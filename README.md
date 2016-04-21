@@ -6,5 +6,5 @@ executed**
 
 ### To-do list
  - [ ] Tool implemented
- - [ ] Write a longer README document
+ - [ ] Write a longer README document
  - [ ] Write a longer to-do list
