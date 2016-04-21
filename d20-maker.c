@@ -52,7 +52,7 @@ int init (void)
 
 	screenx = src_image->w;
 	screeny = src_image->h;
-	myWindow = SDL_CreateWindow ("Icosahedron wrapper\0",
+	myWindow = SDL_CreateWindow ("Icosahedron maker\0",
 								SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
 								src_image->w, src_image->h,	0);
 	if (myWindow == NULL)

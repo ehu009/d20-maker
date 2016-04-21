@@ -1,4 +1,4 @@
-PROG	= d20-wrapper
+PROG	= d20-maker
 
 CC	= gcc
 FLAGS= -Wall
