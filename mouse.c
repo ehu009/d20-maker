@@ -50,6 +50,7 @@ enum
 #define	MASK (value)	(1 << value)
 
 
+static int mouseState = 0;
 #define GET_STATE (value)		(mouseState & MASK(value))
 #define FLIP_STATE (value)	(mouseState ^= MASK(value))
 

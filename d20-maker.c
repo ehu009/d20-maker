@@ -29,7 +29,8 @@ SDL_Surface *canvas = NULL,
 unsigned screenWidth, screenHeight;
 
 int mouseX, mouseY;
-unsigned mouseState = 0;
+
+//	unsigned mouseState = 0;
 
 
 
