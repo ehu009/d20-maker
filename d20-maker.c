@@ -75,6 +75,7 @@ int init (void)
 		print_error ("SDL_CreateRGBSurface\0", SDL_GetError);
 		return 0;
 	}
+	
 
 
 
@@ -181,6 +182,8 @@ void draw_line (SDL_Surface *surface,
 		plot (surface, x, y, color);
 	}
 }
+
+
 struct equilateral_triangle;
 typedef struct equilateral_triangle trekant_t;
 
@@ -327,12 +330,13 @@ void redraw (void)
 	{
 		if (triangles[i] == NULL)
 			continue;
+
 		if (i != 0)
 			printf("drawing: %d\n",i);
 
 		draw_triangle (triangles[i], canvas, plot, 0xffffffff);
 	}
-	draw_triangle (triangles[i], canvas, plot, 0xffffffff);
+//	draw_triangle (triangles[i], canvas, plot, 0xffffffff);
 }
 
 
@@ -464,10 +468,11 @@ int mouseX, mouseY;
 void timerfunc (void *param)
 {
 	SDL_FillRect(canvas, NULL, 0x0ff);
-/*
-printf("LINE %d\n",__LINE__);
+
+//printf("LINE %d\n",__LINE__);
 //	draw_triangle(triangles[0], canvas, setInvPixel, 0xff0000);
 redraw ();
+/*
 printf("LINE %d\n",__LINE__);
 
 	if (!pins[triangle])
@@ -492,7 +497,7 @@ printf("LINE %d\n",__LINE__);
 //	rotate_triangle(triangles[0], 1);
 
 	SDL_UpdateWindowSurface (myWindow);
-	printf("LINE %d\n",__LINE__);
+//	printf("LINE %d\n",__LINE__);
 }
 
 
@@ -531,8 +536,10 @@ int main (int argc, char *arg[])
 
 	SDL_SetSurfaceBlendMode(draw_surface,SDL_BLENDMODE_ADD);
 
+	
+ triangles[0] = make_triangle(150);
 
-
+position_triangle(triangles[0], 100, 40);
 
 	SDL_TimerID myTimer = SDL_AddTimer (1000/32, timer_callback, NULL);
 
