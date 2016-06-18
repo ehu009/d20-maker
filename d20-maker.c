@@ -464,7 +464,7 @@ int mouseX, mouseY;
 void timerfunc (void *param)
 {
 	SDL_FillRect(canvas, NULL, 0x0ff);
-
+/*
 printf("LINE %d\n",__LINE__);
 //	draw_triangle(triangles[0], canvas, setInvPixel, 0xff0000);
 redraw ();
@@ -483,7 +483,7 @@ printf("LINE %d\n",__LINE__);
 	}
 
 printf("LINE %d\n",__LINE__);
-
+*/
 //find_possible_neighbors()
 
 
@@ -525,9 +525,9 @@ int main (int argc, char *arg[])
 		printf ("Something went wrong- exiting.\n");
 		return 1;
 	}
-
+/*
 	init_triangles();
-
+*/
 
 	SDL_SetSurfaceBlendMode(draw_surface,SDL_BLENDMODE_ADD);
 
@@ -541,7 +541,9 @@ int main (int argc, char *arg[])
 	do
 	{
 		SDL_PollEvent (&event);
-		printf("c_t: %d\n",triangle);
+		
+		
+		
 		switch (event.type)
 		{
 			case SDL_USEREVENT:
@@ -560,6 +562,7 @@ int main (int argc, char *arg[])
 					mouseRepeat = 0;
 					*/
 
+/*
 				printf("LINE: %d \n", __LINE__);
 				pins[triangle] = 1;
                 if (!mouseRepeat)
@@ -569,8 +572,11 @@ int main (int argc, char *arg[])
                     ++ mouseRepeat;
                 }
 printf("LINE: %d \n", __LINE__);
+*/
 			//	printf("mRep: %d\n",mouseRepeat);
+	/*
 				fflush(stdout);
+	*/
 				break;
 			case SDL_MOUSEBUTTONUP:
 				/*
@@ -581,14 +587,17 @@ printf("LINE: %d \n", __LINE__);
 					mouseRepeat = 0;
 				printf("mRep: %d\n",mouseRepeat);
 				*/
+		/*
 				if (mouseRepeat)
 					mouseRepeat = 0;
 				mouseDown = 0;
+				*/
 				break;
+		
 			case SDL_MOUSEMOTION:
 				mouseX = event.motion.x;
 				mouseY = event.motion.y;
-				printf("LINE: %d \n", __LINE__);
+	/*			printf("LINE: %d \n", __LINE__);
 
 fflush(stdout);
                 if (triangle > 1)
@@ -622,14 +631,14 @@ fflush(stdout);
 							}
 						}
 
-                      //  position_triangle(triangles[triangle],mouseX, mouseY);
+*/                      //  position_triangle(triangles[triangle],mouseX, mouseY);
 
 /*
                         draw_line(canvas, nearest->x,nearest->y,
                                     mouseX, mouseY,
                                     setInvPixel, 0);
 */
-                    }
+  /*                  }
 
                 printf("LINE: %d \n", __LINE__);
 					if (nearest != NULL)
@@ -643,6 +652,8 @@ fflush(stdout);
             else
                 printf("LINE: %d \n", __LINE__);
 printf("LINE: %d \n", __LINE__);
+
+*/
 				break;
 		}
 
@@ -650,6 +661,7 @@ printf("LINE: %d \n", __LINE__);
 
 	}
 	while (event.type != SDL_QUIT);
+/*
 
 	int j = 0;
 	for (;	j < TRIANGLES_TOTAL;	j++)
@@ -658,7 +670,7 @@ printf("LINE: %d \n", __LINE__);
 			continue;
 		free_triangle(triangles[j]);
 	}
-
+*/
 
 
 	unload ();
