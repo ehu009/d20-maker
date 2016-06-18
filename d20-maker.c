@@ -31,7 +31,9 @@ unsigned screenWidth, screenHeight;
 int mouseX, mouseY;
 
 //	unsigned mouseState = 0;
-extern int mouse_down, mouse_hold, mouse_up;
+int mouse_down= 0,
+		mouse_hold= 0,
+		mouse_up 	= 0;
 
 
 
@@ -219,7 +221,7 @@ printf("LINE %d\n",__LINE__);
 	//		triangles[triangle] = make_triangle(60.0);
 
 
-
+	
 
 //  setPixel(canvas, triangles[triangle]->x, triangles[triangle]->y, 0xffffff);
 
@@ -233,7 +235,11 @@ printf("LINE %d\n",__LINE__);
 //	SDL_BlitSurface(draw_surface, NULL, canvas, NULL);
 
 //	rotate_triangle(triangles[0], 1);
-
+	
+	if(mouse_down) printf("It presses\n");
+	if(mouse_up) printf("It releases\n");
+	if(mouse_hold) printf("It holds\n");
+	
 	SDL_UpdateWindowSurface (myWindow);
 //	printf("LINE %d\n",__LINE__);
 }

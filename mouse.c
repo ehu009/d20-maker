@@ -60,9 +60,22 @@ static int mouseState = 0;
 
 void mouse_handle_down (SDL_Event *e)
 {
-	
-	
-	printf("It presses\n");
+	if (mouse_up)
+	{
+		mouse_up = 0;
+	}
+	if (mouse_down)
+	{
+		mouse_hold = 1;
+		mouse_down = 0;
+	}
+	else
+	{
+		if (mouse_hold == 0)
+		{
+			mouse_down = 1;
+		}
+	}
 }
 
 void mouse_handle_up (SDL_Event *e)
@@ -79,7 +92,11 @@ void mouse_handle_up (SDL_Event *e)
 		}
 	}*/
 	
-	
-	
+	if (mouse_down || mouse_hold)
+	{
+		mouse_down = 0;
+		mouse_hold = 0;
+	}
+	mouse_up = 1;
 }
 

@@ -14,4 +14,4 @@ void mouse_update (SDL_Event *event);
 int mouse_checkout (void);
 */
 
-static int mouse_down, mouse_hold, mouse_up;
+extern int mouse_down, mouse_hold, mouse_up;
