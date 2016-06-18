@@ -28,8 +28,8 @@ SDL_Surface *canvas = NULL,
 
 unsigned screenWidth, screenHeight;
 
-unsigned mouseDown = 0, mouseRepeat = 0;
 int mouseX, mouseY;
+unsigned mouseState = 0;
 
 
 
@@ -497,12 +497,9 @@ int init (void)
 		return 0;
 	}
 	
-
-
-
-
 	return 1;
 }
+
 
 void unload (void)
 {
