@@ -239,8 +239,6 @@ printf("LINE %d\n",__LINE__);
 
 
 
-
-
 static uint32_t timer_callback(uint32_t interval, void *param)
 {
 	SDL_Event event;
@@ -292,15 +290,21 @@ position_triangle(triangles[0], 100, 40);
 		
 		
 		
-		switch (event.type)
-		{
-			case SDL_USEREVENT:
-			{
+		if (event.type == SDL_USEREVENT)
+		{		/*	User defined timed events	*/
 				void (*p) (void*) = event.user.data1;
 				p(event.user.data2);
 				break;
-			}
-			case SDL_MOUSEBUTTONDOWN:
+		}
+		
+		int mouse_event = 0;
+		mouse_event |= (event.type == SDL_MOUSEBUTTONDOWN);
+		mouse_event |= (event.type == SDL_MOUSEBUTTONUP);
+		mouse_event |= (event.type == SDL_MOUSEMOTION);
+		
+		/*
+		if 
+			case SDL_MOUSEBUTTONDOWN:*/
 				/*
 				printf("MOUSE DOWN:\t");
 				if (mouseDown)
@@ -325,8 +329,8 @@ printf("LINE: %d \n", __LINE__);
 	/*
 				fflush(stdout);
 	*/
-				break;
-			case SDL_MOUSEBUTTONUP:
+				/*break;
+			case SDL_MOUSEBUTTONUP:*/
 				/*
 				printf("MOUSE UP:\t");
 				if (!mouseDown)
@@ -340,12 +344,14 @@ printf("LINE: %d \n", __LINE__);
 					mouseRepeat = 0;
 				mouseDown = 0;
 				*/
+				/*
 				break;
 		
 			case SDL_MOUSEMOTION:
-				mouseX = event.motion.x;
+			* */
+	/*		mouseX = event.motion.x;
 				mouseY = event.motion.y;
-	/*			printf("LINE: %d \n", __LINE__);
+				printf("LINE: %d \n", __LINE__);
 
 fflush(stdout);
                 if (triangle > 1)
@@ -402,9 +408,10 @@ fflush(stdout);
 printf("LINE: %d \n", __LINE__);
 
 */
+/*
 				break;
 		}
-
+*/
 
 
 	}
