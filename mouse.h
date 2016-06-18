@@ -10,4 +10,8 @@ void mouse_update (SDL_Event *event);
 /*
  * returns non-zero if mouse has been clicked, otherwise zero
  */
+ /*
 int mouse_checkout (void);
+*/
+
+static int mouse_down, mouse_hold, mouse_up;

@@ -39,29 +39,47 @@ void mouse_handle_move (SDL_Event *e)
 	mouseY = e->motion.y;
 }
 
-
+/*
 enum
 {
 	m_press,
-	m_repeat,
+	m_hold,
 	m_release,
 	m_checkout
 };
+
 #define	MASK (value)	(1 << value)
 
 
 static int mouseState = 0;
 #define GET_STATE (value)		(mouseState & MASK(value))
 #define FLIP_STATE (value)	(mouseState ^= MASK(value))
+*/
+
 
 
 void mouse_handle_down (SDL_Event *e)
 {
+	
+	
 	printf("It presses\n");
 }
 
 void mouse_handle_up (SDL_Event *e)
 {
-	printf("It releases\n");
+	/*if (GET_STATE(m_checkout))
+	{
+		if (GET_STATE(m_press))
+		{
+			printf("It releases\n");
+		}
+		else
+		{
+			
+		}
+	}*/
+	
+	
+	
 }
 

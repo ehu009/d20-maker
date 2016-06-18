@@ -31,7 +31,7 @@ unsigned screenWidth, screenHeight;
 int mouseX, mouseY;
 
 //	unsigned mouseState = 0;
-
+extern int mouse_down, mouse_hold, mouse_up;
 
 
 
