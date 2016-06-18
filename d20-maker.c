@@ -27,7 +27,7 @@ SDL_Surface *canvas = NULL,
 			*src_image = NULL,
 			*draw_surface = NULL;
 
-unsigned screenx, screeny;
+unsigned screenWidth, screenHeight;
 
 
 
@@ -52,8 +52,8 @@ int init (void)
 	}
 
 
-	screenx = src_image->w;
-	screeny = src_image->h;
+	screenWidth = src_image->w;
+	screenHeight = src_image->h;
 	myWindow = SDL_CreateWindow ("Icosahedron maker\0",
 								SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
 								src_image->w, src_image->h,	0);
@@ -213,7 +213,7 @@ void	find_possible_neighbors	(trekant_t *tri, trekant_t *n1, trekant_t *n2, trek
 	}
 
 
-	if ( !rect_border ( screenx,screeny, x1,y1, r, r ) )
+	if ( !rect_border ( screenWidth,screenHeight, x1,y1, r, r ) )
     {
 draw_fake_triangle ( x1, y1, r );
 
@@ -226,7 +226,7 @@ draw_fake_triangle ( x1, y1, r );
         }
 #endif
     }
-	if ( !rect_border ( screenx,screeny, x2,y2, r, r ) )
+	if ( !rect_border ( screenWidth,screenHeight, x2,y2, r, r ) )
 
     {
         draw_line ( canvas, x2, y2 - r,
@@ -242,7 +242,7 @@ draw_fake_triangle ( x1, y1, r );
         }
 #endif
     }
-	if ( !rect_border ( screenx,screeny, x3,x3, r, r ) )
+	if ( !rect_border ( screenWidth,screenHeight, x3,x3, r, r ) )
 
     {
         draw_line ( canvas, x3, y3 - r,
