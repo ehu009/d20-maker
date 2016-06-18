@@ -35,7 +35,8 @@ void mouse_update (SDL_Event *event)
 
 void mouse_handle_move (SDL_Event *e)
 {
-	printf("It moves\n");
+	mouseX = e->motion.x;
+	mouseY = e->motion.y;
 }
 
 void mouse_handle_down (SDL_Event *e)
