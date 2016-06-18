@@ -1,8 +1,8 @@
 PROG = d20-maker
 
 CC	 = gcc
-HEAD = pixels.h
-SRCS = pixels.c
+HEAD = pixels.h lines.h
+SRCS = pixels.c lines.c
 FLAGS= -Wall
 LIBS = -lm -lSDL2 -lSDL2_image -lSDL2_ttf
 
