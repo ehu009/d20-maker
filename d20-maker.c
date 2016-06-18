@@ -103,9 +103,9 @@ void unload ()
 
 
 
-double distance (int x1, int y1, int x2, int y2)
+double distance (double x1, double y1, double x2, double y2)
 {
-	int dx = x2 - x1, dy = y2 - y1;
+	double dx = x2 - x1, dy = y2 - y1;
 	dx *= dx;
 	dy *= dy;
 	return sqrt (dx + dy);
