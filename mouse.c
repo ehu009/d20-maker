@@ -39,6 +39,21 @@ void mouse_handle_move (SDL_Event *e)
 	mouseY = e->motion.y;
 }
 
+
+enum
+{
+	m_press,
+	m_repeat,
+	m_release,
+	m_checkout
+};
+#define	MASK (value)	(1 << value)
+
+
+#define GET_STATE (value)		(mouseState & MASK(value))
+#define FLIP_STATE (value)	(mouseState ^= MASK(value))
+
+
 void mouse_handle_down (SDL_Event *e)
 {
 	printf("It presses\n");
