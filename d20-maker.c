@@ -12,7 +12,7 @@
 
 #include "trekanter.h"
 
-
+#include "mouse.h"
 
 
 int init (void);
@@ -294,13 +294,10 @@ position_triangle(triangles[0], 100, 40);
 		{		/*	User defined timed events	*/
 				void (*p) (void*) = event.user.data1;
 				p(event.user.data2);
-				break;
+				//break;
 		}
 		
-		int mouse_event = 0;
-		mouse_event |= (event.type == SDL_MOUSEBUTTONDOWN);
-		mouse_event |= (event.type == SDL_MOUSEBUTTONUP);
-		mouse_event |= (event.type == SDL_MOUSEMOTION);
+		mouse_update(&event);
 		
 		/*
 		if 
