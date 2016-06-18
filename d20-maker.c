@@ -13,12 +13,11 @@
 #include "trekanter.h"
 
 
-typedef const char * (*error_source) (void);
 
-void print_error (const char *func_name, error_source func)
-{
-	printf ("%s: \"%s\"\n", func_name, func ());
-}
+
+int init (void);
+void unload (void);
+
 
 
 SDL_Window *myWindow = NULL;
@@ -29,75 +28,8 @@ SDL_Surface *canvas = NULL,
 
 unsigned screenWidth, screenHeight;
 
-
-
-int init (void)
-{
-	if (SDL_Init (SDL_INIT_EVENTS | SDL_INIT_VIDEO))
-	{
-		print_error ("SDL Init\0", SDL_GetError);
-		return 0;
-	}
-	else if (TTF_Init())
-	{
-		print_error ("TTF_Init\0", TTF_GetError);
-		return 0;
-	}
-
-	src_image = IMG_Load ("image.jpg");
-	if (src_image == NULL)
-	{
-		print_error ("IMG_Load\0", IMG_GetError);
-		return 0;
-	}
-
-
-	screenWidth = src_image->w;
-	screenHeight = src_image->h;
-	myWindow = SDL_CreateWindow ("Icosahedron maker\0",
-								SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-								src_image->w, src_image->h,	0);
-	if (myWindow == NULL)
-	{
-		print_error ("SDL_CreateWindow\0", SDL_GetError);
-		return 0;
-	}
-
-	canvas = SDL_GetWindowSurface (myWindow);
-	if (canvas == NULL)
-	{
-		print_error ("SDL_GetWindowSurface\0", SDL_GetError);
-		return 0;
-	}
-
-	draw_surface = SDL_CreateRGBSurface (0, canvas->w, canvas->h, 32,
-										0, 0, 0, 0);
-	if (draw_surface == NULL)
-	{
-		print_error ("SDL_CreateRGBSurface\0", SDL_GetError);
-		return 0;
-	}
-	
-
-
-
-
-	return 1;
-}
-
-void unload ()
-{
-
-
-	SDL_FreeSurface (draw_surface);
-
-	SDL_FreeSurface (canvas);
-	SDL_DestroyWindow (myWindow);
-
-	TTF_Quit ();
-	SDL_Quit ();
-}
-
+unsigned mouseDown = 0, mouseRepeat = 0;
+int mouseX, mouseY;
 
 
 
@@ -269,8 +201,6 @@ draw_fake_triangle ( x1, y1, r );
 
 
 
-unsigned mouseDown = 0, mouseRepeat = 0;
-int mouseX, mouseY;
 
 void timerfunc (void *param)
 {
@@ -329,6 +259,8 @@ static uint32_t timer_callback(uint32_t interval, void *param)
 
 }
 
+
+
 int main (int argc, char *arg[])
 {
 	if (!(init ()))
@@ -343,10 +275,12 @@ int main (int argc, char *arg[])
 
 	SDL_SetSurfaceBlendMode(draw_surface,SDL_BLENDMODE_ADD);
 
-	
+/*	Two lines for testing if the triangles'll still draw properly
+ */	
  triangles[0] = make_triangle(150);
-
 position_triangle(triangles[0], 100, 40);
+/*
+ */
 
 	SDL_TimerID myTimer = SDL_AddTimer (1000/32, timer_callback, NULL);
 
@@ -490,4 +424,88 @@ printf("LINE: %d \n", __LINE__);
 	unload ();
 
 	return 0;
+}
+
+
+
+/*
+ * 	The clutter space
+ */
+
+
+
+typedef const char * (*error_source) (void);
+
+void print_error (const char *func_name, error_source func)
+{
+	printf ("%s: \"%s\"\n", func_name, func ());
+}
+
+
+
+int init (void)
+{
+	if (SDL_Init (SDL_INIT_EVENTS | SDL_INIT_VIDEO))
+	{
+		print_error ("SDL Init\0", SDL_GetError);
+		return 0;
+	}
+	else if (TTF_Init())
+	{
+		print_error ("TTF_Init\0", TTF_GetError);
+		return 0;
+	}
+
+	src_image = IMG_Load ("image.jpg");
+	if (src_image == NULL)
+	{
+		print_error ("IMG_Load\0", IMG_GetError);
+		return 0;
+	}
+
+
+	screenWidth = src_image->w;
+	screenHeight = src_image->h;
+	myWindow = SDL_CreateWindow ("Icosahedron maker\0",
+								SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
+								src_image->w, src_image->h,	0);
+	if (myWindow == NULL)
+	{
+		print_error ("SDL_CreateWindow\0", SDL_GetError);
+		return 0;
+	}
+
+	canvas = SDL_GetWindowSurface (myWindow);
+	if (canvas == NULL)
+	{
+		print_error ("SDL_GetWindowSurface\0", SDL_GetError);
+		return 0;
+	}
+
+	draw_surface = SDL_CreateRGBSurface (0, canvas->w, canvas->h, 32,
+										0, 0, 0, 0);
+	if (draw_surface == NULL)
+	{
+		print_error ("SDL_CreateRGBSurface\0", SDL_GetError);
+		return 0;
+	}
+	
+
+
+
+
+	return 1;
+}
+
+void unload (void)
+{
+
+
+	SDL_FreeSurface (draw_surface);
+
+	SDL_FreeSurface (canvas);
+	SDL_DestroyWindow (myWindow);
+
+	TTF_Quit ();
+	SDL_Quit ();
 }
