@@ -19,7 +19,7 @@ int init (void);
 void unload (void);
 
 
-#define WINDOW_TITLE  "Icosahedron maker\0",
+#define WINDOW_TITLE  "Icosahedron maker\0"
 SDL_Window *myWindow = NULL;
 
 SDL_Surface *canvas = NULL,
