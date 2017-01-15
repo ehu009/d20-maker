@@ -29,11 +29,7 @@ SDL_Surface *canvas = NULL,
 unsigned screenWidth, screenHeight;
 
 int mouseX, mouseY;
-
-//	unsigned mouseState = 0;
-int mouse_down= 0,
-		mouse_hold= 0,
-		mouse_up 	= 0;
+unsigned char mouse_state = 0;
 
 
 
@@ -236,9 +232,6 @@ printf("LINE %d\n",__LINE__);
 
 //	rotate_triangle(triangles[0], 1);
 	
-	if(mouse_down) printf("It presses\n");
-	if(mouse_up) printf("It releases\n");
-	if(mouse_hold) printf("It holds\n");
 	
 	SDL_UpdateWindowSurface (myWindow);
 //	printf("LINE %d\n",__LINE__);
@@ -293,8 +286,13 @@ position_triangle(triangles[0], 100, 40);
 	SDL_Event event;
 	do
 	{
-		SDL_PollEvent (&event);
-		
+		if (!SDL_PollEvent (&event))
+		{
+			
+			mouse_reset();
+		}
+		else
+		{
 		
 		
 		if (event.type == SDL_USEREVENT)
@@ -305,6 +303,10 @@ position_triangle(triangles[0], 100, 40);
 		}
 		
 		mouse_update(&event);
+		if(mouse_is_down()) printf("It presses\n");
+		if(mouse_is_up()) printf("It releases\n");
+		if(mouse_is_held()) printf("It holds\n");
+		
 		
 		/*
 		if 
@@ -417,7 +419,7 @@ printf("LINE: %d \n", __LINE__);
 		}
 */
 
-
+		}
 	}
 	while (event.type != SDL_QUIT);
 /*
