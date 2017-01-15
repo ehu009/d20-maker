@@ -1,102 +1,93 @@
 #include "mouse.h"
 
-#include <stdio.h>
+/*
+ * 
+ */
+#define	MASK_DOWN	1
+#define	MASK_UP		2
+#define	MASK_HELD	4
 
 /*
- *	Some handler prototypes
+ * 
  */
-void mouse_handle_move (SDL_Event *e);
-void mouse_handle_down (SDL_Event *e);
-void mouse_handle_up (SDL_Event *e);
+#define	IS_DOWN	(mouse_state & MASK_DOWN)
+#define IS_UP		(mouse_state & MASK_UP)
+#define	IS_HELD	(mouse_state & MASK_HELD)
+//
+#define	TOGGLE_DOWN	mouse_state ^= MASK_DOWN
+#define	TOGGLE_UP		mouse_state ^= MASK_UP
+#define	TOGGLE_HELD	mouse_state ^= MASK_HELD
 
+/*
+ * 
+ */
+#define	SET_DOWN	mouse_state |= MASK_DOWN
+#define	SET_UP		mouse_state |= MASK_UP
+#define	SET_HELD	mouse_state |= MASK_HELD
+//
+#define	RESET_DOWN	if IS_DOWN	TOGGLE_DOWN
+#define	RESET_UP		if IS_UP		TOGGLE_UP
+#define	RESET_HELD	if IS_HELD	TOGGLE_HELD
 
-void mouse_update (SDL_Event *event)
-{
-	switch (event->type)
-	{
-		case SDL_MOUSEBUTTONDOWN:
-		{
-			mouse_handle_down (event);
-			break;
-		}
-		case SDL_MOUSEBUTTONUP:
-		{
-			mouse_handle_up (event);
-			break;
-		}
-		case SDL_MOUSEMOTION:
-		{
-			mouse_handle_move (event);
-			break;
-		}
-	}
-}
-
-
+/*
+ *	event handles
+ */
 void mouse_handle_move (SDL_Event *e)
 {
 	mouseX = e->motion.x;
 	mouseY = e->motion.y;
 }
 
+void mouse_handle_down ()
+{
+	SET_DOWN;
+}
+
+void mouse_handle_up ()
+{
+	RESET_HELD;
+	SET_UP;
+}
+
 /*
-enum
+ * 	
+ */
+void mouse_reset (void)
 {
-	m_press,
-	m_hold,
-	m_release,
-	m_checkout
-};
+	if  IS_DOWN	SET_HELD;
+	RESET_DOWN;
+	RESET_UP;
+}
 
-#define	MASK (value)	(1 << value)
-
-
-static int mouseState = 0;
-#define GET_STATE (value)		(mouseState & MASK(value))
-#define FLIP_STATE (value)	(mouseState ^= MASK(value))
-*/
-
-
-
-void mouse_handle_down (SDL_Event *e)
+void mouse_update (SDL_Event *e)
 {
-	if (mouse_up)
+	switch (event->type)
 	{
-		mouse_up = 0;
-	}
-	if (mouse_down)
-	{
-		mouse_hold = 1;
-		mouse_down = 0;
-	}
-	else
-	{
-		if (mouse_hold == 0)
-		{
-			mouse_down = 1;
-		}
+		case SDL_MOUSEBUTTONDOWN:
+		{	mouse_handle_down ();	break;	}
+		
+		case SDL_MOUSEBUTTONUP:
+		{	mouse_handle_up ();		break;	}
+		
+		case SDL_MOUSEMOTION:
+		{	mouse_handle_move (e);break;	}
 	}
 }
 
-void mouse_handle_up (SDL_Event *e)
+/*
+ * 
+ */
+int mouse_is_down (void)
 {
-	/*if (GET_STATE(m_checkout))
-	{
-		if (GET_STATE(m_press))
-		{
-			printf("It releases\n");
-		}
-		else
-		{
-			
-		}
-	}*/
-	
-	if (mouse_down || mouse_hold)
-	{
-		mouse_down = 0;
-		mouse_hold = 0;
-	}
-	mouse_up = 1;
+	return (int) IS_DOWN;
 }
 
+int mouse_is_up (void)
+{
+	return (int)	IS_UP;
+}
+
+int mouse_is_held (void)
+{
+	return (int) IS_HELD;
+}

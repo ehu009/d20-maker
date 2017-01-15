@@ -1,17 +1,24 @@
 #include "SDL2/SDL.h"
 
-#pragma once
 
+//	not to be touch externally
 extern int mouseX, mouseY;
-//extern unsigned mouseState;
+extern unsigned char mouse_state;
 
-void mouse_update (SDL_Event *event);
+//	checks mouse state
+int mouse_is_down(void);
+int mouse_is_up(void);
+int mouse_is_held(void);
+
+
 
 /*
- * returns non-zero if mouse has been clicked, otherwise zero
+ *	controls state
  */
- /*
-int mouse_checkout (void);
-*/
+ 
+//	call on successfully popping event from queue
+void mouse_update (SDL_Event *e);
 
-extern int mouse_down, mouse_hold, mouse_up;
+//	call when event queue is empty
+void mouse_reset(void);
+
