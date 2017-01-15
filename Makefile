@@ -13,4 +13,4 @@ clean :
 	rm -f *.o $(PROG) *~
 
 $(PROG) : $(HEAD)
-	$(CC) $(FLAGS) $(SRCS) -o $@ $^ $(LIBS) $@.c
+	$(CC) $(FLAGS) $(SRCS) main.c -o $@ $^ $(LIBS)
