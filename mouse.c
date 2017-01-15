@@ -61,7 +61,7 @@ void mouse_reset (void)
 
 void mouse_update (SDL_Event *e)
 {
-	switch (event->type)
+	switch (e->type)
 	{
 		case SDL_MOUSEBUTTONDOWN:
 		{	mouse_handle_down ();	break;	}
