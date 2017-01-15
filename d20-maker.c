@@ -303,9 +303,6 @@ position_triangle(triangles[0], 100, 40);
     }
 
     mouse_update(&event);
-    if(mouse_is_down()) printf("It presses\n");
-    if(mouse_is_up()) printf("It releases\n");
-    if(mouse_is_held()) printf("It holds\n");
 
 
     /*
