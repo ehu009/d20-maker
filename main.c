@@ -14,6 +14,8 @@
 
 #include "mouse.h"
 
+#include "net-builder.h"
+
 
 int init (void);
 void unload (void);
