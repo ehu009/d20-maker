@@ -1,6 +1,10 @@
 #include "net-builder.h"
 
 
+#include    <math.h>
+#include "lines.h"
+
+#include "trekanter.h"
 
 
 double distance (double x1, double y1, double x2, double y2)
@@ -199,58 +203,9 @@ void f2 (void)
 {
 
 
-    /*
-    if
-      case SDL_MOUSEBUTTONDOWN:*/
-        /*
-        printf("MOUSE DOWN:\t");
-        if (mouseDown)
-          mouseRepeat = 1;
 
-        else
-          mouseRepeat = 0;
-          */
 
 /*
-        printf("LINE: %d \n", __LINE__);
-        pins[triangle] = 1;
-                if (!mouseRepeat)
-                {
-                    mouseDown = 1;
-                    ++ triangle;
-                    ++ mouseRepeat;
-                }
-printf("LINE: %d \n", __LINE__);
-*/
-      //  printf("mRep: %d\n",mouseRepeat);
-  /*
-        fflush(stdout);
-  */
-        /*break;
-      case SDL_MOUSEBUTTONUP:*/
-        /*
-        printf("MOUSE UP:\t");
-        if (!mouseDown)
-          mouseRepeat = 1;
-        else
-          mouseRepeat = 0;
-        printf("mRep: %d\n",mouseRepeat);
-        */
-    /*
-        if (mouseRepeat)
-          mouseRepeat = 0;
-        mouseDown = 0;
-        */
-        /*
-        break;
-
-      case SDL_MOUSEMOTION:
-      * */
-  /*    mouseX = event.motion.x;
-        mouseY = event.motion.y;
-        printf("LINE: %d \n", __LINE__);
-
-fflush(stdout);
                 if (triangle > 1)
                 {
 
@@ -319,17 +274,15 @@ void f3 (void)
 */
 
 
-/*  Two lines for testing if the triangles'll still draw properly
-
  triangles[0] = make_triangle(150);
 position_triangle(triangles[0], 100, 40);
 
- */
+
 }
 
 void f4 (void)
 {
-  /*
+
 
   int j = 0;
   for (;  j < TRIANGLES_TOTAL;  j++)
@@ -338,5 +291,4 @@ void f4 (void)
       continue;
     free_triangle(triangles[j]);
   }
-*/
 }

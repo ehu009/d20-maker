@@ -1,13 +1,9 @@
-#include <stdio.h>
 
-#include    <math.h>
 
 #include    "SDL2/SDL.h"
 
+#include <stdio.h>
 
-#include "lines.h"
-
-#include "trekanter.h"
 
 
 extern SDL_Surface *canvas;
