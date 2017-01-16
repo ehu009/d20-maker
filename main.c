@@ -88,6 +88,8 @@ int main (int argc, char *arg[])
   }
   while (event.type != SDL_QUIT);
 
+  SDL_RemoveTimer(myTimer);
+
 
   f4();
 
