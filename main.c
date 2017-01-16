@@ -117,12 +117,13 @@ void print_error (const char *func_name, error_source func)
 
 int init (void)
 {
+
+  #define SDL_ERROR(x)  {print_error(x, SDL_GetError); return 0;}
+
   if (SDL_Init (SDL_INIT_EVENTS | SDL_INIT_VIDEO))
-  {
-    print_error ("SDL Init\0", SDL_GetError);
-    return 0;
-  }
-  else if (TTF_Init())
+    SDL_ERROR("SDL Init\0")
+
+  if (TTF_Init())
   {
     print_error ("TTF_Init\0", TTF_GetError);
     return 0;
@@ -143,26 +144,20 @@ int init (void)
       src_image->w, src_image->h,
       0);
 
+
+
   if (myWindow == NULL)
-  {
-    print_error ("SDL_CreateWindow\0", SDL_GetError);
-    return 0;
-  }
+    SDL_ERROR("SDL_CreateWindow\0")
 
   canvas = SDL_GetWindowSurface (myWindow);
   if (canvas == NULL)
-  {
-    print_error ("SDL_GetWindowSurface\0", SDL_GetError);
-    return 0;
-  }
+    SDL_ERROR("SDL_GetWindowSurface\0")
+
 
   draw_surface = SDL_CreateRGBSurface (0, canvas->w, canvas->h, 32,
                     0, 0, 0, 0);
   if (draw_surface == NULL)
-  {
-    print_error ("SDL_CreateRGBSurface\0", SDL_GetError);
-    return 0;
-  }
+    SDL_ERROR("SDL_CreateRGBSurface\0")
 
   return 1;
 }
