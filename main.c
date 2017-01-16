@@ -15,6 +15,7 @@
 
 int init (void);
 void unload (void);
+static uint32_t timer_callback(uint32_t interval, void *param);
 
 
 #define WINDOW_TITLE  "Icosahedron maker\0"
@@ -34,10 +35,6 @@ unsigned char mouse_state = 0;
 
 
 
-
-
-
-
 void timerfunc (void *param)
 {
   SDL_FillRect(canvas, NULL, 0x0ff);
@@ -46,29 +43,7 @@ void timerfunc (void *param)
   f1();
 
   SDL_UpdateWindowSurface (myWindow);
-//  printf("LINE %d\n",__LINE__);
 }
-
-
-
-static uint32_t timer_callback(uint32_t interval, void *param)
-{
-  SDL_Event event;
-    SDL_UserEvent userevent;
-
-    userevent.type = SDL_USEREVENT;
-    userevent.code = 0;
-    userevent.data1 = &timerfunc;
-    userevent.data2 = NULL;
-
-    event.type = SDL_USEREVENT;
-    event.user = userevent;
-
-    SDL_PushEvent(&event);
-    return(interval);
-
-}
-
 
 
 int main (int argc, char *arg[])
@@ -103,7 +78,6 @@ int main (int argc, char *arg[])
     {   /*  User defined timed events */
         void (*p) (void*) = event.user.data1;
         p(event.user.data2);
-        //break;
     }
 
     mouse_update(&event);
@@ -113,6 +87,7 @@ int main (int argc, char *arg[])
     }
   }
   while (event.type != SDL_QUIT);
+
 
   f4();
 
@@ -162,8 +137,10 @@ int init (void)
   screenWidth = src_image->w;
   screenHeight = src_image->h;
   myWindow = SDL_CreateWindow (WINDOW_TITLE,
-                SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-                src_image->w, src_image->h, 0);
+      SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
+      src_image->w, src_image->h,
+      0);
+
   if (myWindow == NULL)
   {
     print_error ("SDL_CreateWindow\0", SDL_GetError);
@@ -186,6 +163,24 @@ int init (void)
   }
 
   return 1;
+}
+
+
+static uint32_t timer_callback(uint32_t interval, void *param)
+{
+  SDL_Event event;
+  SDL_UserEvent userevent;
+
+  userevent.type = SDL_USEREVENT;
+  userevent.code = 0;
+  userevent.data1 = &timerfunc;
+  userevent.data2 = NULL;
+
+  event.type = SDL_USEREVENT;
+  event.user = userevent;
+
+  SDL_PushEvent(&event);
+  return (interval);
 }
 
 
