@@ -3,8 +3,8 @@
 /*
  *
  */
-#define MASK_DOWN 1
-#define MASK_UP   2
+#define MASK_UP   1
+#define MASK_DOWN 2
 #define MASK_HELD 4
 #define MASK_WHEEL_DOWN 8
 #define MASK_WHEEL_UP   16
@@ -12,32 +12,32 @@
 /*
  *
  */
-#define IS_DOWN (mouse_state & MASK_DOWN)
 #define IS_UP   (mouse_state & MASK_UP)
+#define IS_DOWN (mouse_state & MASK_DOWN)
 #define IS_HELD (mouse_state & MASK_HELD)
-#define IS_WHEEL_DOWN  (mouse_state & MASK_WHEEL_DOWN)
 #define IS_WHEEL_UP    (mouse_state & MASK_WHEEL_UP)
+#define IS_WHEEL_DOWN  (mouse_state & MASK_WHEEL_DOWN)
 //
-#define TOGGLE_DOWN mouse_state ^= MASK_DOWN
 #define TOGGLE_UP   mouse_state ^= MASK_UP
+#define TOGGLE_DOWN mouse_state ^= MASK_DOWN
 #define TOGGLE_HELD mouse_state ^= MASK_HELD
-#define TOGGLE_WHEEL_DOWN  mouse_state ^= MASK_WHEEL_DOWN
 #define TOGGLE_WHEEL_UP    mouse_state ^= MASK_WHEEL_UP
+#define TOGGLE_WHEEL_DOWN  mouse_state ^= MASK_WHEEL_DOWN
 
 /*
  *
  */
-#define SET_DOWN  mouse_state |= MASK_DOWN
 #define SET_UP    mouse_state |= MASK_UP
+#define SET_DOWN  mouse_state |= MASK_DOWN
 #define SET_HELD  mouse_state |= MASK_HELD
-#define SET_WHEEL_DOWN  mouse_state |= MASK_WHEEL_DOWN
 #define SET_WHEEL_UP    mouse_state |= MASK_WHEEL_UP
+#define SET_WHEEL_DOWN  mouse_state |= MASK_WHEEL_DOWN
 //
-#define RESET_DOWN  if IS_DOWN  TOGGLE_DOWN
 #define RESET_UP    if IS_UP    TOGGLE_UP
+#define RESET_DOWN  if IS_DOWN  TOGGLE_DOWN
 #define RESET_HELD  if IS_HELD  TOGGLE_HELD
-#define RESET_WHEEL_DOWN  if IS_WHEEL_DOWN  TOGGLE_WHEEL_DOWN
 #define RESET_WHEEL_UP    if IS_WHEEL_UP    TOGGLE_WHEEL_UP
+#define RESET_WHEEL_DOWN  if IS_WHEEL_DOWN  TOGGLE_WHEEL_DOWN
 
 /*
  *  event handles
