@@ -1,10 +1,11 @@
+#ifndef   PIXELS_H_
 
-#include		"SDL2/SDL.h"
+  #define PIXELS_H_
 
+    #include    "SDL2/SDL.h"
 
-#pragma once
+    uint32_t getPixel (SDL_Surface *src, int x, int y);
 
-uint32_t getPixel (SDL_Surface *src, int x, int y);
+    void setPixel(SDL_Surface *dst, int x, int y, unsigned color);
 
-void setPixel(SDL_Surface *dst, int x, int y, unsigned color);
-
+#endif  /*  PIXELS_H_ */

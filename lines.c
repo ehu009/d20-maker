@@ -1,5 +1,3 @@
-
-
 #include "lines.h"
 #include "pixels.h"
 
@@ -17,8 +15,8 @@ static void unsign (int *value, int *buf)
 }
 
 static void bresenham_adjustment (  int *A, int *B,
-    int *sA,int *sB,
-    int *dA,int *dB,
+    int *sA, int *sB,
+    int *dA, int *dB,
     int *fraction)
 { /*  main Bresenham function */
   if (*fraction >= 0)
@@ -61,7 +59,7 @@ void draw_line (SDL_Surface *surface,
   plot (surface, x, y, color);
   while (*v != *v2)
   {
-    bresenham_adjustment (u,v,  su,sv,  du,dv,  &frac);
+    bresenham_adjustment (u,v, su, sv, du, dv, &frac);
     plot (surface, x, y, color);
   }
 }
