@@ -6,7 +6,8 @@
   //  a type for functions that plot a single pixel
   typedef void (*plot_func) (SDL_Surface *, int, int, unsigned);
 
-  void setInvPixel (SDL_Surface *dst, int x, int y, unsigned color);
+  void colourPixel (SDL_Surface *dst, int x, int y, unsigned color);
+  void invertPixel (SDL_Surface *dst, int x, int y, unsigned color);
 
 
   /*

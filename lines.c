@@ -1,6 +1,4 @@
 #include "lines.h"
-#include "pixels.h"
-
 
 
 static void unsign (int *value, int *buf)
@@ -37,21 +35,21 @@ void draw_line (SDL_Surface *surface,
 { //  Bresenham algorithm
   int frac;
   int x = x1, dx = x2 - x1, stepx = 1,
-    y = y1, dy = y2 - y1, stepy = 1;
+      y = y1, dy = y2 - y1, stepy = 1;
 
   int *u = &x, *du = &dx, *su = &stepx,
-    *v = &y, *dv = &dy, *sv = &stepy,
-    *v2 = &y2;
+      *v = &y, *dv = &dy, *sv = &stepy,
+      *v2 = &y2;
 
   unsign (du, su);
   unsign (dv, sv);
 
   if (dx > dy)
   {
-    v2 = &x2;
     u = &y;     v = &x;
-    su = &stepy;  sv = &stepx;
+    su = &stepy;sv = &stepx;
     du = &dy;   dv = &dx;
+    v2 = &x2;
   }
   frac = *du - ((*dv) / 2);
 
@@ -64,10 +62,21 @@ void draw_line (SDL_Surface *surface,
   }
 }
 
+/*
+ *  plotting functions
+ */
 
-void setInvPixel (SDL_Surface *dst, int x, int y, unsigned color)
+#include "pixels.h"
+
+void colourPixel (SDL_Surface *dst, int x, int y, unsigned color)
+{
+  setPixel (dst, x, y, color);
+}
+
+void invertPixel (SDL_Surface *dst, int x, int y, unsigned color)
 {
   unsigned clr = getPixel (dst, x, y);
   clr ^= 0xffffff;
   setPixel (dst, x, y, clr);
 }
+
