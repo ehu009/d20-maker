@@ -1,16 +1,19 @@
-#include "lines.h"
+#ifndef   DRAWN_TRIANGLES_H_
+  #define   DRAWN_TRIANGLES_H_
 
-#pragma once
-
-
-struct equilateral_triangle;
-typedef struct equilateral_triangle trekant_t;
+  #include "lines.h"
 
 
-trekant_t *make_triangle (double radius);
-void free_triangle (trekant_t *tri);
-int get_triangle_rotation(trekant_t *tri);
-void resize_triangle (trekant_t *tri, double add);
-void position_triangle (trekant_t *tri, int x, int y);
-void rotate_triangle (trekant_t *tri, int add);
-void draw_triangle (trekant_t *tri, SDL_Surface *surface, plot_func plot, unsigned color);
+  struct screen_triangle;
+  typedef struct screen_triangle triangle_t;
+
+  triangle_t *make_screen_triangle (double radius);
+  void free_screen_triangle (triangle_t *t);
+
+  void position_screen_triangle (triangle_t *t, int x, int y);
+  void rotate_screen_triangle (triangle_t *t, int add);
+  void resize_screen_triangle (triangle_t *t, double add);
+
+  void draw_screen_triangle (triangle_t *t, SDL_Surface *surface, plot_func plot, unsigned color);
+
+#endif  /*  DRAWN_TRIANGLES_H_  */

@@ -1,9 +1,8 @@
 #include "trekanter.h"
 
-struct equilateral_triangle;
-typedef struct equilateral_triangle trekant_t;
+//struct screen_triangle;
 
-struct equilateral_triangle
+struct screen_triangle
 {
   int x, y;
   int rotation;
@@ -11,54 +10,57 @@ struct equilateral_triangle
 };
 
 
-
-trekant_t *make_triangle (double radius)
+triangle_t *make_screen_triangle (double radius)
 {
-  trekant_t *tri = calloc(sizeof(trekant_t), 1);
-  if (tri !=NULL)
+  triangle_t *t = calloc(sizeof(triangle_t), 1);
+  if (t !=NULL)
   {
-    tri->radius = radius;
+    t->radius = radius;
   }
-  return tri;
+  return t;
 }
 
-void free_triangle (trekant_t *tri)
+void free_screen_triangle (triangle_t *t)
 {
-  free(tri);
+  free(t);
 }
 
-int get_triangle_rotation(trekant_t *tri)
+int get_screen_triangle_rotation(triangle_t *t)
 {
-  return tri->rotation;
+  return t->rotation % 4;
 }
 
-void resize_triangle (trekant_t *tri, double add)
+
+void position_screen_triangle (triangle_t *t, int x, int y)
 {
-  tri->radius += add;
-  if (tri->radius < 0)
-    tri->radius *= -1;
+  t->x = x;
+  t->y = y;
 }
 
-void position_triangle (trekant_t *tri, int x, int y)
+void rotate_screen_triangle (triangle_t *t, int add)
 {
-  tri->x = x;
-  tri->y = y;
+  t->rotation += add;
 }
 
-void rotate_triangle (trekant_t *tri, int add)
+void resize_screen_triangle (triangle_t *t, double add)
 {
-  tri->rotation += add;
+  t->radius += add;
+  if (t->radius < 0)
+  {
+    t->radius *= -1;
+    t->rotation += 2;
+  }
 }
 
-void draw_triangle (trekant_t *tri, SDL_Surface *surface, plot_func plot, unsigned color)
+void draw_screen_triangle (triangle_t *t, SDL_Surface *surface, plot_func plot, unsigned color)
 {
 
-  int rotation = tri->rotation;
+  int rotation = t->rotation;
   while (rotation < 0)
     rotation += 4;
   rotation %= 4;
 
-  double sides = 3 * tri->radius;
+  double sides = 3 * t->radius;
   sides /= sqrt(3);
   sides /= 2;
 
@@ -69,32 +71,32 @@ void draw_triangle (trekant_t *tri, SDL_Surface *surface, plot_func plot, unsign
     switch(rotation)
     {
     case 0:
-      x1 = - (0.5 + sides); y1 = 0.5 + (tri->radius / 2);
-      x2 = 0.5 + sides;   y2 = 0.5 + (tri->radius / 2);
-      x3 = 0;   y3 = - (0.5 + tri->radius);
+      x1 = - (0.5 + sides); y1 = 0.5 + (t->radius / 2);
+      x2 = 0.5 + sides;   y2 = 0.5 + (t->radius / 2);
+      x3 = 0;   y3 = - (0.5 + t->radius); //  top
       break;
 
     case 1:
-      x1 = - (0.5 + (tri->radius / 2)); y1 = - (0.5 + sides);
-      x2 = - (0.5 + (tri->radius / 2)); y2 = (0.5 + sides);
-      x3 = 0.5 + tri->radius; y3 = 0;
+      x1 = - (0.5 + (t->radius / 2)); y1 = - (0.5 + sides);
+      x2 = - (0.5 + (t->radius / 2)); y2 = (0.5 + sides);
+      x3 = 0.5 + t->radius; y3 = 0; //  right
       break;
 
     case 2:
-      x1 = - (0.5 + sides); y1 = - (0.5 + (tri->radius / 2));
-      x2 = 0.5 + sides;   y2 = - (0.5 + (tri->radius / 2));
-      x3 = 0;   y3 = (0.5 + tri->radius);
+      x1 = - (0.5 + sides); y1 = - (0.5 + (t->radius / 2));
+      x2 = 0.5 + sides;   y2 = - (0.5 + (t->radius / 2));
+      x3 = 0;   y3 = (0.5 + t->radius); //  bottom
       break;
 
     case 3:
-      x1 = 0.5 + (tri->radius / 2); y1 = - (0.5 + sides);
-      x2 = 0.5 + (tri->radius / 2); y2 = (0.5 + sides);
-      x3 = - (0.5 + tri->radius); y3 = 0;
+      x1 = 0.5 + (t->radius / 2); y1 = - (0.5 + sides);
+      x2 = 0.5 + (t->radius / 2); y2 = (0.5 + sides);
+      x3 = - (0.5 + t->radius); y3 = 0; //  left
       break;
     }
 
-  draw_line (surface, tri->x + x1, tri->y + y1, tri->x + x2, tri->y + y2, plot, color);
-  draw_line (surface, tri->x + x2, tri->y + y2, tri->x + x3, tri->y + y3, plot, color);
-  draw_line (surface, tri->x + x3, tri->y + y3, tri->x + x1, tri->y + y1, plot, color);
+  draw_line (surface, t->x + x1, t->y + y1, t->x + x2, t->y + y2, plot, color);
+  draw_line (surface, t->x + x2, t->y + y2, t->x + x3, t->y + y3, plot, color);
+  draw_line (surface, t->x + x3, t->y + y3, t->x + x1, t->y + y1, plot, color);
 
 }
