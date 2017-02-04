@@ -16,11 +16,12 @@ uint32_t getPixel (SDL_Surface *src, int x, int y)
 void setPixel(SDL_Surface *dst, int x, int y, unsigned color)
 {
   unsigned *bufp;
+
   if (x >= dst->w
-    ||  x < 0
-    ||  y >= dst->h
-    ||  y < 0)
-       return;
+      ||  x < 0
+      ||  y >= dst->h
+      ||  y < 0)
+    return;
   bufp = (unsigned *)dst->pixels + y*dst->pitch/4 + x;
   *bufp = color;
 }

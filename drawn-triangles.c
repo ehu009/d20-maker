@@ -1,4 +1,4 @@
-#include "trekanter.h"
+#include "drawn-triangles.h"
 
 //struct screen_triangle;
 

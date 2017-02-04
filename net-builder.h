@@ -7,7 +7,7 @@
 
 #include "lines.h"
 
-#include "trekanter.h"
+#include "drawn-triangles.h"
 
 
 extern SDL_Surface *canvas;
