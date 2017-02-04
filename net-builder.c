@@ -17,12 +17,15 @@ double distance (double x1, double y1, double x2, double y2)
 
 
 
+
+
+
 #define   TRIANGLES_TOTAL 20
 unsigned triangle = 0;
 
 unsigned pins[TRIANGLES_TOTAL];
-trekant_t *triangles[TRIANGLES_TOTAL];
-trekant_t *work_triangle;
+triangle_t *triangles[TRIANGLES_TOTAL];
+triangle_t *work_triangle;
 
 void init_triangles (void)
 {
@@ -50,7 +53,7 @@ void redraw (void)
     if (i != 0)
       printf("drawing: %d\n",i);
 
-    draw_triangle (triangles[i], canvas, plot, 0xffffffff);
+    draw_screen_triangle (triangles[i], canvas, plot, 0xffffffff);
   }
 //  draw_triangle (triangles[i], canvas, plot, 0xffffffff);
 }

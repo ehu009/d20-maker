@@ -4,6 +4,9 @@
 
 #include <stdio.h>
 
+#include "lines.h"
+
+#include "drawn-triangles.h"
 
 
 extern SDL_Surface *canvas;

@@ -10,7 +10,11 @@
 
 #include "mouse.h"
 
+#include "pixels.h"
+
 #include "net-builder.h"
+
+#include "drawn-triangles.h"
 
 
 int init (void);
@@ -31,16 +35,19 @@ int mouseX, mouseY;
 unsigned char mouse_state = 0;
 
 
-
+triangle_t *starting_triangle = NULL;
 
 
 
 void timerfunc (void *param)
-{
+{ //  update screen image
   SDL_FillRect(canvas, NULL, 0x0ff);
   SDL_BlitSurface (src_image, NULL, canvas, NULL);
 
   f1();
+
+  draw_screen_triangle(starting_triangle, canvas, setPixel,0);
+
 
   SDL_UpdateWindowSurface (myWindow);
 }
@@ -61,6 +68,12 @@ int main (int argc, char *arg[])
 
   SDL_TimerID myTimer = SDL_AddTimer (1000/32, timer_callback, NULL);
 
+
+  starting_triangle = make_screen_triangle(25.0);
+  if (starting_triangle == NULL)
+    {
+      printf("\n\n\n\nuhhhh\n\n\n");
+    }
 
   SDL_Event event;
   do
@@ -83,6 +96,8 @@ int main (int argc, char *arg[])
     mouse_update(&event);
 
     f2();
+
+    position_screen_triangle(starting_triangle, mouseX, mouseY);
 
     }
   }

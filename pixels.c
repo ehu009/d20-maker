@@ -18,6 +18,7 @@ void setPixel (SDL_Surface *dst,
     unsigned color)
 {
   unsigned *bufp;
+
   if (x >= dst->w
       ||  x < 0
       ||  y >= dst->h
