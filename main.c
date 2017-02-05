@@ -10,7 +10,7 @@
 
 #include "mouse.h"
 
-#include "pixels.h"
+#include "lines.h"
 
 #include "net-builder.h"
 
@@ -46,7 +46,7 @@ void timerfunc (void *param)
 
   f1();
 
-  draw_screen_triangle(starting_triangle, canvas, setPixel,0);
+  draw_screen_triangle(starting_triangle, canvas, invertPixel,-1);
 
 
   SDL_UpdateWindowSurface (myWindow);
@@ -95,9 +95,18 @@ int main (int argc, char *arg[])
 
     mouse_update(&event);
 
+
+    resize_screen_triangle(starting_triangle, mouse_is_scrolled());
+
     f2();
 
     position_screen_triangle(starting_triangle, mouseX, mouseY);
+
+
+
+   // rotate_screen_triangle(starting_triangle,mouse_is_scrolled());
+
+
 
     }
   }
@@ -198,7 +207,7 @@ static uint32_t timer_callback(uint32_t interval, void *param)
 
 void unload (void)
 {
-
+free_screen_triangle(starting_triangle);
 
   SDL_FreeSurface (draw_surface);
 
