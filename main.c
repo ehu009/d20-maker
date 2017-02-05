@@ -8,7 +8,7 @@
 
 
 
-#include "mouse.h"
+#include "mouse_app.h"
 
 #include "lines.h"
 
@@ -31,12 +31,13 @@ SDL_Surface *canvas = NULL,
 
 unsigned screenWidth, screenHeight;
 
+mouse_t mouse;
+
+
+/*
 int mouseX, mouseY;
 unsigned char mouse_state = 0;
-
-
-triangle_t *starting_triangle = NULL;
-
+*/
 
 
 void timerfunc (void *param)
@@ -45,8 +46,6 @@ void timerfunc (void *param)
   SDL_BlitSurface (src_image, NULL, canvas, NULL);
 
   f1();
-
-  draw_screen_triangle(starting_triangle, canvas, invertPixel,-1);
 
 
   SDL_UpdateWindowSurface (myWindow);
@@ -57,8 +56,8 @@ int main (int argc, char *arg[])
 {
   if (!(init ()))
   {
-    unload ();
     printf ("Something went wrong- exiting.\n");
+    unload ();
     return 1;
   }
 
@@ -67,13 +66,6 @@ int main (int argc, char *arg[])
   SDL_SetSurfaceBlendMode(draw_surface,SDL_BLENDMODE_ADD);
 
   SDL_TimerID myTimer = SDL_AddTimer (1000/32, timer_callback, NULL);
-
-
-  starting_triangle = make_screen_triangle(25.0);
-  if (starting_triangle == NULL)
-    {
-      printf("\n\n\n\nuhhhh\n\n\n");
-    }
 
   SDL_Event event;
   do
@@ -95,16 +87,10 @@ int main (int argc, char *arg[])
 
     mouse_update(&event);
 
-
-    resize_screen_triangle(starting_triangle, mouse_is_scrolled());
-
     f2();
 
-    position_screen_triangle(starting_triangle, mouseX, mouseY);
 
 
-
-   // rotate_screen_triangle(starting_triangle,mouse_is_scrolled());
 
 
 
@@ -207,7 +193,6 @@ static uint32_t timer_callback(uint32_t interval, void *param)
 
 void unload (void)
 {
-free_screen_triangle(starting_triangle);
 
   SDL_FreeSurface (draw_surface);
 

@@ -15,46 +15,118 @@ double distance (double x1, double y1, double x2, double y2)
 
 
 
+/*
+ *  assigns slots in a net to triangles
+ */
+
+struct slot
+{
+
+  triangle_t *positions[3];
+  unsigned pinned;
+  double x, y;
+
+  unsigned visited;
+};
 
 
 #define   TRIANGLES_TOTAL 20
-unsigned triangle = 0;
 
-unsigned pins[TRIANGLES_TOTAL];
-triangle_t *triangles[TRIANGLES_TOTAL];
-triangle_t *work_triangle;
-
-void init_triangles (void)
+struct net_builder
 {
+
+  unsigned num_pinned;
+
+  int rotation;
+  double radius;
+
+  triangle_t *work_triangle;
+
+
+  struct slot slots[TRIANGLES_TOTAL];
+};
+
+typedef struct net_builder net_t;
+
+
+void init_slots (net_t *n)
+{
+  struct slot *s;
   int i = 0;
   for (;i < TRIANGLES_TOTAL;i++)
   {
-    triangles[i] = NULL;
-    pins[i] = 0;
+    s = &n->slots[i];
+
+    int j = 3;
+    while (j)
+    {
+      s->positions[j-1] = NULL;
+      j--;
+    }
+    s->pinned = 0;
+    s->x = 0.0;
+    s->y = 0.0;
   }
 
 }
 
-
-
-void redraw (void)
+net_t *make_net_builder(double start_radius)
 {
-/*
-  plot_func plot = setInvPixel;
-  int i = 0;
-  for (;  i < TRIANGLES_TOTAL; i++)
+  net_t *ptr = (net_t *) calloc(1, sizeof(net_t));
+
+  int err = 0;
+  err |= (ptr == NULL);
+  if(!err)
   {
-    if (triangles[i] == NULL)
-      continue;
-
-    if (i != 0)
-      printf("drawing: %d\n",i);
-
-    draw_screen_triangle (triangles[i], canvas, plot, 0xffffffff);
+    ptr->radius = start_radius;
+    ptr->work_triangle = make_screen_triangle(start_radius);
+    err |= (ptr->work_triangle == NULL);
+    if (!err)
+      init_slots(ptr);
+    else
+    {
+      free(ptr);
+      ptr = NULL;
+    }
   }
-  * */
-//  draw_triangle (triangles[i], canvas, plot, 0xffffffff);
+  return ptr;
 }
+
+
+void free_screen_triangles (net_t *n)
+{
+  struct slot *s;
+  triangle_t **t;
+  int i = 0;
+  for (;i < TRIANGLES_TOTAL;i++)
+  {
+    s = &n->slots[i];
+    int j = 3;
+    for(; j; j--)
+    {
+      t = &s->positions[j-1];
+      if (*t != NULL)
+      {
+        printf("\tfreeing #%d\n",j);
+        free(*t);
+        *t = NULL;
+      }
+    }
+  }
+}
+
+void free_net_builder(net_t *n)
+{
+  free_screen_triangle(n->work_triangle);
+  free_screen_triangles(n);
+  free(n);
+}
+
+
+char toggle = 0;
+
+net_t *d20 = NULL;
+
 
 
 /*
@@ -168,43 +240,80 @@ draw_fake_triangle ( x1, y1, r );
 
 
 
+void draw_pinned_slots(net_t *n)
+{
+  int i = 0;
+  for(; i < TRIANGLES_TOTAL; i++)
+  {
+    if (d20->slots[i].pinned == 0)
+      continue;
+    int j = 3;
+    triangle_t **ptr = d20->slots[i].positions;
+    while(j)
+    {
+      if (*ptr != NULL)
+        draw_screen_triangle(*ptr, canvas, invertPixel, 0);
+      ptr ++;
+      j --;
+    }
+  }
+}
+
 void f1 (void)
 {
-
-//printf("LINE %d\n",__LINE__);
-//  draw_triangle(triangles[0], canvas, setInvPixel, 0xff0000);
-
-    //  redraw ();
-/*
-printf("LINE %d\n",__LINE__);
-
-  if (!pins[triangle])
+  if (d20->work_triangle != NULL)
   {
-//      if (triangles[triangle] == NULL)
-  //    triangles[triangle] = make_triangle(60.0);
+    draw_screen_triangle(d20->work_triangle, canvas, invertPixel, 0);
+  }
 
-
-
-
-//  setPixel(canvas, triangles[triangle]->x, triangles[triangle]->y, 0xffffff);
+  if (d20->num_pinned)
+  {
+    draw_pinned_slots(d20);
 
   }
 
-printf("LINE %d\n",__LINE__);
-*/
-//find_possible_neighbors()
-
-
-//  SDL_BlitSurface(draw_surface, NULL, canvas, NULL);
-
-//  rotate_triangle(triangles[0], 1);
-
 }
 
-void f2 (void)
+void f2 ()
 {
+  if (d20->num_pinned == 0)
+  {
+    set_screen_triangle_position (d20->work_triangle, mouse._x, mouse._y);
 
 
+    if(mouse_right(&mouse) == 1)
+    {
+      toggle ^= 1;
+    }
+
+    int scroll = mouse_scroll(&mouse);
+
+    if (toggle)
+    {
+      d20->radius += scroll;
+      resize_screen_triangle (d20->work_triangle, scroll);
+    }
+    else
+    {
+      d20->rotation += scroll;
+      rotate_screen_triangle (d20->work_triangle, scroll);
+    }
+
+    if (mouse_left(&mouse) == -1)
+    {
+      d20->slots[0].x = mouse._x;
+      d20->slots[0].y = mouse._y;
+      d20->slots[0].positions[0] = d20->work_triangle;
+      d20->work_triangle = NULL;
+      d20->slots[0].pinned = 1;
+      d20->num_pinned += 1;
+
+    }
+
+
+  }
+  else
+  {
 
 
 /*
@@ -266,24 +375,19 @@ printf("LINE: %d \n", __LINE__);
         break;
     }
 */
+  }
 }
 
 
 void f3 (void)
 {
-  /*
-  init_triangles();
-*/
-
-/*
- triangles[0] = make_triangle(150);
-position_triangle(triangles[0], 100, 40);
-*/
+  d20 = make_net_builder(35.0);
 
 }
 
 void f4 (void)
 {
+  free_net_builder(d20);
 
 /*
   int j = 0;
