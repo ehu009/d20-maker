@@ -2,9 +2,6 @@
 
 
 #include    <math.h>
-#include "lines.h"
-
-#include "trekanter.h"
 
 
 double distance (double x1, double y1, double x2, double y2)
@@ -42,7 +39,7 @@ void init_triangles (void)
 
 void redraw (void)
 {
-
+/*
   plot_func plot = setInvPixel;
   int i = 0;
   for (;  i < TRIANGLES_TOTAL; i++)
@@ -55,6 +52,7 @@ void redraw (void)
 
     draw_screen_triangle (triangles[i], canvas, plot, 0xffffffff);
   }
+  * */
 //  draw_triangle (triangles[i], canvas, plot, 0xffffffff);
 }
 
@@ -175,7 +173,8 @@ void f1 (void)
 
 //printf("LINE %d\n",__LINE__);
 //  draw_triangle(triangles[0], canvas, setInvPixel, 0xff0000);
-redraw ();
+
+    //  redraw ();
 /*
 printf("LINE %d\n",__LINE__);
 
@@ -276,17 +275,17 @@ void f3 (void)
   init_triangles();
 */
 
-
+/*
  triangles[0] = make_triangle(150);
 position_triangle(triangles[0], 100, 40);
-
+*/
 
 }
 
 void f4 (void)
 {
 
-
+/*
   int j = 0;
   for (;  j < TRIANGLES_TOTAL;  j++)
   {
@@ -294,4 +293,5 @@ void f4 (void)
       continue;
     free_triangle(triangles[j]);
   }
+  * */
 }
