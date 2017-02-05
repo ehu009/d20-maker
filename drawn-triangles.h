@@ -10,7 +10,9 @@
   triangle_t *make_screen_triangle (double radius);
   void free_screen_triangle (triangle_t *t);
 
-  void position_screen_triangle (triangle_t *t, int x, int y);
+  void set_screen_triangle_position (triangle_t *t, int x, int y);
+  void get_screen_triangle_position (triangle_t *t, int *x, int *y);
+
   void rotate_screen_triangle (triangle_t *t, int add);
   void resize_screen_triangle (triangle_t *t, double add);
 

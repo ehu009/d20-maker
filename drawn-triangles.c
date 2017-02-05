@@ -1,6 +1,5 @@
 #include "drawn-triangles.h"
 
-//struct screen_triangle;
 
 struct screen_triangle
 {
@@ -30,8 +29,13 @@ int get_screen_triangle_rotation(triangle_t *t)
   return t->rotation % 4;
 }
 
+void get_screen_triangle_position (triangle_t *t, int *x, int *y)
+{
+  *x = t->x;
+  *y = t->y;
+}
 
-void position_screen_triangle (triangle_t *t, int x, int y)
+void set_screen_triangle_position (triangle_t *t, int x, int y)
 {
   t->x = x;
   t->y = y;
