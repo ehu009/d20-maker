@@ -12,7 +12,6 @@
   //  checks mouse state
   int mouse_is_down(void);
   int mouse_is_up(void);
-  int mouse_is_held(void);
   int mouse_is_scrolled(void);
 
 
