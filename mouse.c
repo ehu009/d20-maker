@@ -1,12 +1,12 @@
 #include "mouse.h"
-
+#include "mouse_app.h"
 
 /*
  *
  */
-#define STATE mouse_state
-#define XPOS  mouseX
-#define YPOS  mouseY
+#define STATE mouse.buttons
+//#define XPOS  mouseX
+//#define YPOS  mouseY
 
 void mouse_reset (void)
 {
@@ -15,13 +15,15 @@ void mouse_reset (void)
 
 void mouse_handle_move (SDL_Event *e)
 {
-  XPOS = e->motion.x;
-  YPOS = e->motion.y;
+  mouse._x = e->motion.x;
+  mouse._y = e->motion.y;
 }
 
 /*
  *
  */
+#define SET(bit)  STATE |= bit
+//
 #define MASK_L_UP   1
 #define MASK_R_UP   2
 #define MASK_M_UP   4
@@ -30,21 +32,6 @@ void mouse_handle_move (SDL_Event *e)
 #define MASK_M_DOWN 32
 #define MASK_WHEEL_UP   64
 #define MASK_WHEEL_DOWN 128
-
-#define SET(bit)  STATE |= bit
-#define IS_BIT_SET(bit) ((STATE & bit) != 0)
-
-/*
- *
- */
-#define IS_L_UP   IS_BIT_SET(MASK_L_UP)
-#define IS_L_DOWN IS_BIT_SET(MASK_L_DOWN)
-#define IS_R_UP   IS_BIT_SET(MASK_R_UP)
-#define IS_R_DOWN IS_BIT_SET(MASK_R_DOWN)
-#define IS_M_UP   IS_BIT_SET(MASK_M_UP)
-#define IS_M_DOWN IS_BIT_SET(MASK_M_DOWN)
-#define IS_WHEEL_UP    IS_BIT_SET(MASK_WHEEL_UP)
-#define IS_WHEEL_DOWN  IS_BIT_SET(MASK_WHEEL_DOWN)
 
 /*
  *  event handles
@@ -96,19 +83,42 @@ void mouse_update (SDL_Event *e)
   }
 }
 
+
 /*
  *
  */
-int mouse_left_button (void)
-{ return (int)  0 - IS_L_UP + IS_L_DOWN;  }
+#define IS_BIT_SET(bit, num) ((num & bit) != 0)
+//
+#define IS_L_UP(x)   IS_BIT_SET(MASK_L_UP, x)
+#define IS_L_DOWN(x) IS_BIT_SET(MASK_L_DOWN, x)
+#define IS_R_UP(x)   IS_BIT_SET(MASK_R_UP, x)
+#define IS_R_DOWN(x) IS_BIT_SET(MASK_R_DOWN, x)
+#define IS_M_UP(x)  IS_BIT_SET(MASK_M_UP, x)
+#define IS_M_DOWN(x) IS_BIT_SET(MASK_M_DOWN, x)
+#define IS_WHEEL_UP(x)    IS_BIT_SET(MASK_WHEEL_UP, x)
+#define IS_WHEEL_DOWN(x)  IS_BIT_SET(MASK_WHEEL_DOWN, x)
 
-int mouse_right_button (void)
-{ return (int)  0 - IS_R_UP + IS_R_DOWN;  }
-
-int mouse_middle_button (void)
-{ return (int)  0 - IS_M_UP + IS_M_DOWN;  }
-
-int mouse_is_scrolled(void)
-{ return (int)  0 - IS_WHEEL_UP + IS_WHEEL_DOWN;  }
 
 
+/*
+ *
+ */
+int mouse_left(mouse_t *m)
+{
+  return (int)  0 - IS_L_UP(m->buttons) + IS_L_DOWN(m->buttons);
+}
+
+int mouse_right(mouse_t *m)
+{
+  return (int)  0 - IS_R_UP(m->buttons) + IS_R_DOWN(m->buttons);
+}
+
+int mouse_middle(mouse_t *m)
+{
+  return (int)  0 - IS_M_UP(m->buttons) + IS_M_DOWN(m->buttons);
+}
+
+int mouse_scroll(mouse_t *m)
+{
+  return (int)  0 - IS_WHEEL_UP(m->buttons) + IS_WHEEL_DOWN(m->buttons);
+}
