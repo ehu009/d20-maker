@@ -10,10 +10,10 @@
   extern unsigned char mouse_state;
 
   //  checks mouse state
-  int mouse_is_down(void);
-  int mouse_is_up(void);
-  int mouse_is_scrolled(void);
-
+  int mouse_left_button (void);
+  int mouse_right_button (void);
+  int mouse_middle_button (void);
+  int mouse_is_scrolled (void);
 
   /*
    *  controls state
@@ -23,6 +23,6 @@
   void mouse_update (SDL_Event *e);
 
   //  call when event queue is empty
-  void mouse_reset(void);
+  void mouse_reset (void);
 
 #endif  /*  MOUSE_H_  */
