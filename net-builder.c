@@ -14,19 +14,20 @@ double distance (double x1, double y1, double x2, double y2)
 
 
 
-
 /*
  *  assigns slots in a net to triangles
  */
 
 struct slot
 {
-
-  triangle_t *positions[3];
   unsigned pinned;
   double x, y;
+  //  possible screen locations
+  triangle_t *positions[3];
+  //  neighboring triangles
+  struct slot *A, *B, *C;
 
-  unsigned visited;
+  unsigned visited; //  might not need this one
 };
 
 
@@ -36,17 +37,56 @@ struct net_builder
 {
 
   unsigned num_pinned;
-
   int rotation;
   double radius;
 
   triangle_t *work_triangle;
 
-
   struct slot slots[TRIANGLES_TOTAL];
 };
 
 typedef struct net_builder net_t;
+
+
+/*
+ *  neighbor relations between triangles
+ */
+//  five bits needed to count to 20
+#define MASK 0b011111
+//  so we need a short for 3 numbers, each up to 20
+#define NET_MODEL_TYPE short
+//  shift amounts for each number
+enum {SHAMT_A=10, SHAMT_B=5, SHAMT_C=0};
+
+#define NEIGHBOR_A(x) (((MASK << SHAMT_A) & x) >> SHAMT_A)
+#define NEIGHBOR_B(x) (((MASK << SHAMT_B) & x) >> SHAMT_B)
+#define NEIGHBOR_C(x) (((MASK << SHAMT_C) & x) >> SHAMT_C)
+
+#define NET_MODEL_ENTRY(a,b,c)  (NET_MODEL_TYPE) 0 + (a<<SHAMT_A) + (b<<SHAMT_B) + (c<<SHAMT_C)
+
+NET_MODEL_TYPE net_model [20] =
+{
+  NET_MODEL_ENTRY(3,2,4),
+  NET_MODEL_ENTRY(1,6,5),
+  NET_MODEL_ENTRY(1,8,7),
+  NET_MODEL_ENTRY(1,10,9),
+  NET_MODEL_ENTRY(2,11,10),
+  NET_MODEL_ENTRY(2,7,12),
+  NET_MODEL_ENTRY(3,13,6),
+  NET_MODEL_ENTRY(3,9,14),
+  NET_MODEL_ENTRY(4,15,8),
+  NET_MODEL_ENTRY(4,5,16),
+  NET_MODEL_ENTRY(5,12,17),
+  NET_MODEL_ENTRY(6,18,11),
+  NET_MODEL_ENTRY(7,14,18),
+  NET_MODEL_ENTRY(8,19,13),
+  NET_MODEL_ENTRY(9,16,19),
+  NET_MODEL_ENTRY(10,17,15),
+  NET_MODEL_ENTRY(11,20,16),
+  NET_MODEL_ENTRY(12,13,20),
+  NET_MODEL_ENTRY(14,15,20),
+  NET_MODEL_ENTRY(17,18,19)
+};
 
 
 void init_slots (net_t *n)
@@ -66,6 +106,11 @@ void init_slots (net_t *n)
     s->pinned = 0;
     s->x = 0.0;
     s->y = 0.0;
+
+    short neighbors = net_model[i];
+    s->A = &n->slots[NEIGHBOR_A(neighbors)];
+    s->B = &n->slots[NEIGHBOR_B(neighbors)];
+    s->C = &n->slots[NEIGHBOR_C(neighbors)];
   }
 
 }
@@ -82,11 +127,16 @@ net_t *make_net_builder(double start_radius)
     ptr->work_triangle = make_screen_triangle(start_radius);
     err |= (ptr->work_triangle == NULL);
     if (!err)
+    {
       init_slots(ptr);
+    }
     else
     {
-      free(ptr);
-      ptr = NULL;
+      if (ptr != NULL)
+      {
+        free(ptr);
+        ptr = NULL;
+      }
     }
   }
   return ptr;
@@ -107,7 +157,6 @@ void free_screen_triangles (net_t *n)
       t = &s->positions[j-1];
       if (*t != NULL)
       {
-        printf("\tfreeing #%d\n",j);
         free(*t);
         *t = NULL;
       }
@@ -123,7 +172,7 @@ void free_net_builder(net_t *n)
 }
 
 
-char toggle = 0;
+char rotate_root_toggler = 1;
 
 net_t *d20 = NULL;
 
@@ -274,21 +323,56 @@ void f1 (void)
 
 }
 
+
+
+
+int rotate_root_triangle(void)
+{ //  toggle rotation and resizing of root triangle
+  if(mouse_right(&mouse) == 1)
+  {
+    rotate_root_toggler ^= 1;
+  }
+  return rotate_root_toggler;
+}
+
+void pin_root_triangle(net_t *n)
+{
+  n->slots[0].x = mouse._x;
+  n->slots[0].y = mouse._y;
+
+  //  advance the structure
+  //  ..
+
+  n->slots[0].positions[0] = n->work_triangle;
+  n->work_triangle = NULL;
+
+  n->slots[0].pinned = 1;
+  n->num_pinned += 1;
+
+  //  ..
+}
+
+void unpin_root_triangle(net_t *n)
+{
+  free_screen_triangles(n);
+  init_slots(n);
+
+  n->num_pinned = 0;
+  n->work_triangle = make_screen_triangle(n->radius);
+
+  rotate_screen_triangle(n->work_triangle, n->rotation);
+  set_screen_triangle_position(n->work_triangle,mouse._x, mouse._y);
+}
+
 void f2 ()
 {
   if (d20->num_pinned == 0)
-  {
+  { //  root triangle is not pinned
     set_screen_triangle_position (d20->work_triangle, mouse._x, mouse._y);
-
-
-    if(mouse_right(&mouse) == 1)
-    {
-      toggle ^= 1;
-    }
 
     int scroll = mouse_scroll(&mouse);
 
-    if (toggle)
+    if (rotate_root_triangle())
     {
       d20->radius += scroll;
       resize_screen_triangle (d20->work_triangle, scroll);
@@ -301,80 +385,38 @@ void f2 ()
 
     if (mouse_left(&mouse) == -1)
     {
-      d20->slots[0].x = mouse._x;
-      d20->slots[0].y = mouse._y;
-      d20->slots[0].positions[0] = d20->work_triangle;
-      d20->work_triangle = NULL;
-      d20->slots[0].pinned = 1;
-      d20->num_pinned += 1;
-
+      pin_root_triangle(d20);
     }
-
-
   }
   else
   {
+    if (mouse_left(&mouse) == -1)
+    { //  doing
+      printf("click\n");
+      printf("we have %d triangles pinned\n", d20->num_pinned);
 
 
-/*
-                if (triangle > 1)
-                {
-
-                    //  find nearest triangle
-                    int i = 0;
-                    double shortest = distance (mouseX,mouseY, triangles[i]->x,triangles[i]->y);
-                    printf("LINE: %d \n", __LINE__);
-                    trekant_t *nearest = triangles[i];
-                    printf("LINE: %d \n", __LINE__);
-
-
-                    if (shortest >= nearest->radius)
-                    {
-
-  fflush(stdout);
-            for ( ++i   ; i < triangle; i++)
-            {
-              if (!pins[i])
-              {
-                printf("i broke out\n");
-                break;
-              }
-
-              double dist = distance (mouseX,mouseY, triangles[i]->x,triangles[i]->y);
-              if (dist < shortest)
-              {
-                nearest = triangles[i];
-                shortest = dist;
-              }
-            }
-
-*/                      //  position_triangle(triangles[triangle],mouseX, mouseY);
-
-/*
-                        draw_line(canvas, nearest->x,nearest->y,
-                                    mouseX, mouseY,
-                                    setInvPixel, 0);
-*/
-  /*                  }
-
-                printf("LINE: %d \n", __LINE__);
-          if (nearest != NULL)
-            find_possible_neighbors(nearest, NULL,NULL,NULL);
-        printf("LINE: %d \n", __LINE__);
-
-                }
-
-            if (triangles[triangle] != NULL)
-                position_triangle(triangles[triangle],mouseX,mouseY);
-            else
-                printf("LINE: %d \n", __LINE__);
-printf("LINE: %d \n", __LINE__);
-
-*/
-/*
-        break;
     }
-*/
+
+    if (mouse_right(&mouse) == -1)
+    { //  undoing
+      if (d20->num_pinned == 1)
+      {
+        unpin_root_triangle(d20);
+      }
+      else
+      {
+        printf("undoing for more than just the root triangle has not been implemented yet\n");
+      }
+    }
+
+    //  ..
+
+    //  ..
+
+    //  ..
+
+
   }
 }
 

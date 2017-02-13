@@ -7,9 +7,6 @@
 #include    "SDL2/SDL_ttf.h"
 
 
-
-#include "mouse_app.h"
-
 #include "lines.h"
 
 #include "net-builder.h"
@@ -33,11 +30,6 @@ unsigned screenWidth, screenHeight;
 
 mouse_t mouse;
 
-
-/*
-int mouseX, mouseY;
-unsigned char mouse_state = 0;
-*/
 
 
 void timerfunc (void *param)
