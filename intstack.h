@@ -1,5 +1,5 @@
-#ifndef   INTSTACK_H_
-  #define INTSTACK_H_
+#ifndef   INTEGER_STACK_H_
+  #define INTEGER_STACK_H_
 
   struct integer_stack;
 

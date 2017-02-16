@@ -14,6 +14,8 @@
   void get_screen_triangle_position (triangle_t *t, int *x, int *y);
 
   void rotate_screen_triangle (triangle_t *t, int add);
+  int get_screen_triangle_rotation(triangle_t *t);
+
   void resize_screen_triangle (triangle_t *t, double add);
 
   void draw_screen_triangle (triangle_t *t, SDL_Surface *surface, plot_func plot, unsigned color);
