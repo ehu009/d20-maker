@@ -54,6 +54,8 @@ chain_t *make_chain (void *start_item)
 
 void free_chain (chain_t *chain)
 {
+  if (chain == NULL)
+    return;
   struct chain_link *ptr, *link = chain->head;
   int n = chain->links;
   while (n)

@@ -44,6 +44,9 @@ void set_screen_triangle_position (triangle_t *t, int x, int y)
 void rotate_screen_triangle (triangle_t *t, int add)
 {
   t->rotation += add;
+  while (t->rotation < 0)
+    t->rotation += 4;
+  t->rotation %= 4;
 }
 
 void resize_screen_triangle (triangle_t *t, double add)
@@ -53,7 +56,9 @@ void resize_screen_triangle (triangle_t *t, double add)
   {
     t->radius *= -1;
     t->rotation += 2;
+    t->rotation %= 4;
   }
+
 }
 
 void draw_screen_triangle (triangle_t *t, SDL_Surface *surface, plot_func plot, unsigned color)
