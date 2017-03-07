@@ -1,6 +1,6 @@
 #include "drawn-triangles.h"
 
-
+#include "pixels.h"
 struct screen_triangle
 {
   int x, y;
@@ -61,7 +61,11 @@ void resize_screen_triangle (triangle_t *t, double add)
 
 }
 
-void draw_screen_triangle (triangle_t *t, SDL_Surface *surface, plot_func plot, unsigned color)
+
+void get_triangle_points_relative (triangle_t *t,
+    int *x1, int *y1,
+    int *x2, int *y2,
+    int *x3, int *y3)
 {
 
   int rotation = t->rotation;
@@ -73,39 +77,46 @@ void draw_screen_triangle (triangle_t *t, SDL_Surface *surface, plot_func plot, 
   sides /= sqrt(3);
   sides /= 2;
 
-    int x1, y1,
-    x2, y2,
-    x3, y3;
+  switch(rotation)
+  {
+  case 0:
+    *x1 = - (0.5 + sides); *y1 = 0.5 + (t->radius / 2);
+    *x2 = 0.5 + sides;   *y2 = 0.5 + (t->radius / 2);
+    *x3 = 0;   *y3 = - (0.5 + t->radius); //  top
+    break;
 
-    switch(rotation)
-    {
-    case 0:
-      x1 = - (0.5 + sides); y1 = 0.5 + (t->radius / 2);
-      x2 = 0.5 + sides;   y2 = 0.5 + (t->radius / 2);
-      x3 = 0;   y3 = - (0.5 + t->radius); //  top
-      break;
+  case 1:
+    *x1 = - (0.5 + (t->radius / 2)); *y1 = - (0.5 + sides);
+    *x2 = - (0.5 + (t->radius / 2)); *y2 = (0.5 + sides);
+    *x3 = 0.5 + t->radius; *y3 = 0; //  right
+    break;
 
-    case 1:
-      x1 = - (0.5 + (t->radius / 2)); y1 = - (0.5 + sides);
-      x2 = - (0.5 + (t->radius / 2)); y2 = (0.5 + sides);
-      x3 = 0.5 + t->radius; y3 = 0; //  right
-      break;
+  case 2:
+    *x1 = - (0.5 + sides); *y1 = - (0.5 + (t->radius / 2));
+    *x2 = 0.5 + sides;   *y2 = - (0.5 + (t->radius / 2));
+    *x3 = 0;   *y3 = (0.5 + t->radius); //  bottom
+    break;
 
-    case 2:
-      x1 = - (0.5 + sides); y1 = - (0.5 + (t->radius / 2));
-      x2 = 0.5 + sides;   y2 = - (0.5 + (t->radius / 2));
-      x3 = 0;   y3 = (0.5 + t->radius); //  bottom
-      break;
-
-    case 3:
-      x1 = 0.5 + (t->radius / 2); y1 = - (0.5 + sides);
-      x2 = 0.5 + (t->radius / 2); y2 = (0.5 + sides);
-      x3 = - (0.5 + t->radius); y3 = 0; //  left
-      break;
-    }
-
-  draw_line (surface, t->x + x1, t->y + y1, t->x + x2, t->y + y2, plot, color);
-  draw_line (surface, t->x + x2, t->y + y2, t->x + x3, t->y + y3, plot, color);
-  draw_line (surface, t->x + x3, t->y + y3, t->x + x1, t->y + y1, plot, color);
-
+  case 3:
+    *x1 = 0.5 + (t->radius / 2); *y1 = - (0.5 + sides);
+    *x2 = 0.5 + (t->radius / 2); *y2 = (0.5 + sides);
+    *x3 = - (0.5 + t->radius); *y3 = 0; //  left
+    break;
+  }
 }
+
+void draw_screen_triangle (triangle_t *t, SDL_Surface *surface, plot_func plot, unsigned color)
+{
+  int x1, y1,
+  x2, y2,
+  x3, y3;
+
+  get_triangle_points_relative(t,&x1,&y1,&x2,&y2,&x3,&y3);
+  x1 += t->x;   x2 += t->x;   x3 += t->x;
+  y1 += t->y;   y2 += t->y;   y3 += t->y;
+
+  draw_line (surface, x1, y1, x2, y2, plot, color);
+  draw_line (surface, x2, y2, x3, y3, plot, color);
+  draw_line (surface, x3, y3, x1, y1, plot, color);
+}
+
