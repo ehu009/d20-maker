@@ -6,7 +6,6 @@
 #include    "SDL2/SDL_image.h"
 #include    "SDL2/SDL_ttf.h"
 
-
 #include "lines.h"
 
 #include "net-builder.h"
@@ -23,8 +22,7 @@ static uint32_t timer_callback(uint32_t interval, void *param);
 SDL_Window *myWindow = NULL;
 
 SDL_Surface *canvas = NULL,
-      *src_image = NULL,
-      *draw_surface = NULL;
+    *src_image = NULL;
 
 unsigned screenWidth, screenHeight;
 
@@ -38,8 +36,6 @@ void timerfunc (void *param)
   SDL_BlitSurface (src_image, NULL, canvas, NULL);
 
   f1();
-
-
   SDL_UpdateWindowSurface (myWindow);
 }
 
@@ -54,8 +50,6 @@ int main (int argc, char *arg[])
   }
 
   f3();
-
-  SDL_SetSurfaceBlendMode(draw_surface,SDL_BLENDMODE_ADD);
 
   SDL_TimerID myTimer = SDL_AddTimer (1000/32, timer_callback, NULL);
 
@@ -155,12 +149,6 @@ int init (void)
   if (canvas == NULL)
     SDL_ERROR("SDL_GetWindowSurface\0")
 
-
-  draw_surface = SDL_CreateRGBSurface (0, canvas->w, canvas->h, 32,
-                    0, 0, 0, 0);
-  if (draw_surface == NULL)
-    SDL_ERROR("SDL_CreateRGBSurface\0")
-
   return 1;
 }
 
@@ -185,9 +173,6 @@ static uint32_t timer_callback(uint32_t interval, void *param)
 
 void unload (void)
 {
-
-  SDL_FreeSurface (draw_surface);
-
   SDL_FreeSurface (canvas);
   SDL_DestroyWindow (myWindow);
 
