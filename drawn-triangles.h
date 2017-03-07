@@ -20,4 +20,7 @@
 
   void draw_screen_triangle (triangle_t *t, SDL_Surface *surface, plot_func plot, unsigned color);
 
+  void fill_invert_screen_triangle (triangle_t *t, SDL_Surface *surface);
+
+
 #endif  /*  DRAWN_TRIANGLES_H_  */

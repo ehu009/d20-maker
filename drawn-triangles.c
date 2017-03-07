@@ -120,3 +120,102 @@ void draw_screen_triangle (triangle_t *t, SDL_Surface *surface, plot_func plot, 
   draw_line (surface, x3, y3, x1, y1, plot, color);
 }
 
+void fill_invert_screen_triangle (triangle_t *t, SDL_Surface *surface)
+{
+  int i = 0;
+
+  int x[3], y[3];
+  get_triangle_points_relative (t,&x[0],&y[0],&x[1],&y[1],&x[2],&y[2]);
+
+  int b_x = x[0], b_y = y[0];
+  int b_w = x[0], b_h = y[0];
+  do
+  {
+    int cx = x[i], cy = y[i];
+    if (b_x > cx)
+      b_x = cx;
+    if (b_w < cx)
+      b_w = cx;
+    if (b_y > cy)
+      b_y = cy;
+    if (b_h < cy)
+      b_h = cy;
+    i ++;
+  }
+  while (i < 3);
+
+  b_w -= b_x - 1;
+  b_h -= b_y - 1;
+
+  SDL_Rect rect =
+  {
+    .x = b_x + t->x,
+    .y = b_y + t->y,
+    .w = b_w,
+    .h = b_h
+  };
+
+
+  SDL_Surface *surf = NULL;
+  #if SDL_BYTEORDER == SDL_BIG_ENDIAN
+    surf = SDL_CreateRGBSurface (0, b_w, b_h, 32, 0xFF000000, 0x00FF0000, 0x0000FF00, 0x000000FF);
+  #else
+    surf = SDL_CreateRGBSurface (0, b_w, b_h, 32, 0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000);
+  #endif
+
+  SDL_SetSurfaceBlendMode(surf,SDL_BLENDMODE_BLEND);
+  SDL_BlitSurface (surface, &rect, surf, NULL);
+
+  uint32_t markup = SDL_MapRGBA(surf->format, 0xff,0xff,0,0xff);
+
+
+  SDL_Rect clip_rect;
+  SDL_GetClipRect(surface, &clip_rect);
+  SDL_SetClipRect(surface, &rect);
+
+  for (i = 0; i < 3; i++)
+  {
+    x[i] -= b_x;
+    y[i] -= b_y;
+  }
+
+  draw_line (surf, x[0], y[0], x[1], y[1], colourPixel, markup);
+  draw_line (surf, x[1], y[1], x[2], y[2], colourPixel, markup);
+  draw_line (surf, x[2], y[2], x[0], y[0], colourPixel, markup);
+
+
+  int j;
+  uint32_t pixel;
+
+  for (i = b_x; i <= surf->w; i++)
+  {
+    int upper = -1, lower = -1;
+
+    for (j = b_y; j <= surf->h; j++)
+    {
+      pixel = getPixel(surf, i, j);
+      if (pixel != markup)
+        continue;
+      upper = j;
+      break;
+
+    }
+    if (upper != -1)
+    {
+      lower = upper;
+      for (j = surf->h; j >=upper; j --)
+      {
+        pixel = getPixel(surf, i, j);
+        if (pixel != markup)
+          continue;
+        lower = j;
+        break;
+      }
+      draw_line (surf, i, upper, i, lower, invertPixel, 0);
+    }
+  }
+  SDL_SetClipRect(surface, &clip_rect);
+  SDL_BlitSurface (surf, NULL, surface, &rect);
+  SDL_FreeSurface (surf);
+
+}
