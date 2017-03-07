@@ -11,7 +11,7 @@
 
 extern mouse_t mouse;
 
-extern SDL_Surface *canvas;
+extern SDL_Surface *canvas, *draw_surface;
 
 
 void f1 (void);
