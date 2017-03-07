@@ -3,6 +3,8 @@
 
   #include "SDL2/SDL.h"
 
+  extern SDL_Surface *canvas;
+
   //  a type for functions that plot a single pixel
   typedef void (*plot_func) (SDL_Surface *, int, int, unsigned);
 

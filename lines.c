@@ -75,8 +75,17 @@ void colourPixel (SDL_Surface *dst, int x, int y, unsigned color)
 
 void invertPixel (SDL_Surface *dst, int x, int y, unsigned color)
 {
-  unsigned clr = getPixel (dst, x, y);
-  clr ^= 0xffffff;
-  setPixel (dst, x, y, clr);
+  int x2 = x, y2 = y;
+  SDL_Rect clip_rect;
+  SDL_GetClipRect (canvas, &clip_rect);
+  if (clip_rect.x != 0)
+    x2 += clip_rect.x;
+  if (clip_rect.y != 0)
+    y2 += clip_rect.y;
+
+  unsigned clr = getPixel (canvas, x2, y2);
+  clr ^= 0x00ffffff;
+  clr &= 0x00ffffff;
+  setPixel (dst, x, y, clr | 0xff000000);
 }
 
