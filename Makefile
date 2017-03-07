@@ -6,11 +6,10 @@ SRCS = pixels.c lines.c drawn-triangles.c mouse.c chain.c integer_stack.c net-bu
 FLAGS= -Wall
 LIBS = -lm -lSDL2 -lSDL2_image -lSDL2_ttf
 
-
 default : clean $(PROG)
 
 clean :
 	rm -f *.o $(PROG) *~
 
 $(PROG) : $(HEAD)
-	$(CC) $(FLAGS) $(SRCS) main.c -o $@ $^ $(LIBS)
+	$(CC) $(FLAGS) $(SRCS) $^ $(LIBS) main.c -o $@
