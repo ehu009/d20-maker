@@ -4,8 +4,11 @@
 
     #include    "SDL2/SDL.h"
 
-    uint32_t getPixel (SDL_Surface *src, int x, int y);
+    #define   COLOR  uint32_t
 
-    void setPixel(SDL_Surface *dst, int x, int y, unsigned color);
+
+    COLOR getPixel (SDL_Surface *src, int x, int y);
+
+    void setPixel(SDL_Surface *dst, int x, int y, COLOR color);
 
 #endif  /*  PIXELS_H_ */
