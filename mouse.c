@@ -1,22 +1,26 @@
 #include "mouse.h"
 #include "mouse_app.h"
 
+
+
+
 /*
  *
  */
+
 #define STATE mouse.buttons
-//#define XPOS  mouseX
-//#define YPOS  mouseY
 
 void mouse_reset (void)
 {
   STATE = 0;
+  mouse.moving = 0;
 }
 
 void mouse_handle_move (SDL_Event *e)
 {
   mouse._x = e->motion.x;
   mouse._y = e->motion.y;
+  mouse.moving = 1;
 }
 
 /*
@@ -74,6 +78,7 @@ void mouse_handle_scroll (SDL_Event *e)
 
 void mouse_update (SDL_Event *e)
 {
+  mouse.moving = 0;
   switch (e->type)
   {
     case SDL_MOUSEBUTTONUP:   { mouse_handle_up (e);    break;  }
@@ -99,26 +104,40 @@ void mouse_update (SDL_Event *e)
 #define IS_WHEEL_DOWN(x)  IS_BIT_SET(MASK_WHEEL_DOWN, x)
 
 
+/*
+ *
+ */
+int mouse_moves (void)
+{
+  return mouse.moving;
+}
+
+void mouse_position (int *x, int *y)
+{
+  *x = mouse._x;
+  *y = mouse._y;
+}
+
 
 /*
  *
  */
-int mouse_left(mouse_t *m)
+int mouse_left (void)
 {
-  return (int)  0 - IS_L_UP(m->buttons) + IS_L_DOWN(m->buttons);
+  return (int)  0 - IS_L_UP(mouse.buttons) + IS_L_DOWN(mouse.buttons);
 }
 
-int mouse_right(mouse_t *m)
+int mouse_right (void)
 {
-  return (int)  0 - IS_R_UP(m->buttons) + IS_R_DOWN(m->buttons);
+  return (int)  0 - IS_R_UP(mouse.buttons) + IS_R_DOWN(mouse.buttons);
 }
 
-int mouse_middle(mouse_t *m)
+int mouse_middle (void)
 {
-  return (int)  0 - IS_M_UP(m->buttons) + IS_M_DOWN(m->buttons);
+  return (int)  0 - IS_M_UP(mouse.buttons) + IS_M_DOWN(mouse.buttons);
 }
 
-int mouse_scroll(mouse_t *m)
+int mouse_scroll (void)
 {
-  return (int)  0 - IS_WHEEL_UP(m->buttons) + IS_WHEEL_DOWN(m->buttons);
+  return (int)  0 - IS_WHEEL_UP(mouse.buttons) + IS_WHEEL_DOWN(mouse.buttons);
 }

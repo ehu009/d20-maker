@@ -9,7 +9,6 @@
 
 #include "drawn-triangles.h"
 
-extern mouse_t mouse;
 
 extern SDL_Surface *canvas, *draw_surface;
 

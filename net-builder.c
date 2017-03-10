@@ -348,7 +348,7 @@ void f1 (void)
 
 int rotate_root_triangle(void)
 { //  toggle rotation and resizing of root triangle
-  if(mouse_right(&mouse) == 1)
+  if(mouse_right() == 1)
   {
     rotate_root_toggler ^= 1;
   }
@@ -357,7 +357,7 @@ int rotate_root_triangle(void)
 
 int slide_selector(void)
 {
-  if(mouse_middle(&mouse) == 1)
+  if(mouse_middle() == -1)
   {
     slide_toggler ^= 1;
   }
@@ -366,9 +366,11 @@ int slide_selector(void)
 
 void pin_root_triangle(net_t *n)
 {
-  n->slots[0].x = mouse._x;
-  n->slots[0].y = mouse._y;
+  int x, y;
+  mouse_position(&x, &y);
 
+  n->slots[0].x = x;
+  n->slots[0].y = y;
   n->rotation = get_screen_triangle_rotation (n->work_triangle);
   n->slots[0].positions[0] = n->work_triangle;
   n->work_triangle = NULL;
@@ -518,16 +520,21 @@ void unpin_root_triangle(net_t *n)
   n->work_triangle = make_screen_triangle(n->radius);
 
   rotate_screen_triangle(n->work_triangle, n->rotation);
-  set_screen_triangle_position(n->work_triangle,mouse._x, mouse._y);
+
+  int x, y;
+  mouse_position(&x, &y);
+  set_screen_triangle_position(n->work_triangle, x, y);
 }
 
 void f2 ()
 {
+  int mX, mY;
+  mouse_position (&mX, &mY);
   if (stack_height(d20->pinned) == 0)
   { //  root triangle is not pinned
-    set_screen_triangle_position (d20->work_triangle, mouse._x, mouse._y);
+    set_screen_triangle_position (d20->work_triangle, mX, mY);
 
-    int scroll = mouse_scroll(&mouse);
+    int scroll = mouse_scroll();
 
     if (rotate_root_triangle())
     {
@@ -540,7 +547,7 @@ void f2 ()
       rotate_screen_triangle (d20->work_triangle, scroll);
     }
 
-    if (mouse_left(&mouse) == -1)
+    if (mouse_left() == -1)
     {
       pin_root_triangle(d20);
     }
@@ -549,7 +556,7 @@ void f2 ()
   {
 
 
-    int scroll = mouse_scroll(&mouse);
+    int scroll = mouse_scroll();
     if (slide_selector())
     {
       if (scroll)
@@ -562,7 +569,7 @@ void f2 ()
       }
     }
 
-    if (mouse_right(&mouse) == -1)
+    if (mouse_right() == -1)
     { //  undoing
       if (stack_height(d20->pinned) == 1)
       {
@@ -591,8 +598,7 @@ void f2 ()
 
       }
     }
-
-    if (mouse_left(&mouse) == -1)
+    if (mouse_left() == -1)
     { //  doing
       printf("click\n");
       printf("we have %d triangles pinned\n", stack_height(d20->pinned));
@@ -947,7 +953,6 @@ pin(d20);
 
 
     }
-
 
   }
 }

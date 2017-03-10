@@ -3,21 +3,17 @@
 
   #include "mouse.h"
 
-  struct mouse_object
-  {
-    int _x, _y;
-    mouse_data buttons;
-  };
-
-  typedef struct mouse_object mouse_t;
-
-
 
   extern mouse_t mouse;
 
-  int mouse_left  (mouse_t *m);
-  int mouse_right (mouse_t *m);
-  int mouse_middle  (mouse_t *m);
-  int mouse_scroll  (mouse_t *m);
+
+  int mouse_moves (void);
+  void mouse_position (int *x, int *y);
+
+
+  int mouse_left  (void);
+  int mouse_right (void);
+  int mouse_middle  (void);
+  int mouse_scroll  (void);
 
 #endif  /*  MOUSE_APP_H_  */

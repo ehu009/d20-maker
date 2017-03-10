@@ -26,8 +26,6 @@ SDL_Surface *canvas = NULL,
 
 unsigned screenWidth, screenHeight;
 
-mouse_t mouse;
-
 
 
 void timerfunc (void *param)
