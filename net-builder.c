@@ -360,6 +360,10 @@ int slide_selector(void)
   if(mouse_middle() == -1)
   {
     slide_toggler ^= 1;
+    if (slide_toggler == 0)
+      printf("selection option A\n");
+    else
+      printf("selection option B\n");
   }
   return slide_toggler;
 }
@@ -566,6 +570,36 @@ void f2 ()
         if (scroll == 1)
           slider_procede(d20->selector);
         d20->work_triangle = slider_current(d20->selector);
+      }
+    }
+    else
+    {
+      if (mouse_moves ())
+      {
+        int k = chain_size(d20->edge);
+        triangle_t *current = (triangle_t *)slider_current(d20->selector),
+            *nearest = current;
+
+        int tX, tY;
+        get_screen_triangle_position(current, &tX, &tY);
+        double shortest = distance(mX, mY, tX, tY);
+
+        while (k)
+        {
+          slider_procede(d20->selector);
+          current = slider_current(d20->selector);
+          get_screen_triangle_position(current, &tX, &tY);
+          double length = distance (mX, mY, tX, tY);
+          if (length < shortest)
+            nearest = current;
+          -- k;
+        }
+
+        while (nearest != (triangle_t *) slider_current(d20->selector))
+        {
+          slider_procede(d20->selector);
+        }
+        d20->work_triangle = nearest;
       }
     }
 
