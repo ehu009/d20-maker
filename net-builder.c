@@ -242,133 +242,45 @@ int slide_selector(void)
 }
 
 
-/*
-
-void  find_possible_neighbors (trekant_t *tri, trekant_t *n1, trekant_t *n2, trekant_t *n3)
-{
-  int x1, x2, x3, y1, y2, y3;
-  x1 = tri->x;
-  x2 = tri->x;
-  x3 = tri->x;
-
-    y1 = tri->y;
-  y2 = tri->y;
-  y3 = tri->y;
-
-//  trekant_t *q1, *q2, *q3;
-
-  int start;
-  int rot = tri->rotation % 4;
-  double pi = M_PI, r = tri->radius;
-
-  if ( rot == 0 )
-  {
-    start = 30;
-  }
-  else if ( rot == 2 )
-  {
-    start = 210;
-  }
-  if ( !( rot % 2 ) )
-  {
-    x3 += r * cos ( ( double )  ( start + 120 * 2 ) * ( pi / 180 ) );
-    x2 += r * cos ( ( double )  ( start + 120 * 1 ) * ( pi / 180 ) );
-    x1 += r * cos ( ( double )  ( start + 120 * 0 ) * ( pi / 180 ) );
-
-    y3 -= r * sin ( ( double )  ( ( start + 120 * 2 ) * ( pi / 180 ) ) );
-    y2 -= r * sin ( ( double )  ( ( start + 120 * 1 ) * ( pi / 180 ) ) );
-    y1 -= r * sin ( ( double )  ( ( start + 120 * 0 ) * ( pi / 180 ) ) );
-  }
-
-#define NEW_TRIANGL     0
-
-
-  void draw_fake_triangle ( unsigned x, unsigned y, double r )
-  {
-    draw_line ( canvas, x, y - r,
-                  x, y,   setInvPixel, 0 );
-    draw_line ( canvas, x - r, y,
-                  x, y,   setInvPixel, 0 );
-  }
-
-
-  int rect_border (int b_x, int b_y, double x, double y,double w, double h)
-  {
-        return  ( int ) (
-              ( x > ( b_x - w ) )
-        |  ( x < w )
-        |  ( y > ( b_y - h ) )
-        |  ( y < h ) );
-  }
-
-
-  if ( !rect_border ( screenWidth,screenHeight, x1,y1, r, r ) )
-    {
-draw_fake_triangle ( x1, y1, r );
-
-
-#if NEW_TRIANGL
-        if (n1 != NULL)
-        {
-           make_triangle (tri->radius);
-
-        }
-#endif
-    }
-  if ( !rect_border ( screenWidth,screenHeight, x2,y2, r, r ) )
-
-    {
-        draw_line ( canvas, x2, y2 - r,
-                                    x2, y2,   setInvPixel, 0 );
-        draw_line ( canvas, x2 - r, y2,
-                                    x2, y2,   setInvPixel, 0 );
-
-#if NEW_TRIANGL
-        if (n2 != NULL)
-        {
-           make_triangle (tri->radius);
-
-        }
-#endif
-    }
-  if ( !rect_border ( screenWidth,screenHeight, x3,x3, r, r ) )
-
-    {
-        draw_line ( canvas, x3, y3 - r,
-                                    x3, y3,   setInvPixel, 0 );
-        draw_line ( canvas, x3 - r, y3,
-                                    x3, y3,   setInvPixel, 0 );
-
-#if NEW_TRIANGL
-        if (n3 != NULL)
-        {
-           make_triangle (tri->radius);
-
-        }
-#endif
-    }
-
-}
-*/
 
 
 
 void draw_slots(net_t *n, SDL_Surface *surface)
-{
+{ //  draw slots for a net onto a surface
   if (surface == NULL)
     return;
+
+  struct slot *sptr;
+  triangle_t **tptr;
+  triangle_t *m;
   int i = 0;
   for(; i < TRIANGLES_TOTAL; i++)
-  {
-    triangle_t *ptr = n->slots[i].positions[0];
-    if (ptr != NULL)
+  { //  look for triangles in all slots
+    sptr = &n->slots[i];
+    tptr = sptr->positions;
+    m = tptr[0];
+    if (sptr->pinned)
     {
-      if (ptr == n->work_triangle)
+      //  pinned slots
+      draw_screen_triangle (m, surface, invertPixel, 0);
+      continue;
+    }
+    //  unpinned ones
+    if ((m != NULL) && (m != n->work_triangle))
+    {
+      fill_invert_screen_triangle (m, surface);
+    }
+    int k = 1;
+    for (; k <3; k ++)
+    {
+      m = tptr[k];
+      if (m == NULL)
+        //  skip blanks
         continue;
-      if (n->slots[i].pinned == 0)
-      fill_invert_screen_triangle(ptr, surface);
-      else
-      draw_screen_triangle (ptr, surface, invertPixel, 0);
+      if (m == n->work_triangle)
+        //  skip work triangle
+        continue;
+      fill_invert_screen_triangle (m, surface);
     }
   }
 }
@@ -566,6 +478,14 @@ void unpin_root_triangle(net_t *n)
   mouse_position (&x, &y);
   set_screen_triangle_position (n->work_triangle, x, y);
 }
+
+/*
+ *
+ * dev place
+ *
+ */
+
+
 
 triangle_t *find_triangle_nearest_to(int x, int y)
 {
