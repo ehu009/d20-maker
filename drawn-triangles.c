@@ -63,9 +63,9 @@ void resize_screen_triangle (triangle_t *t, double add)
 
 
 void get_triangle_points_relative (triangle_t *t,
-    int *x1, int *y1,
-    int *x2, int *y2,
-    int *x3, int *y3)
+    double *x1, double *y1,
+    double *x2, double *y2,
+    double *x3, double *y3)
 {
 
   int rotation = t->rotation;
@@ -80,34 +80,34 @@ void get_triangle_points_relative (triangle_t *t,
   switch(rotation)
   {
   case 0:
-    *x1 = - (0.5 + sides); *y1 = 0.5 + (t->radius / 2);
-    *x2 = 0.5 + sides;   *y2 = 0.5 + (t->radius / 2);
-    *x3 = 0;   *y3 = - (0.5 + t->radius); //  top
+    *x1 = - (sides); *y1 = (t->radius / 2);
+    *x2 = sides;   *y2 = (t->radius / 2);
+    *x3 = 0;   *y3 = - (t->radius); //  top
     break;
 
   case 1:
-    *x1 = - (0.5 + (t->radius / 2)); *y1 = - (0.5 + sides);
-    *x2 = - (0.5 + (t->radius / 2)); *y2 = (0.5 + sides);
-    *x3 = 0.5 + t->radius; *y3 = 0; //  right
+    *x1 = - (t->radius / 2); *y1 = - (sides);
+    *x2 = - (t->radius / 2); *y2 = sides;
+    *x3 = t->radius; *y3 = 0; //  right
     break;
 
   case 2:
-    *x1 = - (0.5 + sides); *y1 = - (0.5 + (t->radius / 2));
-    *x2 = 0.5 + sides;   *y2 = - (0.5 + (t->radius / 2));
-    *x3 = 0;   *y3 = (0.5 + t->radius); //  bottom
+    *x1 = - ( sides); *y1 = - (t->radius / 2);
+    *x2 = sides;   *y2 = - (t->radius / 2);
+    *x3 = 0;   *y3 = (t->radius); //  bottom
     break;
 
   case 3:
-    *x1 = 0.5 + (t->radius / 2); *y1 = - (0.5 + sides);
-    *x2 = 0.5 + (t->radius / 2); *y2 = (0.5 + sides);
-    *x3 = - (0.5 + t->radius); *y3 = 0; //  left
+    *x1 = (t->radius / 2); *y1 = - (sides);
+    *x2 = (t->radius / 2); *y2 = (sides);
+    *x3 = - (t->radius); *y3 = 0; //  left
     break;
   }
 }
 
 void draw_screen_triangle (triangle_t *t, SDL_Surface *surface, plot_func plot, unsigned color)
 {
-  int x1, y1,
+  double x1, y1,
   x2, y2,
   x3, y3;
 
@@ -124,7 +124,7 @@ void fill_invert_screen_triangle (triangle_t *t, SDL_Surface *surface)
 {
   int i = 0;
 
-  int x[3], y[3];
+  double x[3], y[3];
   get_triangle_points_relative (t,&x[0],&y[0],&x[1],&y[1],&x[2],&y[2]);
 
   int b_x = x[0], b_y = y[0];

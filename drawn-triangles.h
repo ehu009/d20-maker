@@ -22,5 +22,9 @@
 
   void fill_invert_screen_triangle (triangle_t *t, SDL_Surface *surface);
 
+  void get_triangle_points_relative (triangle_t *t,
+      double *x1, double *y1,
+      double *x2, double *y2,
+      double *x3, double *y3);
 
 #endif  /*  DRAWN_TRIANGLES_H_  */
