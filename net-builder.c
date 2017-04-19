@@ -205,11 +205,41 @@ void free_net_builder(net_t *n)
   free(n);
 }
 
+struct application
+{
+  //  togglers
+  char rotate_root;
+  char use_slider;
+  //  other things
 
-char rotate_root_toggler = 1;
-char slide_toggler = 1;
+} app;
+/*
+struct application app = {
+  .rotate_root = 1,
+  .use_slider = 1
+};*/
 net_t *d20 = NULL;
 
+
+
+
+int rotate_root_triangle(void)
+{ //  toggle between rotation and resizing of root triangle
+  if(mouse_middle() == -1)
+  {
+    app.rotate_root ^= 1;
+  }
+  return app.rotate_root;
+}
+
+int slide_selector(void)
+{ //  toggle between using mouse wheel or position for selections
+  if(mouse_middle() == -1)
+  {
+    app.use_slider ^= 1;
+  }
+  return app.use_slider;
+}
 
 
 /*
@@ -323,51 +353,52 @@ draw_fake_triangle ( x1, y1, r );
 
 
 
-void draw_pinned_slots(net_t *n)
+void draw_slots(net_t *n, SDL_Surface *surface)
 {
+  if (surface == NULL)
+    return;
   int i = 0;
   for(; i < TRIANGLES_TOTAL; i++)
   {
-    if (d20->slots[i].pinned == 0)
-      continue;
-    triangle_t *ptr = d20->slots[i].positions[0];
+    triangle_t *ptr = n->slots[i].positions[0];
     if (ptr != NULL)
     {
-      draw_screen_triangle(ptr, canvas, invertPixel, 0);
+      if (ptr == n->work_triangle)
+        continue;
+      if (n->slots[i].pinned == 0)
+      fill_invert_screen_triangle(ptr, surface);
+      else
+      draw_screen_triangle (ptr, surface, invertPixel, 0);
     }
   }
 }
 
+
+void draw_net (net_t *n, SDL_Surface *surface)
+{
+  if (surface == NULL)
+    return;
+
+
+  if (stack_height (n->pinned))
+  {
+    draw_slots (n, surface);
+    draw_screen_triangle (n->work_triangle, surface, colourPixel, 0x00ff00);
+  }
+  else
+  {
+    fill_invert_screen_triangle (n->work_triangle, surface);
+  }
+
+}
+
+
 void f1 (void)
 {
-  if (d20->work_triangle != NULL)
-  {
-    fill_invert_screen_triangle(d20->work_triangle, canvas);
-  }
-  if (stack_height(d20->pinned))
-  {
-    draw_pinned_slots(d20);
-  }
+  draw_net (d20, canvas);
 }
 
 
-int rotate_root_triangle(void)
-{ //  toggle between rotation and resizing of root triangle
-  if(mouse_middle() == -1)
-  {
-    rotate_root_toggler ^= 1;
-  }
-  return rotate_root_toggler;
-}
-
-int slide_selector(void)
-{ //  toggle between using mouse wheel or position for selections
-  if(mouse_middle() == -1)
-  {
-    slide_toggler ^= 1;
-  }
-  return slide_toggler;
-}
 
 void pin_root_triangle(net_t *n)
 {
@@ -415,6 +446,8 @@ void pin_root_triangle(net_t *n)
     double thirty = 30, sixty = 60;
     thirty*= M_PI/180;
     sixty*= M_PI/180;
+
+
 
     int R = get_screen_triangle_rotation (tA);
     switch (R)
@@ -510,6 +543,8 @@ void pin_root_triangle(net_t *n)
 }
 
 
+
+
 void unpin_root_triangle(net_t *n)
 {
   free_screen_triangles(n);
@@ -518,18 +553,18 @@ void unpin_root_triangle(net_t *n)
   free_chain(n->edge);
   n->edge = NULL;
 
-  init_slots(n);
+  init_slots (n);
 
   char err = 0;
-  stack_pop(n->pinned,&err);
+  stack_pop (n->pinned,&err);
 
   n->work_triangle = make_screen_triangle(n->radius);
 
-  rotate_screen_triangle(n->work_triangle, n->rotation);
+  rotate_screen_triangle (n->work_triangle, n->rotation);
 
   int x, y;
-  mouse_position(&x, &y);
-  set_screen_triangle_position(n->work_triangle, x, y);
+  mouse_position (&x, &y);
+  set_screen_triangle_position (n->work_triangle, x, y);
 }
 
 triangle_t *find_triangle_nearest_to(int x, int y)
@@ -566,47 +601,49 @@ struct slot *get_neighbor_with_triangle (struct slot *s, triangle_t *t)
   else return NULL;
 }
 
-struct slot *find_nearest_neighbor (struct slot **hood, int n, triangle_t *position)
+struct slot *find_nearest_neighbor (struct slot **network, int n, triangle_t *position)
 {
   if (n > 0)
-    return hood[0];
+    return network[0];
   if (n > 1)
   {
     int tx, ty;
     get_screen_triangle_position(position, &tx, &ty);
 
-    struct slot *nearest = hood[0];
+    struct slot *nearest = network[0];
     int ax, ay;
     int bx, by;
-    get_screen_triangle_position(hood[0]->positions[0], &ax, &ay);
-    get_screen_triangle_position(hood[1]->positions[0], &bx, &by);
+    get_screen_triangle_position(network[0]->positions[0], &ax, &ay);
+    get_screen_triangle_position(network[1]->positions[0], &bx, &by);
 
     double shortest = distance(tx, ty, ax, ay),
         dist = distance(tx, ty, bx, by);
 
     if (dist < shortest)
     {
-      nearest = hood[1];
+      nearest = network[1];
       shortest = dist;
     }
     if (n > 2)
     {
       int ax, ay;
       int bx, by;
-      get_screen_triangle_position(hood[1]->positions[0], &ax, &ay);
-      get_screen_triangle_position(hood[2]->positions[0], &bx, &by);
+      get_screen_triangle_position(network[1]->positions[0], &ax, &ay);
+      get_screen_triangle_position(network[2]->positions[0], &bx, &by);
       dist = distance(tx, ty, bx, by);
       if (dist < shortest)
-        nearest = hood[2];
+        nearest = network[2];
     }
     return nearest;
   }
+
+  printf("rumpelukt\n");
   return NULL;
 }
 
 
 
-int appromixates (double test, double source, double accuracy)
+int approximates (double test, double source, double accuracy)
 {
   return (source + accuracy >= test)
       && (test >= source - accuracy);
@@ -626,7 +663,7 @@ triangle_t *slot_has_triangle_near (struct slot *slot, double x, double y)
     if (tr == NULL)
       continue;
     get_screen_triangle_position (tr, &tx, &ty);
-    if (appromixates(tx, x, FLOAT_ACC) && appromixates(ty, y, FLOAT_ACC))
+    if (approximates(tx, x, FLOAT_ACC+1) && approximates(ty, y, FLOAT_ACC+1))
     {
       return tr;
     }
@@ -636,11 +673,183 @@ triangle_t *slot_has_triangle_near (struct slot *slot, double x, double y)
 
 
 
+void find_possible_anchors (triangle_t *t, net_t *n, struct slot **sbuf, int *nbuf)
+{
+  char error = 0;
+printf("looking for neighbors\n");
+  intstack_t *tmp_stack = make_integer_stack (TRIANGLES_TOTAL);
+  if (tmp_stack == NULL)
+    error ++;
+
+  int n_idx = 0;
+  *nbuf = -1;
+
+  if (!error)
+  { //  pop all
+    while (stack_height (n->pinned))
+    {
+      int popped = stack_pop (n->pinned,&error);
+      if (!error)
+      {
+        stack_push (tmp_stack, &error, popped);
+      }
+      else { printf ("error :C %d\n",__LINE__);}
+      if (!error)
+      {
+      printf("trying idx:%d,",popped);
+        //  check if slot has available neighbors
+        // check if available neighbor matches screen triangle
+        struct slot *slot = &n->slots[popped];
+       /*
+        int has_neighbor = 0
+            ||  (!slot->A->pinned
+                ||  !slot->B->pinned
+                ||  !slot->C->pinned);
+        if (has_neighbor)
+        {
+        */
+          if (slot_has_triangle (slot->A, t)
+              ||  slot_has_triangle (slot->B, t)
+              ||  slot_has_triangle (slot->C, t))
+          {
+            if(!error)
+            {
+              sbuf[n_idx] = slot;
+              if (n_idx == 0)
+                printf("\t\t");
+              printf("found neighbor");
+              if (n_idx < 3-1)
+                printf(", ");
+              ++ n_idx;
+            }
+            else { printf ("error :C %d\n",__LINE__);}
+          }
+      //  }
+      }
+      else { printf ("error :C %d\n",__LINE__);}
+    }
+  }
+  if (!error)
+  { //  push back
+
+    while (stack_height (tmp_stack))
+    {
+      int popped = stack_pop (tmp_stack,&error);
+      if (!error)
+      {
+        stack_push (n->pinned, &error, popped);
+      }
+      else { printf ("error :C %d\n",__LINE__);}
+    }
+  }
+  else
+  {
+    printf ("error :CCC\n");
+  }
+  if (!error)
+    *nbuf = n_idx + 1;
+  else
+    printf("i dont know what went wrong when finding the anchor yet\n");
+  printf("\n");
+  fflush(stdout);
+}
+
+
+
+double triangle_modulation_in_radians (int triangle_rotation)
+{
+  double modulation = 0.0;
+  switch (triangle_rotation)
+  {
+    case 0:
+      printf("rotation 0\n");
+      modulation += 90;
+    break;
+    case 1:
+      printf("rotation 1\n");
+      modulation += 30;
+    break;
+    case 2:
+      printf("rotation 2\n");
+      modulation += 60;
+    break;
+    case 3:
+      printf("rotation 3\n");
+//            modulation += 0;
+    break;
+  }
+  modulation *= M_PI;
+  modulation /= 180;
+  return modulation;
+}
+
+
+
+int pidgeon_policy (net_t *n, double x, double y)
+{
+  //  see if net contains a triangle at a position near
+  int exists = 0, i = 0;
+  struct slot *s = n->slots;
+  for (; i < TRIANGLES_TOTAL; i ++)
+  {
+    exists |= (slot_has_triangle_near (s, x, y) != NULL);
+    if (exists)
+      break;
+    s ++;
+  }
+  return exists;
+}
+
+int ring_policy (net_t *n, double x, double y)
+{
+  //  see if net will constitute six-triangle rings
+
+  int exists = 0;
+
+  //  first the pidgeon in question
+  //  then check three nearby holes
+  //  then check nine in outer ones
+  return exists;
+}
+
+
+
+
+
+//  finn current slot:
+//  finn anker:
+
+//  finn vektor
+//  2x:
+//    rotér vektor
+//    policy:
+//      kan ikke ha to trekanter på samme posisjon:
+//        sjekk om noen slots har trekanter med liknende posisjon
+//      kan ikke være i ring av 6 posisjoner:
+//        finn vektor, rotér seks ganger
+//        per 5 posisjoner
+//          sjekk om noen slots har trekanter med liknende posisjon
+//
+//
+//
+//
+//
+//
+
+
+
 
 
 
 void pin (net_t *n, int mouse_x, int mouse_y)
 {
+  if (stack_height(n->pinned) == TRIANGLES_TOTAL)
+  {
+  printf("full of triangles\n");
+    return;
+    }
+
+
 
   triangle_t *st = n->work_triangle;
 
@@ -649,78 +858,8 @@ void pin (net_t *n, int mouse_x, int mouse_y)
   struct slot *nearest_neighbor;
 
 
-  void find_possible_anchors (triangle_t *t, net_t *n, struct slot **sbuf, int *nbuf)
-  {
-    char error = 0;
-
-    intstack_t *tmp_stack = make_integer_stack (TRIANGLES_TOTAL);
-    if (tmp_stack == NULL)
-      error ++;
-
-    int n_idx = -1;
-    *nbuf = n_idx;
-
-    if (!error)
-    { //  pop all
-      while (stack_height (n->pinned))
-      {
-        int popped = stack_pop (n->pinned,&error);
-        if (!error)
-        {
-          stack_push (tmp_stack, &error, popped);
-        }
-        else { printf ("error :C %d\n",__LINE__);}
-        if (!error)
-        {
-          //  check if slot has available neighbors
-          // check if available neighbor matches screen triangle
-          struct slot *slot = &n->slots[popped];
-          int has_neighbor = 0
-              ||  (!slot->A->pinned
-                  ||  !slot->B->pinned
-                  ||  !slot->C->pinned);
-          if (has_neighbor)
-          {
-            if (slot_has_triangle (slot->A, t)
-                ||  slot_has_triangle (slot->B, t)
-                ||  slot_has_triangle (slot->C, t))
-            {
-              ++ n_idx;
-              if(!error)
-              {
-                sbuf[n_idx] = slot;
-              }
-              else { printf ("error :C %d\n",__LINE__);}
-            }
-          }
-        }
-        else { printf ("error :C %d\n",__LINE__);}
-      }
-      if (!error)
-      { //  push back
-        while (stack_height (tmp_stack))
-        {
-          int popped = stack_pop (tmp_stack,&error);
-          if (!error)
-          {
-            stack_push (n->pinned, &error, popped);
-          }
-          else { printf ("error :C %d\n",__LINE__);}
-        }
-      }
-    }
-    else
-    {
-      printf ("error :CCC\n");
-    }
-    if (!error)
-      *nbuf = n_idx + 1;
-
-  }
   printf("hello\n");
   find_possible_anchors (st, n, &neighbors[0], &num_neighbors);
-
-  printf("hello\n");
 
 
 
@@ -780,6 +919,8 @@ void pin (net_t *n, int mouse_x, int mouse_y)
 
     nearest_neighbor = find_nearest_neighbor (neighbors, num_neighbors, st);
 
+
+
     printf ("slots are at %p, anchor is at %p\n", n->slots, nearest_neighbor);
 
     struct slot *cur = get_neighbor_with_triangle (nearest_neighbor, st);
@@ -795,9 +936,11 @@ void pin (net_t *n, int mouse_x, int mouse_y)
         *buf += s->B->pinned;
         *buf += s->C->pinned;
       }
-      int k = 0;  // anchor's # pinned neighbors
+
+//    remove me
+      int k = 99;  // anchor's # pinned neighbors
       num_pinned_neighbors (nearest_neighbor, &k);
-      printf ("nearest neighbor has %d pinned neighbors\n", k);
+ //     printf ("nearest neighbor has %d pinned neighbors\n", k);
 
       int p = 0;  //  new slot's # pinned neighbors
       num_pinned_neighbors (cur, &p);
@@ -806,62 +949,369 @@ void pin (net_t *n, int mouse_x, int mouse_y)
 
       int sx, sy;
       get_screen_triangle_position (st, &sx, &sy);
-      // vector of distance between these slots can be rotated by PI/3 degrees
+      // vector of distance between these slots can be rotated by 2PI/3 degrees
       //  point of origin is position of newly pinned slot
-      double vx = nearest_neighbor->x - sx,
-          vy = nearest_neighbor->y - sy;
+      double anx = nearest_neighbor->x - sx,
+          any = nearest_neighbor->y - sy;
 
-      double rotation = atan2 (vy, vx);
-      rotation -= 120*M_PI/180;
+      double an_rotation = atan2 (any, anx), rotation  = an_rotation;
       // rotate vector
 
+      printf("SX: %d, SY: %d\n",(int)sx, (int)sy);
+      printf("vector from newly pinned to anchor is %d\n", (int)((rotation*180)/M_PI));
+      /*
+      if (rotation < 0)
+      {
+        printf ( "\t\t");
+        while (rotation < 0)
+        {
+          printf ( ", modulating rotation");
+          rotation += 2*M_PI;
+        }
+        printf ( "\n\t\tvector was rotated to %d\n", (int)((rotation*180)/M_PI));
+      }
+      */
 //  x' = xcos(f) - ysin(f)
 //  y = ycos(f) - xsin(f)
 
 
+
+
+
+
+
+
+
+
+
+      int anchor_idx = -1;
 //
-      double nx=vx*cos(rotation)-vy*sin(rotation), ny=vy*cos(rotation)-vx*sin(rotation);
+      double new_x [ 3],  new_y [ 3];
+
+      rotate_screen_triangle ( st, 2);
+  /*
+      int aX, aY,
+          bX, bY,
+          cX, cY;
+*/
+//      get_triangle_points_relative (st, &aX, &aY, &bX, &bY, &cX, &cY);
+      get_triangle_points_relative (st, &new_x[0], &new_y[0], &new_x[1], &new_y[1], &new_x[2], &new_y[2]);
+
+      int i = 0;
+
+/*
+      for(; i < 3; i ++)
+      {
+        new_x[i] += sx;
+        new_y[i] += sy;
+      }
+*/
+//printf("\tlooking for anchor's position in an array:\n");
+      i = 0;
+
+      for ( ; i < 3; i ++)
+      {
+        int a1 = approximates ( new_x[i], anx, FLOAT_ACC+3.0),
+            a2 = approximates ( new_y[i], any, FLOAT_ACC+3.0);
+  //      int a1 = approximates ( new_x[i], nearest_neighbor->x, FLOAT_ACC+5.0),
+  //          a2 = approximates ( new_y[i], nearest_neighbor->y, FLOAT_ACC+5.0);
+
+
+        if (a1 && a2)
+        {
+          printf("\t-\tfound: (%f, %f),\n", new_x[i], new_y[i]);
+          printf("\t\t   vs. (%f, %f), -> %d\n",anx, any, (a1 && a2));
+  //        printf("\t-\tIT HAS BEEN FOUND \n");
+          anchor_idx = i;
+          break;
+        }else
+        {
+
+        }
+      }
+      printf("\t-\n");
+
+      if (anchor_idx == -1)
+        {
+printf("VERY VERY VERY BAD:\tNO ANCHOR\n");
+        return;
+        }
 
 
 
-      struct slot *next_slot = NULL;
+
+//      rotation += triangle_modulation_in_radians ((get_screen_triangle_rotation(st) + 2) % 4);
+
 
       struct slot *A = cur->A, *B = cur->B, *C = cur->C;
 
-      // a change of A to B to C should represent an anti-clockwise motion
-      if (nearest_neighbor == A)
+      triangle_t *tA = NULL, *tC = NULL, *tB = NULL;
+
+      struct slot *next_slot = NULL;
+      double onetwenty= 120;
+      onetwenty *=M_PI;
+      onetwenty /= 180;
+      int inserted_behind = 0;
+      int num_expansions = 2, expansions = 1;
+
+//      int cur_idx = anchor_idx;
+
+      do
       {
-        next_slot = B;
+        triangle_t **tp = NULL;
+
+
+
+      //  printf ("VECTOR N { X:%f, Y:%f }\n", nx, ny);
+
+ //       cur_idx += 1;
+  //      cur_idx %= 3;
+      //  if (cur_idx < 0)
+      //    cur_idx += 3;
+
+      //  printf ("VECTOR N { X:%f, Y:%f }\n", nx, ny);
+        double tmpx, tmpy;  //  triangle positioning
+            /*
+            if (next_slot == A)
+            { tmpx = aX;  tmpy = aY;
+            }
+            if (next_slot == B)
+            { tmpx = bX;  tmpy = bY;
+            }
+            if (next_slot == C)
+            { tmpx = cX;  tmpy = cY;
+            }*/
+
+        //    tmpx = nx;
+         //   tmpy = ny;
+
+//            tmpx = new_x[cur_idx];
+  //          tmpy = new_y[cur_idx];
+
+
+
+
+
+
+
+
+
+
+        // a change of C to B to A should represent a clockwise motion
+      //  rotation = an_rotation + (2*onetwenty);
+rotation =-onetwenty*expansions;
+        if ( rotation >= M_PI)
+        {
+        //  printf ( "\t\t");
+          while ( rotation >= M_PI)
+          {
+         //   printf ( ", modulating rotation");
+            rotation -= 2 * M_PI;
+          }
+         // printf ( "\n\t\tvector was rotated to %d, %f\n", ( int) ( ( rotation * 180) / M_PI), rotation);
+        }
+        if ( rotation <= -M_PI)
+        {
+        //  printf ( "\t\t");
+          while ( rotation <= -M_PI)
+          {
+         //   printf ( ", modulating rotation");
+            rotation += 2 * M_PI;
+          }
+         // printf ( "\n\t\tvector was rotated to %d, %f\n", ( int) ( ( rotation * 180) / M_PI), rotation);
+        }
+      //  printf ( "rotation to new screen triangle is %d, %f\n", ( int) ( ( rotation * 180) / M_PI), rotation);
+
+
+
+
+        double vecx = new_x[anchor_idx]* cos(rotation),
+            vecy = new_y[anchor_idx]*cos(rotation);
+        vecx -= new_y[anchor_idx]*sin(rotation);
+        vecy += new_x[anchor_idx]*sin(rotation);
+
+        if (pidgeon_policy(n, sx+vecx, sy+vecy))
+        {
+          printf("PIDGEON\n");
+        }
+        else
+        {
+
+        //  determine what slot we're on, and where to go next
+        struct slot *rotator = next_slot;
+        if (expansions == 1)
+          rotator = nearest_neighbor;
+        if (rotator == A)
+        {   next_slot = B;
+
+            if (!B->pinned)
+            {
+
+              tp = &tB;
+            }
+        }
+        if (rotator == B)
+        {   next_slot = C;
+
+            if (!C->pinned)
+            {
+              tp = &tC;
+            }
+        }
+        if (rotator == C)
+        {   next_slot = A;
+
+            if (!A->pinned)
+            {
+              tp = &tA;
+            }
+        }
+
+
+
+        double nx, ny;
+        nx = (anx * cos( rotation));
+        nx += (-any * sin( rotation));
+
+        ny = (anx * sin( rotation));
+        ny += (any * cos( rotation));
+
+        int pos_idx = -1;
+        int ll = 0;
+  printf("\tcomparing vector to calc positions in an array:\n");
+        for ( ; ll < 3; ll ++)
+        {
+          if (ll == anchor_idx)
+            continue;
+          int a1 = approximates ( vecx, new_x[ll], FLOAT_ACC+2.0),
+              a2 = approximates ( vecy, new_y[ll], FLOAT_ACC+2.0);
+
+          if (a1 && a2)
+          {
+            printf("\t-\tfound: (%f,\t%f),\n", vecx, vecy);
+            printf("\t\t   vs. (%f,\t%f); -> %d\n", new_x[ll], new_y[ll], (a1 && a2));
+            pos_idx = ll;
+            break;
+          }
+        }
+  printf("\t-\n");
+
+
+
+//tmpx = vecx;tmpy = vecy;
+
+
+        //  lag et triangel
+        if(tp != NULL)
+        {
+          *tp = make_screen_triangle (n->radius);
+          if (*tp != NULL)
+          {
+
+
+            printf ("adding triangle at rotation %d, %f\n ", (int) (rotation *180/M_PI), rotation);
+
+      //  if (pos_idx == -1) printf("NOT OKAY ALRIGHT\n");
+
+            int dd = 0;
+
+            if (next_slot->positions[dd] != NULL)
+            {
+
+              ++ dd;
+              if (next_slot->positions[dd] != NULL)
+              {
+
+                ++ dd;
+                if (next_slot->positions[dd] != NULL)
+                {
+                  free(next_slot->positions[dd]);
+                }
+              }
+            }
+            next_slot->positions[dd] = *tp;
+
+          if (pos_idx > -1)
+            set_screen_triangle_position (*tp, sx + new_x[pos_idx], sy + new_y[pos_idx]);
+          else
+          {
+            set_screen_triangle_position (*tp, vecx+sx, vecx+sy);
+            printf("NURHGFD\n");
+            }
+            rotate_screen_triangle (*tp, get_screen_triangle_rotation(st));
+
+            //  slider må være tilbake på work triangle
+            if (expansions == 0)
+            {
+              slider_insert_before (n->selector, (void *) *tp);
+              inserted_behind ++;
+            }
+            else
+            {
+              slider_insert_after (n->selector, (void *) *tp);
+            }
+
+
+
+            //trenger fiks
+          }
+
+
+        }
+
+        }
+        ++  expansions;
       }
-      if (nearest_neighbor == B)
+      while ( expansions <= num_expansions);
+
+
+      rotate_screen_triangle ( st, 2);
+
+      //  push pinned to stack
+      char err = 0;
+      int stack_addition = ((int)cur) - ((int)&n->slots[0]);
+      stack_addition /= sizeof(struct slot);
+      printf("ADDING %d TO STACK\n", stack_addition);
+      stack_push(n->pinned, &err, stack_addition);
+
+      //  remove other screen triangles from current slot
+
+      for (i = 0; i < 3; i ++)
       {
-        next_slot = C;
+        triangle_t **t_ptr = &cur->positions[i];
+        if (*t_ptr != NULL)
+        {
+          if (st != *t_ptr)
+          {
+            free_screen_triangle(*t_ptr);
+          }
+          *t_ptr = NULL;
+        }
       }
-      if (nearest_neighbor == C)
-      {
-        next_slot = A;
-      }
 
-      // remove other screen triangles from slot
+      //  set slot's triangle to work triangle
+      cur->positions[0] = st;
 
-      //
-
-
-      //  set position of slot to that of screen triangle
+      //  set position of working slot to that of working triangle
       cur->x = sx;
       cur->y = sy;
 
-
-
-
       //  pin it
+      ++ cur->pinned;
 
-//              ++ cur->pinned;
+      //  pull back, remove pinned from edge, in front
+      slider_recede(n->selector);
+      slider_remove_next(n->selector);
+
+      if (inserted_behind)
+        //  sometimes pull back twice
+        slider_recede(n->selector);
+
+      //  switch work triangle along edge
+      n->work_triangle = slider_current(n->selector);
 
 
-
-
-
+//  to trash later
 
 
 
@@ -881,34 +1331,33 @@ void pin (net_t *n, int mouse_x, int mouse_y)
     }
     else if (k == 1)
     {
-      struct slot *neighbor= NULL;
+    //  struct slot *neighbor = NULL;
 
         //  new ones are C, then B
-        triangle_t *tA = NULL, *tC = NULL, *tB = NULL;
-
+//        triangle_t *tA = NULL, *tC = NULL, *tB = NULL;
+/*
         if (!A->pinned)
         {
-          tA = make_screen_triangle(n->radius);
+          tA = make_screen_triangle (n->radius);
           if (!B->pinned && C->pinned)
           {
-          printf("it was C\n");
+            printf("it was C\n");
             neighbor = C;
           }
           if (!C->pinned && B->pinned)
           {
-          printf("it was B\n");
+            printf("it was B\n");
             neighbor = B;
           }
         }
         if (!B->pinned)
         {
-          tB = make_screen_triangle(n->radius);
-
+          tB = make_screen_triangle (n->radius);
           if (!A->pinned  && C->pinned)
           {
 
 
-          printf("it was C\n");
+            printf ("it was C\n");
             neighbor = C;
           }
           if (!C->pinned  &&  A->pinned)
@@ -934,7 +1383,8 @@ void pin (net_t *n, int mouse_x, int mouse_y)
           printf("it was A\n");
             neighbor = A;
           }
-          }
+        }
+*/
 
 
         int rot = get_screen_triangle_rotation(st) + 2;
@@ -1006,13 +1456,17 @@ void pin (net_t *n, int mouse_x, int mouse_y)
 
         a_x += r_x; b_x += r_x; c_x += r_x;
         a_y += r_y; b_y += r_y; c_y += r_y;
-
+/*
         if (neighbor == A)
         {
-        printf("testing A\n");
+        * */
+
+
+     //   printf("testing A\n");
        /* if (tA != NULL)
           {set_screen_triangle_position (tA, (int)(a_x + 0.5), (int)(a_y + 0.5));}
        */
+  /*
         if (tB != NULL)
           {set_screen_triangle_position (tB, (int)(b_x + 0.5), (int)(b_y + 0.5));}
         if (tC != NULL)
@@ -1038,11 +1492,11 @@ void pin (net_t *n, int mouse_x, int mouse_y)
         if (tC != NULL)
           {set_screen_triangle_position (tC, (int)(c_x + 0.5), (int)(c_y + 0.5));}
           }
-
+*/
 
         slider_recede(n->selector);
         slider_remove_next(n->selector);
-
+/*
         if (tA != NULL)
         {
           if (A->positions[0] != NULL)
@@ -1096,9 +1550,9 @@ void pin (net_t *n, int mouse_x, int mouse_y)
           slider_insert_after(n->selector, (void *) tB);
         }
 
+*/
 
-
-
+/*
         if (cur->positions[0] != st)
         {
           if (cur->positions[0] != NULL)
@@ -1107,7 +1561,7 @@ void pin (net_t *n, int mouse_x, int mouse_y)
           }
           cur->positions[0] = st;
         }
-
+*/
         char err = 0;
         stack_push(n->pinned, &err, ((cur - n->slots)/sizeof(struct slot)));
         n->work_triangle = slider_current(n->selector);
@@ -1131,11 +1585,16 @@ void pin (net_t *n, int mouse_x, int mouse_y)
 
       //
 
+
+
       }
       else
       {
-        printf("I have not handled this case\n");
+//        printf("I have not handled this case\n");
       }
+
+
+
     }
   }
 
@@ -1188,7 +1647,10 @@ void f2 ()
         if (scroll == -1)
           slider_recede(d20->selector);
         if (scroll == 1)
+        {
           slider_procede(d20->selector);
+          printf("forward\n");
+          }
         d20->work_triangle = slider_current(d20->selector);
       }
     }
@@ -1218,14 +1680,20 @@ void f2 ()
         void undo(net_t *n)
         {
           char err = 0;
-          int c = stack_peek(n->pinned,&err);
+          int c = stack_pop(n->pinned,&err);
+          printf("popped %d from stack\n", c);
           struct slot *sl = &n->slots[c];
           triangle_t *t = sl->positions[0];
-          slider_recede(n->selector);
-          slider_insert_after(n->selector,t);
+          if (sl->A->pinned + sl->B->pinned + sl->C->pinned == 0)
+          {
+            sl->positions[0] = NULL;
+            free_screen_triangle(t);
+            }
+          else
+            slider_insert_after(n->selector,t);
+        //  slider_recede(n->selector);
           n->work_triangle = slider_current(n->selector);
           sl->pinned = 0;
-          stack_pop(n->pinned,&err);
 
           //  needs expanding upon
 
@@ -1236,7 +1704,6 @@ void f2 ()
 
       }
     }
-
 
 
     if (mouse_left() == -1)
@@ -1250,14 +1717,17 @@ pin(d20, mX, mY);
 
     }
 
+
+
   }
 }
 
 
 void f3 (void)
 {
+  app.rotate_root = 1;
+  app.use_slider = 1;
   d20 = make_net_builder(35.0);
-
 }
 
 void f4 (void)
