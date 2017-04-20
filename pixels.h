@@ -4,8 +4,10 @@
 
     #include    "SDL2/SDL.h"
 
+
     #define   COLOR  uint32_t
 
+    //  change/read pixel values at a point on a surface
 
     COLOR getPixel (SDL_Surface *src, int x, int y);
 

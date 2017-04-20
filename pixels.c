@@ -1,18 +1,19 @@
 #include "pixels.h"
 
-
+//  knowing where pixels aren't
 #define   OUT_OF_BOUNDS(x, y, surface)  \
     (x >= surface->w)         \
         ||  (x < 0)           \
         ||  (y >= surface->h) \
         ||  (y < 0)
-
-#define   PIXEL_AT(x, y, surface)       (COLOR *) surface->pixels + y*surface->pitch/4 + x
+//  knowing how pixels are represented in memory
+#define   PIXEL_AT(x, y, surface)       \
+    (COLOR *) surface->pixels + y*surface->pitch/4 + x
 
 
 COLOR getPixel (SDL_Surface *src,
     int x, int y)
-{
+{ //  read pixel value from surface
   COLOR *bufp;
   if (OUT_OF_BOUNDS(x, y, src))
     return 0;
@@ -23,7 +24,7 @@ COLOR getPixel (SDL_Surface *src,
 void setPixel (SDL_Surface *dst,
     int x, int y,
     COLOR color)
-{
+{ //  change pixel value for surface
   COLOR *bufp;
   if (OUT_OF_BOUNDS(x, y, dst))
     return;

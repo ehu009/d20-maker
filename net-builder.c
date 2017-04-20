@@ -2,9 +2,9 @@
 
 #include    <math.h>
 
-
+//  distance between two points
 double distance (double x1, double y1, double x2, double y2)
-{
+{ //  pythagorean root of squared sides summed
   double dx = x2 - x1, dy = y2 - y1;
   dx *= dx;
   dy *= dy;
@@ -33,6 +33,8 @@ struct slot
 
 
   unsigned visited; //  might not need this one
+  //  perhaps a mutex device
+      //  depends on implementation
 };
 
 int slot_has_triangle(struct slot *slot, triangle_t *t)
@@ -42,20 +44,22 @@ int slot_has_triangle(struct slot *slot, triangle_t *t)
       ||  (slot->positions[2] == t);
 }
 
-
+//  amount of triangles in an icosahedron
 #define   TRIANGLES_TOTAL 20
 
 struct net_builder
 {
+  // params
   int rotation;
   double radius;
 
+  // selection
   triangle_t *work_triangle;
-
   chain_t *edge;
   chainslider_t *selector;
-  intstack_t *pinned;
 
+  // storage
+  intstack_t *pinned;
   struct slot slots[TRIANGLES_TOTAL];
 };
 
@@ -63,14 +67,27 @@ typedef struct net_builder net_t;
 
 
 /*
- *  neighbor relations between triangles
+ *  neighbor relations between triangles on an icosahedron
  */
+
+/*
+ *  relationships are stored as integer values, such that
+ *    they have three components, each are an index to an array
+ *    that represents the net of the icosahedron.
+ */
+
 //  five bits needed to count to 20
 #define MASK 0b011111
-//  so we need a short for 3 numbers, each up to 20
+
+//  so we need an integer type for 3 numbers, each up to 20
+//  =3*5=15 bits, +1 bit => one short
 #define NET_MODEL_TYPE short
-//  shift amounts for each number
+
+//  shift amounts for each number composing the net model type
 enum {SHAMT_A=10, SHAMT_B=5, SHAMT_C=0};
+
+
+//  these macros compose integers storing three numbers
 
 #define NEIGHBOR_A(x) (-1 + (((MASK << SHAMT_A) & x) >> SHAMT_A))
 #define NEIGHBOR_B(x) (-1 + (((MASK << SHAMT_B) & x) >> SHAMT_B))
@@ -78,6 +95,8 @@ enum {SHAMT_A=10, SHAMT_B=5, SHAMT_C=0};
 
 #define NET_MODEL_ENTRY(a,b,c)  (NET_MODEL_TYPE) 0 + (a<<SHAMT_A) + (b<<SHAMT_B) + (c<<SHAMT_C)
 
+//  integers that model relationship between itself and other integers
+  //  as if edging surfaces on an icosahedron
 NET_MODEL_TYPE net_model [TRIANGLES_TOTAL] =
 {
   NET_MODEL_ENTRY(3,2,4),
@@ -102,20 +121,19 @@ NET_MODEL_TYPE net_model [TRIANGLES_TOTAL] =
   NET_MODEL_ENTRY(17,18,19)
 };
 
-
 void init_slots (net_t *n)
-{
+{ //  initializes slots for a net
   struct slot *s;
   int i = 0;
   for (;i < TRIANGLES_TOTAL;i++)
   {
     s = &n->slots[i];
 
-    int j = 3;
-    while (j)
+    int j = 0;
+    while (j <3)
     {
-      s->positions[j-1] = NULL;
-      j--;
+      s->positions[j] = NULL;
+      j++;
     }
     s->pinned = 0;
     s->x = 0.0;
@@ -179,10 +197,11 @@ void free_screen_triangles (net_t *n)
   for (;i < TRIANGLES_TOTAL;i++)
   {
     s = &n->slots[i];
-    int j = 3;
-    for(; j; j--)
+    int j = 0;
+    while (j <3)
     {
-      t = &s->positions[j-1];
+      t = &s->positions[j];
+      j++;
       if (*t != NULL)
       {
         free(*t);
@@ -205,6 +224,10 @@ void free_net_builder(net_t *n)
   free(n);
 }
 
+
+
+
+
 struct application
 {
   //  togglers
@@ -213,11 +236,7 @@ struct application
   //  other things
 
 } app;
-/*
-struct application app = {
-  .rotate_root = 1,
-  .use_slider = 1
-};*/
+
 net_t *d20 = NULL;
 
 
@@ -287,18 +306,17 @@ void draw_slots(net_t *n, SDL_Surface *surface)
 
 
 void draw_net (net_t *n, SDL_Surface *surface)
-{
+{ //  draw a net onto a surface
   if (surface == NULL)
     return;
 
-
   if (stack_height (n->pinned))
-  {
+  { //  drawing more than one triangle
     draw_slots (n, surface);
     draw_screen_triangle (n->work_triangle, surface, colourPixel, 0x00ff00);
   }
   else
-  {
+  { //  draw first triangle as filled
     fill_invert_screen_triangle (n->work_triangle, surface);
   }
 
@@ -313,7 +331,7 @@ void f1 (void)
 
 
 void pin_root_triangle(net_t *n)
-{
+{ //  pinning the first triangle for a net
   int x, y;
   mouse_position(&x, &y);
 
@@ -458,7 +476,7 @@ void pin_root_triangle(net_t *n)
 
 
 void unpin_root_triangle(net_t *n)
-{
+{ // resetting the net structure by unpinning
   free_screen_triangles(n);
   free_chainslider(n->selector);
   n->selector = NULL;
@@ -479,11 +497,10 @@ void unpin_root_triangle(net_t *n)
   set_screen_triangle_position (n->work_triangle, x, y);
 }
 
-/*
- *
- * dev place
- *
- */
+
+
+
+
 
 
 
