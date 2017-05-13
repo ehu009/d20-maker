@@ -17,35 +17,12 @@ double distance (double x1, double y1, double x2, double y2)
 
 #include "chain.h"
 
-/*
- *  assigns slots in a net to triangles
- */
-
-struct slot
-{
-  unsigned pinned;
-  double x, y;
-  //  possible screen locations
-  triangle_t *positions[3];
-  //  neighboring triangles
-  struct slot *A, *B, *C;
+#include  "net_model.h"
 
 
 
-  unsigned visited; //  might not need this one
-  //  perhaps a mutex device
-      //  depends on implementation
-};
 
-int slot_has_triangle(struct slot *slot, triangle_t *t)
-{
-  return (slot->positions[0] == t)
-      ||  (slot->positions[1] == t)
-      ||  (slot->positions[2] == t);
-}
 
-//  amount of triangles in an icosahedron
-#define   TRIANGLES_TOTAL 20
 
 struct net_builder
 {
@@ -66,60 +43,8 @@ struct net_builder
 typedef struct net_builder net_t;
 
 
-/*
- *  neighbor relations between triangles on an icosahedron
- */
-
-/*
- *  relationships are stored as integer values, such that
- *    they have three components, each are an index to an array
- *    that represents the net of the icosahedron.
- */
-
-//  five bits needed to count to 20
-#define MASK 0b011111
-
-//  so we need an integer type for 3 numbers, each up to 20
-//  =3*5=15 bits, +1 bit => one short
-#define NET_MODEL_TYPE short
-
-//  shift amounts for each number composing the net model type
-enum {SHAMT_A=10, SHAMT_B=5, SHAMT_C=0};
 
 
-//  these macros compose integers storing three numbers
-
-#define NEIGHBOR_A(x) (-1 + (((MASK << SHAMT_A) & x) >> SHAMT_A))
-#define NEIGHBOR_B(x) (-1 + (((MASK << SHAMT_B) & x) >> SHAMT_B))
-#define NEIGHBOR_C(x) (-1 + (((MASK << SHAMT_C) & x) >> SHAMT_C))
-
-#define NET_MODEL_ENTRY(a,b,c)  (NET_MODEL_TYPE) 0 + (a<<SHAMT_A) + (b<<SHAMT_B) + (c<<SHAMT_C)
-
-//  integers that model relationship between itself and other integers
-  //  as if edging surfaces on an icosahedron
-NET_MODEL_TYPE net_model [TRIANGLES_TOTAL] =
-{
-  NET_MODEL_ENTRY(3,2,4),
-  NET_MODEL_ENTRY(1,6,5),
-  NET_MODEL_ENTRY(1,8,7),
-  NET_MODEL_ENTRY(1,10,9),
-  NET_MODEL_ENTRY(2,11,10),
-  NET_MODEL_ENTRY(2,7,12),
-  NET_MODEL_ENTRY(3,13,6),
-  NET_MODEL_ENTRY(3,9,14),
-  NET_MODEL_ENTRY(4,15,8),
-  NET_MODEL_ENTRY(4,5,16),
-  NET_MODEL_ENTRY(5,12,17),
-  NET_MODEL_ENTRY(6,18,11),
-  NET_MODEL_ENTRY(7,14,18),
-  NET_MODEL_ENTRY(8,19,13),
-  NET_MODEL_ENTRY(9,16,19),
-  NET_MODEL_ENTRY(10,17,15),
-  NET_MODEL_ENTRY(11,20,16),
-  NET_MODEL_ENTRY(12,13,20),
-  NET_MODEL_ENTRY(14,15,20),
-  NET_MODEL_ENTRY(17,18,19)
-};
 
 void init_slots (net_t *n)
 { //  initializes slots for a net
@@ -128,17 +53,7 @@ void init_slots (net_t *n)
   for (;i < TRIANGLES_TOTAL;i++)
   {
     s = &n->slots[i];
-
-    int j = 0;
-    while (j <3)
-    {
-      s->positions[j] = NULL;
-      j++;
-    }
-    s->pinned = 0;
-    s->x = 0.0;
-    s->y = 0.0;
-
+    init_slot(s);
     short neighbors = net_model[i];
     s->A = &n->slots[NEIGHBOR_A(neighbors)];
     s->B = &n->slots[NEIGHBOR_B(neighbors)];
@@ -181,6 +96,8 @@ net_t *make_net_builder(double start_radius)
 
     if (ptr != NULL)
     {
+      if (ptr->work_triangle == NULL)
+        free(ptr->work_triangle);
       free(ptr);
       ptr = NULL;
     }
@@ -234,7 +151,7 @@ struct application
   char rotate_root;
   char use_slider;
   //  other things
-
+  //  ...
 } app;
 
 net_t *d20 = NULL;
@@ -527,16 +444,7 @@ triangle_t *find_triangle_nearest_to(int x, int y)
   return nearest;
 }
 
-struct slot *get_neighbor_with_triangle (struct slot *s, triangle_t *t)
-{
-  if (slot_has_triangle (s->A, t))
-    return s->A;
-  else if (slot_has_triangle (s->B, t))
-    return s->B;
-  else if (slot_has_triangle (s->C, t))
-    return s->C;
-  else return NULL;
-}
+
 
 struct slot *find_nearest_neighbor (struct slot **network, int n, triangle_t *position)
 {
@@ -782,9 +690,9 @@ void pin (net_t *n, int mouse_x, int mouse_y)
 {
   if (stack_height(n->pinned) == TRIANGLES_TOTAL)
   {
-  printf("full of triangles\n");
+    printf("full of triangles\n");
     return;
-    }
+  }
 
 
 
@@ -860,7 +768,7 @@ void pin (net_t *n, int mouse_x, int mouse_y)
 
     printf ("slots are at %p, anchor is at %p\n", n->slots, nearest_neighbor);
 
-    struct slot *cur = get_neighbor_with_triangle (nearest_neighbor, st);
+    struct slot *cur = neighbor_with_triangle (nearest_neighbor, st);
     if (cur == NULL)
       printf ("something bent a-bad at %d\n",__LINE__);
     else
@@ -1206,7 +1114,7 @@ rotation =-onetwenty*expansions;
 
       //  push pinned to stack
       char err = 0;
-      int stack_addition = ((int)cur) - ((int)&n->slots[0]);
+      int stack_addition = slot_index(n->slots, cur);
       stack_addition /= sizeof(struct slot);
       printf("ADDING %d TO STACK\n", stack_addition);
       stack_push(n->pinned, &err, stack_addition);
