@@ -10,13 +10,12 @@
 #include "drawn-triangles.h"
 
 
-extern SDL_Surface *canvas, *draw_surface;
+extern SDL_Surface *canvas, *src_image;
 
 
-void f1 (void);
+void app_start (void);
+void app_free (void);
 
-void f2 (void);
 
-void f3 (void);
-
-void f4 (void);
+void app_usage (void);
+void app_draw (void);

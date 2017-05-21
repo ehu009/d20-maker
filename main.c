@@ -1,41 +1,37 @@
 #include    <stdlib.h>
 #include    <stdio.h>
 
-
-
 #include    "SDL2/SDL_image.h"
 #include    "SDL2/SDL_ttf.h"
 
-#include "lines.h"
-
 #include "net-builder.h"
-
-#include "drawn-triangles.h"
 
 
 int init (void);
 void unload (void);
-static uint32_t timer_callback(uint32_t interval, void *param);
+static uint32_t timer_callback (uint32_t interval, void *param);
 
+#define SIDE_BAR_W  400
+#define SIDE_BAR_H  400
 
-#define WINDOW_TITLE  "Icosahedron maker\0"
 SDL_Window *myWindow = NULL;
+#define WINDOW_TITLE  "Icosahedron maker\0"
+
 
 SDL_Surface *canvas = NULL,
     *src_image = NULL;
 
-unsigned screenWidth, screenHeight;
+unsigned canvasW, canvasH;
 
 
-
-void timerfunc (void *param)
-{ //  update screen image
-  SDL_FillRect(canvas, NULL, 0x0ff);
-  SDL_BlitSurface (src_image, NULL, canvas, NULL);
-
-  f1();
-  SDL_UpdateWindowSurface (myWindow);
+int exit_condition (SDL_Event *event)
+{
+  int quit = 0;
+  quit |= (event->type == SDL_QUIT);
+  quit |= ((event->type == SDL_KEYDOWN) && (event->key.keysym.sym == SDLK_ESCAPE));
+  return quit;
 }
+
 
 
 int main (int argc, char *arg[])
@@ -47,7 +43,7 @@ int main (int argc, char *arg[])
     return 1;
   }
 
-  f3();
+  app_start ();
 
   SDL_TimerID myTimer = SDL_AddTimer (1000/32, timer_callback, NULL);
 
@@ -57,35 +53,27 @@ int main (int argc, char *arg[])
     if (!SDL_PollEvent (&event))
     {
 
-      mouse_reset();
+      mouse_reset ();
     }
     else
     {
+      if (event.type == SDL_USEREVENT)
+      {   /*  User defined timed events */
+          void (*p) (void*) = event.user.data1;
+          p (event.user.data2);
+      }
 
+      mouse_update (&event);
 
-    if (event.type == SDL_USEREVENT)
-    {   /*  User defined timed events */
-        void (*p) (void*) = event.user.data1;
-        p(event.user.data2);
-    }
-
-    mouse_update(&event);
-
-    f2();
-
-
-
-
-
-
+      app_usage ();
     }
   }
-  while (event.type != SDL_QUIT);
+  while (!exit_condition(&event));
 
-  SDL_RemoveTimer(myTimer);
+  SDL_RemoveTimer (myTimer);
 
 
-  f4();
+  app_free ();
 
   unload ();
 
@@ -117,7 +105,7 @@ int init (void)
   if (SDL_Init (SDL_INIT_EVENTS | SDL_INIT_VIDEO))
     SDL_ERROR("SDL Init\0")
 
-  if (TTF_Init())
+  if (TTF_Init ())
   {
     print_error ("TTF_Init\0", TTF_GetError);
     return 0;
@@ -130,28 +118,38 @@ int init (void)
     return 0;
   }
 
+  canvasW = src_image->w;
+  canvasH = src_image->h;
 
-  screenWidth = src_image->w;
-  screenHeight = src_image->h;
+  unsigned screenH = canvasH,
+      screenW = SIDE_BAR_W + canvasW;
+  if (screenH < SIDE_BAR_H)
+    screenH = SIDE_BAR_H;
+
   myWindow = SDL_CreateWindow (WINDOW_TITLE,
       SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-      src_image->w, src_image->h,
-      0);
+      screenW, screenH, 0);
 
 
 
   if (myWindow == NULL)
-    SDL_ERROR("SDL_CreateWindow\0")
+    SDL_ERROR ("SDL_CreateWindow\0")
 
   canvas = SDL_GetWindowSurface (myWindow);
   if (canvas == NULL)
-    SDL_ERROR("SDL_GetWindowSurface\0")
+    SDL_ERROR ("SDL_GetWindowSurface\0")
 
   return 1;
 }
 
+void timerfunc (void *param)
+{ //  update screen image
+  void (*function) (void) = param;
+  function ();
+  SDL_UpdateWindowSurface (myWindow);
+}
 
-static uint32_t timer_callback(uint32_t interval, void *param)
+static uint32_t timer_callback (uint32_t interval, void *param)
 {
   SDL_Event event;
   SDL_UserEvent userevent;
@@ -159,19 +157,19 @@ static uint32_t timer_callback(uint32_t interval, void *param)
   userevent.type = SDL_USEREVENT;
   userevent.code = 0;
   userevent.data1 = &timerfunc;
-  userevent.data2 = NULL;
+  userevent.data2 = &app_draw;
 
   event.type = SDL_USEREVENT;
   event.user = userevent;
 
-  SDL_PushEvent(&event);
+  SDL_PushEvent (&event);
   return (interval);
 }
 
 
 void unload (void)
 {
-  SDL_FreeSurface (canvas);
+  SDL_FreeSurface (src_image);
   SDL_DestroyWindow (myWindow);
 
   TTF_Quit ();
