@@ -1,8 +1,8 @@
 PROG = d20-maker
 
 CC   = gcc
-HEAD = pixels.h lines.h drawn-triangles.h mouse.h net-builder.h mouse_app.h
-SRCS = pixels.c lines.c drawn-triangles.c mouse.c net-builder.c
+HEAD = vertex.h pixels.h lines.h mouse.h net-builder.h mouse_app.h
+SRCS = vertex.c pixels.c lines.c mouse.c net-builder.c
 FLAGS= -Wall
 LIBS = -lm -lSDL2 -lSDL2_image -lSDL2_ttf
 

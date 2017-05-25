@@ -22,7 +22,7 @@ int approximates (double test, double source, double accuracy)
 
 typedef enum {APP_START, APP_MAIN, APP_END, APP_FREE} app_status;
 
-struct application
+static struct
 {
   //  togglers
   char rotate_root;
@@ -30,7 +30,7 @@ struct application
   //  other things
   //  ...
   app_status status;
-} app;
+} application;
 
 
 
@@ -40,26 +40,26 @@ int rotate_root_triangle(void)
   if((mouse_middle() == -1)
       ||  (mouse_left() == -1))
   {
-    app.rotate_root ^= 1;
+    application.rotate_root ^= 1;
   }
-  return app.rotate_root;
+  return application.rotate_root;
 }
 
 int slide_selector(void)
 { //  toggle between using mouse wheel or position for selections
   if(mouse_middle() == -1)
   {
-    app.use_slider ^= 1;
+    application.use_slider ^= 1;
   }
-  return app.use_slider;
+  return application.use_slider;
 }
-
 
 
 void app_draw (void)
 {
   SDL_FillRect (canvas, NULL, 0x0ff);
   SDL_BlitSurface (src_image, NULL, canvas, NULL);
+
 }
 
 
@@ -151,9 +151,9 @@ void app_usage ()
 
 void app_start (void)
 {
-  app.rotate_root = 1;
-  app.use_slider = 1;
-  app.status = APP_START;
+  application.rotate_root = 1;
+  application.use_slider = 1;
+  application.status = APP_START;
 
   // initialize structures
 }

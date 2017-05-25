@@ -7,8 +7,6 @@
 #include "lines.h"
 #include "mouse_app.h"
 
-#include "drawn-triangles.h"
-
 
 extern SDL_Surface *canvas, *src_image;
 

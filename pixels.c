@@ -12,9 +12,10 @@
 
 
 COLOR getPixel (SDL_Surface *src,
-    int x, int y)
+    vtx2_t *p)
 { //  read pixel value from surface
   COLOR *bufp;
+  int x = p->pts[0], y = p->pts[1];
   if (OUT_OF_BOUNDS(x, y, src))
     return 0;
   bufp = PIXEL_AT(x, y, src);
@@ -22,10 +23,11 @@ COLOR getPixel (SDL_Surface *src,
 }
 
 void setPixel (SDL_Surface *dst,
-    int x, int y,
+    vtx2_t *p,
     COLOR color)
 { //  change pixel value for surface
   COLOR *bufp;
+  int x = p->pts[0], y = p->pts[1];
   if (OUT_OF_BOUNDS(x, y, dst))
     return;
   bufp = (COLOR *) dst->pixels + y*dst->pitch/4 + x;
