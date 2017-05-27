@@ -8,10 +8,10 @@
   extern SDL_Surface *canvas;
 
   //  a type for functions that plot a single pixel
-  typedef void (*plot_func) (SDL_Surface *, vtx2_t *, COLOR);
+  typedef void (*plot_func) (SDL_Surface *, vtx2i_t *, COLOR);
 
-  void colourPixel (SDL_Surface *dst, vtx2_t *p, COLOR color);
-  void invertPixel (SDL_Surface *dst, vtx2_t *p, COLOR color);
+  void colourPixel (SDL_Surface *dst, vtx2i_t *p, COLOR color);
+  void invertPixel (SDL_Surface *dst, vtx2i_t *p, COLOR color);
 
 
   /*
@@ -24,7 +24,7 @@
       COLOR color);
 
   void draw_line2 (SDL_Surface *surface,
-      vtx2_t *A, vtx2_t *B,
+      vtx2i_t *A, vtx2i_t *B,
       plot_func plot, COLOR color);
 
 

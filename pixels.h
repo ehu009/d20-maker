@@ -10,9 +10,9 @@
 
     //  change/read pixel values at a point on a surface
 
-    COLOR getPixel (SDL_Surface *src, vtx2_t *p);
+    COLOR getPixel (SDL_Surface *src, vtx2i_t *p);
 
-    void setPixel(SDL_Surface *dst, vtx2_t *p, COLOR color);
+    void setPixel(SDL_Surface *dst, vtx2i_t *p, COLOR color);
 
 
 #endif  /*  PIXELS_H_ */

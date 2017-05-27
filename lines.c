@@ -54,7 +54,7 @@ void draw_line (SDL_Surface *surface,
   frac = *du - ((*dv) / 2);
 
   //  Drawing
-  vtx2_t p = {.pts={x,y}};
+  vtx2i_t p = {.pts={x,y}};
   plot (surface, &p, color);
   while (*v != *v2)
   {
@@ -67,12 +67,12 @@ void draw_line (SDL_Surface *surface,
 
 
 void draw_line2 (SDL_Surface *surface,
-    vtx2_t *A, vtx2_t *B,
+    vtx2i_t *A, vtx2i_t *B,
     plot_func plot,
     COLOR color)
 { //  Bresenham algorithm
   int frac;
-  vtx2_t p1 = *A, p2 = *B;
+  vtx2i_t p1 = *A, p2 = *B;
   int x = p1.pts[0], dx = p2.pts[0] - x, stepx = 1,
       y = p1.pts[1], dy = p2.pts[1] - y, stepy = 1;
 
@@ -93,7 +93,7 @@ void draw_line2 (SDL_Surface *surface,
   frac = *du - ((*dv) / 2);
 
   //  Drawing
-  vtx2_t p = {.pts={x,y}};
+  vtx2i_t p = {.pts={x,y}};
   plot (surface, &p, color);
   while (*v != *v2)
   {
@@ -111,14 +111,14 @@ void draw_line2 (SDL_Surface *surface,
  */
 
 
-void colourPixel (SDL_Surface *dst, vtx2_t *p, unsigned color)
+void colourPixel (SDL_Surface *dst, vtx2i_t *p, unsigned color)
 {
   setPixel (dst, p, color);
 }
 
-void invertPixel (SDL_Surface *dst, vtx2_t *p, unsigned color)
+void invertPixel (SDL_Surface *dst, vtx2i_t *p, unsigned color)
 {
-  vtx2_t p2 = *p;
+  vtx2i_t p2 = *p;
   SDL_Rect clip_rect;
   SDL_GetClipRect (canvas, &clip_rect);
   if (clip_rect.x != 0)

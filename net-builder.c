@@ -36,7 +36,7 @@ static struct
 int rotate_root_triangle(void)
 { //  toggle between rotation and resizing of root triangle
   if((mouse_middle() == -1)
-      ||  (mouse_left() == -1))
+      ||  (mouse_right() == -1))
   {
     application.rotate_root ^= 1;
   }
@@ -56,7 +56,7 @@ int slide_selector(void)
 /*
  *  model of vertices in an icosahedron
  */
-vtx5_t d20_model[12] =
+vtx5i_t d20_model[12] =
 {
  {.pts = {1,2,3,4,5}},
  {.pts = {0,2,5,6,7}},
@@ -79,9 +79,9 @@ static struct
   int rotation;
   int num_faces;
 
-  vtx2_t *pos[12];
-  vtx2_t *invalid[12];
-  vtx5_t linkage[12];
+  vtx2i_t *pos[12];
+  vtx2i_t *invalid[12];
+  vtx5i_t linkage[12];
 } d20;
 
 
@@ -106,9 +106,9 @@ void app_start (void)
   d20.x = 50.0;
   d20.y = 50.0;
 
-  d20.pos[0] = calloc (1, sizeof(vtx2_t));
-  d20.pos[1] = calloc (1, sizeof(vtx2_t));
-  d20.pos[2] = calloc (1, sizeof(vtx2_t));
+  d20.pos[0] = calloc (1, sizeof(vtx2i_t));
+  d20.pos[1] = calloc (1, sizeof(vtx2i_t));
+  d20.pos[2] = calloc (1, sizeof(vtx2i_t));
 
 }
 
