@@ -45,7 +45,7 @@ int main (int argc, char *arg[])
 
   app_start ();
 
-  SDL_TimerID myTimer = SDL_AddTimer (1000/32, timer_callback, NULL);
+  SDL_TimerID myTimer = SDL_AddTimer (1000/64, timer_callback, NULL);
 
   SDL_Event event;
   do
