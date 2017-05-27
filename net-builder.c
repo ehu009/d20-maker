@@ -57,7 +57,9 @@ int slide_selector(void)
 /*
  *  model of vertices in an icosahedron
  */
-vtx5i_t d20_model[12] =
+#define NUM_D20_VTX   12
+
+vtx5i_t d20_model[NUM_D20_VTX] =
 {
  {.pts = {1,2,3,4,5}},
  {.pts = {0,2,5,6,7}},
@@ -73,11 +75,13 @@ vtx5i_t d20_model[12] =
  {.pts = {7,8,3,10,11}}
 };
 
+#define NUM_VTX_POS   5
 
 struct working_triangle
 {
-  vtx2d_t *A, *B, *C;
+  vtx2d_t **A, **B, **C;
 };
+
 
 
 static struct
@@ -88,9 +92,10 @@ static struct
   int num_faces;
   struct working_triangle current;
 
-  vtx2d_t *pos[12];
-  vtx2d_t *invalid[12];
-  vtx5i_t linkage[12];
+  char pinned[NUM_D20_VTX];
+  vtx2d_t *pos[NUM_D20_VTX][NUM_VTX_POS];
+  vtx2d_t *invalid[NUM_D20_VTX];
+  vtx5i_t linkage[NUM_D20_VTX];
 } d20;
 
 
@@ -102,10 +107,13 @@ void app_start (void)
   application.status = APP_START;
 
   // initialize structures
-  int j = 0;
-  for (; j < 12; j ++)
+  int j = 0, k = 0;
+  for (; j < NUM_D20_VTX; j ++)
   {
-    d20.pos[j] = NULL;
+    for (; k < NUM_VTX_POS; k++)
+    {
+      d20.pos[j][k] = NULL;
+    }
     d20.invalid[j] = NULL;
     d20.linkage[j] = d20_model[j];
   }
@@ -115,37 +123,38 @@ void app_start (void)
   d20.x = 50;
   d20.y = 50;
 
-  d20.current.A = calloc (1, sizeof(vtx2d_t));
-  d20.current.B = calloc (1, sizeof(vtx2d_t));
-  d20.current.C = calloc (1, sizeof(vtx2d_t));
+  d20.current.A = &d20.pos[0][0];
+  d20.current.B = &d20.pos[1][0];
+  d20.current.C = &d20.pos[2][0];
 
+  *d20.current.A = calloc (1, sizeof(vtx2d_t));
+  *d20.current.B = calloc (1, sizeof(vtx2d_t));
+  *d20.current.C = calloc (1, sizeof(vtx2d_t));
 }
 
 void app_free (void)
 {
   //  free initialized structures
-  int j = 0;
-  for (; j < 12; j ++)
+  int j = 0, k = 0;
+  for (; j < NUM_D20_VTX; j ++)
   {
-    if (d20.pos[j] != NULL)
-      free (d20.pos[j]);
+    for (; k < NUM_VTX_POS; k++)
+    {
+      if (d20.pos[j][k] != NULL)
+        free (d20.pos[j][k]);
+    }
     if (d20.invalid[j] != NULL)
       free (d20.invalid[j]);
   }
-  if (d20.current.A != NULL)
-    free(d20.current.A);
-  if (d20.current.B != NULL)
-    free(d20.current.B);
-  if (d20.current.C != NULL)
-    free(d20.current.C);
+
 }
 
 void draw_root (void)
 {
   vtx2i_t p1, p2, p3;
-  get_vtx2i_from_vtx2d(d20.current.A, &p1);
-  get_vtx2i_from_vtx2d(d20.current.B, &p2);
-  get_vtx2i_from_vtx2d(d20.current.C, &p3);
+  get_vtx2i_from_vtx2d(*d20.current.A, &p1);
+  get_vtx2i_from_vtx2d(*d20.current.B, &p2);
+  get_vtx2i_from_vtx2d(*d20.current.C, &p3);
 
   draw_line2 (canvas, &p1, &p2, invertPixel, 0);
   draw_line2 (canvas, &p2, &p3, invertPixel, 0);
@@ -187,14 +196,14 @@ void change_root (void)
   r2 *= M_PI/180;
   r3 *= M_PI/180;
 
-  d20.current.A->pts[0] = d20.x + sin(r1) * radi;
-  d20.current.A->pts[1] = d20.y + cos(r1) * radi;
+  (*d20.current.A)->pts[0] = d20.x + sin(r1) * radi;
+  (*d20.current.A)->pts[1] = d20.y + cos(r1) * radi;
 
-  d20.current.B->pts[0] = d20.x + sin(r2) * radi;
-  d20.current.B->pts[1] = d20.y + cos(r2) * radi;
+  (*d20.current.B)->pts[0] = d20.x + sin(r2) * radi;
+  (*d20.current.B)->pts[1] = d20.y + cos(r2) * radi;
 
-  d20.current.C->pts[0] = d20.x + sin(r3) * radi;
-  d20.current.C->pts[1] = d20.y + cos(r3) * radi;
+  (*d20.current.C)->pts[0] = d20.x + sin(r3) * radi;
+  (*d20.current.C)->pts[1] = d20.y + cos(r3) * radi;
 }
 
 void app_usage ()
