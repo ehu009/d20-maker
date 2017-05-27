@@ -9,7 +9,9 @@
 
 int init (void);
 void unload (void);
-static uint32_t timer_callback (uint32_t interval, void *param);
+const uint32_t update_interval = 1000/64;
+
+static uint32_t draw_callback (uint32_t interval, void *param);
 
 #define SIDE_BAR_W  400
 #define SIDE_BAR_H  400
@@ -24,14 +26,7 @@ SDL_Surface *canvas = NULL,
 unsigned canvasW, canvasH;
 
 
-int exit_condition (SDL_Event *event)
-{
-  int quit = 0;
-  quit |= (event->type == SDL_QUIT);
-  quit |= ((event->type == SDL_KEYDOWN) && (event->key.keysym.sym == SDLK_ESCAPE));
-  return quit;
-}
-
+static int exit_condition (SDL_Event *event);
 
 
 int main (int argc, char *arg[])
@@ -45,33 +40,35 @@ int main (int argc, char *arg[])
 
   app_start ();
 
-  SDL_TimerID myTimer = SDL_AddTimer (1000/64, timer_callback, NULL);
+  SDL_TimerID drawingTimer = SDL_AddTimer (update_interval, draw_callback, NULL);
 
   SDL_Event event;
   do
   {
     if (!SDL_PollEvent (&event))
     {
-
-      mouse_reset ();
+      SDL_Delay (update_interval);
     }
     else
     {
       if (event.type == SDL_USEREVENT)
-      {   /*  User defined timed events */
+      {
           void (*p) (void*) = event.user.data1;
-          p (event.user.data2);
+          p (NULL);
       }
 
-      mouse_update (&event);
+      if (mouse_update (&event))
+      {
+        app_usage ();
+        mouse_reset();
+      }
 
-      app_usage ();
     }
   }
   while (!exit_condition(&event));
 
-  SDL_RemoveTimer (myTimer);
 
+  SDL_RemoveTimer (drawingTimer);
 
   app_free ();
 
@@ -102,7 +99,7 @@ int init (void)
 
   #define SDL_ERROR(x)  {print_error(x, SDL_GetError); return 0;}
 
-  if (SDL_Init (SDL_INIT_EVENTS | SDL_INIT_VIDEO))
+  if (SDL_Init (SDL_INIT_EVENTS | SDL_INIT_VIDEO | SDL_INIT_TIMER))
     SDL_ERROR("SDL Init\0")
 
   if (TTF_Init ())
@@ -142,30 +139,37 @@ int init (void)
   return 1;
 }
 
-void timerfunc (void *param)
+void drawfunc (void *param)
 { //  update screen image
-  void (*function) (void) = param;
-  function ();
+  app_draw();
   SDL_UpdateWindowSurface (myWindow);
 }
 
-static uint32_t timer_callback (uint32_t interval, void *param)
+SDL_UserEvent _drawEvent = {
+  .type = SDL_USEREVENT,
+  .code = 0,
+  .data1 = &drawfunc
+};
+
+static uint32_t draw_callback (uint32_t interval, void *param)
 {
-  SDL_Event event;
-  SDL_UserEvent userevent;
-
-  userevent.type = SDL_USEREVENT;
-  userevent.code = 0;
-  userevent.data1 = &timerfunc;
-  userevent.data2 = &app_draw;
-
-  event.type = SDL_USEREVENT;
-  event.user = userevent;
-
+  SDL_Event event = {
+    .type = SDL_USEREVENT,
+    .user = _drawEvent
+  };
   SDL_PushEvent (&event);
+
   return (interval);
 }
 
+static int exit_condition (SDL_Event *event)
+{
+  int quit = 0;
+  quit |= (event->type == SDL_QUIT);
+  quit |= ((event->type == SDL_KEYDOWN)
+      && (event->key.keysym.sym == SDLK_ESCAPE));
+  return quit;
+}
 
 void unload (void)
 {

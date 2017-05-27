@@ -20,7 +20,7 @@
    *  controls state
    */
   //  call on successfully popping event from queue
-  void mouse_update (SDL_Event *e);
+  int mouse_update (SDL_Event *e);
 
   //  call when event queue is empty
   void mouse_reset (void);

@@ -76,16 +76,18 @@ void mouse_handle_scroll (SDL_Event *e)
     SET(MASK_WHEEL_UP);
 }
 
-void mouse_update (SDL_Event *e)
+int mouse_update (SDL_Event *e)
 {
+  int q = 1;
   mouse.moving = 0;
   switch (e->type)
   {
-    case SDL_MOUSEBUTTONUP:   { mouse_handle_up (e);    break;  }
-    case SDL_MOUSEBUTTONDOWN: { mouse_handle_down (e);  break;  }
-    case SDL_MOUSEMOTION:     { mouse_handle_move (e);  break;  }
-    case SDL_MOUSEWHEEL:      { mouse_handle_scroll (e);break;  }
+    case SDL_MOUSEBUTTONUP:   { mouse_handle_up (e);    ++q;  break;  }
+    case SDL_MOUSEBUTTONDOWN: { mouse_handle_down (e);  ++q;  break;  }
+    case SDL_MOUSEMOTION:     { mouse_handle_move (e);  ++q;  break;  }
+    case SDL_MOUSEWHEEL:      { mouse_handle_scroll (e);++q;  break;  }
   }
+  return q;
 }
 
 
