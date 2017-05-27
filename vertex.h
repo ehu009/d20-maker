@@ -6,15 +6,24 @@
     int pts[2];
   };
 
+  struct vertex_2point_double
+  {
+    double pts[2];
+  };
+
+
   struct vertex_5point_integer
   {
     int pts[5];
   };
 
 
-  typedef struct vertex_2point_integer vtx2i_t;
+  typedef struct vertex_2point_integer  vtx2i_t;
 
-  typedef struct vertex_5point_integer vtx5i_t;
+  typedef struct vertex_2point_double   vtx2d_t;
+
+
+  typedef struct vertex_5point_integer  vtx5i_t;
 
 
 
