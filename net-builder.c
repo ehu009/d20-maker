@@ -77,11 +77,23 @@ vtx5i_t d20_model[NUM_D20_VTX] =
 
 #define NUM_VTX_POS   5
 
-struct working_triangle
+
+
+struct vertex_slot
 {
-  vtx2d_t **A, **B, **C;
+  char pinned;
+  vtx2d_t *pos[NUM_VTX_POS];
+  vtx2d_t *invalid;
+  struct vertex_slot *links[NUM_VTX_POS];
 };
 
+typedef struct vertex_slot slot_t;
+
+struct working_triangle
+{
+  slot_t *A, *B, *C;
+//  vtx2d_t **A, **B, **C;
+};
 
 
 static struct
@@ -90,12 +102,9 @@ static struct
   double radius;
   int rotation;
   int num_faces;
-  struct working_triangle current;
 
-  char pinned[NUM_D20_VTX];
-  vtx2d_t *pos[NUM_D20_VTX][NUM_VTX_POS];
-  vtx2d_t *invalid[NUM_D20_VTX];
-  vtx5i_t linkage[NUM_D20_VTX];
+  struct working_triangle current;
+  slot_t vertex[NUM_D20_VTX];
 } d20;
 
 
@@ -108,14 +117,18 @@ void app_start (void)
 
   // initialize structures
   int j = 0, k = 0;
+  slot_t *s;
   for (; j < NUM_D20_VTX; j ++)
   {
+    s = &d20.vertex[j];
+    s->pinned = 0;
     for (; k < NUM_VTX_POS; k++)
     {
-      d20.pos[j][k] = NULL;
+      s->pos[k] = NULL;
+      s->links[k] = &d20.vertex[d20_model[j].pts[k]];
     }
-    d20.invalid[j] = NULL;
-    d20.linkage[j] = d20_model[j];
+    s->invalid = NULL;
+
   }
 
   d20.num_faces = 0;
@@ -123,28 +136,30 @@ void app_start (void)
   d20.x = 50;
   d20.y = 50;
 
-  d20.current.A = &d20.pos[0][0];
-  d20.current.B = &d20.pos[1][0];
-  d20.current.C = &d20.pos[2][0];
+  d20.current.A = &d20.vertex[0];
+  d20.current.B = &d20.vertex[1];
+  d20.current.C = &d20.vertex[2];
 
-  *d20.current.A = calloc (1, sizeof(vtx2d_t));
-  *d20.current.B = calloc (1, sizeof(vtx2d_t));
-  *d20.current.C = calloc (1, sizeof(vtx2d_t));
+  d20.current.A->pos[0] = calloc (1, sizeof(vtx2d_t));
+  d20.current.B->pos[0] = calloc (1, sizeof(vtx2d_t));
+  d20.current.C->pos[0] = calloc (1, sizeof(vtx2d_t));
 }
 
 void app_free (void)
 {
   //  free initialized structures
   int j = 0, k = 0;
+  slot_t *s;
   for (; j < NUM_D20_VTX; j ++)
   {
+    s = &d20.vertex[j];
     for (; k < NUM_VTX_POS; k++)
     {
-      if (d20.pos[j][k] != NULL)
-        free (d20.pos[j][k]);
+      if (s->pos[k] != NULL)
+        free (s->pos[k]);
     }
-    if (d20.invalid[j] != NULL)
-      free (d20.invalid[j]);
+    if (s->invalid != NULL)
+      free (s->invalid);
   }
 
 }
@@ -152,9 +167,9 @@ void app_free (void)
 void draw_root (void)
 {
   vtx2i_t p1, p2, p3;
-  get_vtx2i_from_vtx2d(*d20.current.A, &p1);
-  get_vtx2i_from_vtx2d(*d20.current.B, &p2);
-  get_vtx2i_from_vtx2d(*d20.current.C, &p3);
+  get_vtx2i_from_vtx2d(d20.current.A->pos[0], &p1);
+  get_vtx2i_from_vtx2d(d20.current.B->pos[0], &p2);
+  get_vtx2i_from_vtx2d(d20.current.C->pos[0], &p3);
 
   draw_line2 (canvas, &p1, &p2, invertPixel, 0);
   draw_line2 (canvas, &p2, &p3, invertPixel, 0);
@@ -196,14 +211,16 @@ void change_root (void)
   r2 *= M_PI/180;
   r3 *= M_PI/180;
 
-  (*d20.current.A)->pts[0] = d20.x + sin(r1) * radi;
-  (*d20.current.A)->pts[1] = d20.y + cos(r1) * radi;
-
-  (*d20.current.B)->pts[0] = d20.x + sin(r2) * radi;
-  (*d20.current.B)->pts[1] = d20.y + cos(r2) * radi;
-
-  (*d20.current.C)->pts[0] = d20.x + sin(r3) * radi;
-  (*d20.current.C)->pts[1] = d20.y + cos(r3) * radi;
+  vtx2d_t *ptr;
+  ptr = d20.current.A->pos[0];
+  ptr->pts[0] = d20.x + sin(r1) * radi;
+  ptr->pts[1] = d20.y + cos(r1) * radi;
+  ptr = d20.current.B->pos[0];
+  ptr->pts[0] = d20.x + sin(r2) * radi;
+  ptr->pts[1] = d20.y + cos(r2) * radi;
+  ptr = d20.current.C->pos[0];
+  ptr->pts[0] = d20.x + sin(r3) * radi;
+  ptr->pts[1] = d20.y + cos(r3) * radi;
 }
 
 void app_usage ()
