@@ -27,6 +27,9 @@
 
 
 
+  void get_vtx2i_from_vtx2d (vtx2d_t *src, vtx2i_t *dst);
+
+  vtx2i_t *make_vtx2i_from_vtx2d (vtx2d_t *src);
 
 
 #endif    /*  VERTICES_H_ */
