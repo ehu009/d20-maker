@@ -29,6 +29,7 @@ static struct
   char use_slider;
   //  other things
   //  ...
+  int mX, mY;
   app_status status;
 } application;
 
@@ -72,15 +73,23 @@ vtx5i_t d20_model[12] =
  {.pts = {7,8,3,10,11}}
 };
 
+
+struct working_triangle
+{
+  vtx2d_t *A, *B, *C;
+};
+
+
 static struct
 {
-  double x, y;
+  int x, y;
   double radius;
   int rotation;
   int num_faces;
+  struct working_triangle current;
 
-  vtx2i_t *pos[12];
-  vtx2i_t *invalid[12];
+  vtx2d_t *pos[12];
+  vtx2d_t *invalid[12];
   vtx5i_t linkage[12];
 } d20;
 
@@ -103,12 +112,12 @@ void app_start (void)
 
   d20.num_faces = 0;
   d20.radius = 30.0;
-  d20.x = 50.0;
-  d20.y = 50.0;
+  d20.x = 50;
+  d20.y = 50;
 
-  d20.pos[0] = calloc (1, sizeof(vtx2i_t));
-  d20.pos[1] = calloc (1, sizeof(vtx2i_t));
-  d20.pos[2] = calloc (1, sizeof(vtx2i_t));
+  d20.current.A = calloc (1, sizeof(vtx2d_t));
+  d20.current.B = calloc (1, sizeof(vtx2d_t));
+  d20.current.C = calloc (1, sizeof(vtx2d_t));
 
 }
 
@@ -123,8 +132,24 @@ void app_free (void)
     if (d20.invalid[j] != NULL)
       free (d20.invalid[j]);
   }
+  if (d20.current.A != NULL)
+    free(d20.current.A);
+  if (d20.current.B != NULL)
+    free(d20.current.B);
+  if (d20.current.C != NULL)
+    free(d20.current.C);
+}
 
+void draw_root (void)
+{
+  vtx2i_t p1, p2, p3;
+  get_vtx2i_from_vtx2d(d20.current.A, &p1);
+  get_vtx2i_from_vtx2d(d20.current.B, &p2);
+  get_vtx2i_from_vtx2d(d20.current.C, &p3);
 
+  draw_line2 (canvas, &p1, &p2, invertPixel, 0);
+  draw_line2 (canvas, &p2, &p3, invertPixel, 0);
+  draw_line2 (canvas, &p3, &p1, invertPixel, 0);
 }
 
 
@@ -136,9 +161,7 @@ void app_draw (void)
   if (!d20.num_faces)
   {
     //fill_invert_screen_triangle (d20.pos[0], d20.pos[1], d20.pos[2], canvas);
-    draw_line2 (canvas, d20.pos[0], d20.pos[1], invertPixel, 0);
-    draw_line2 (canvas, d20.pos[1], d20.pos[2], invertPixel, 0);
-    draw_line2 (canvas, d20.pos[2], d20.pos[0], invertPixel, 0);
+    draw_root ();
   }
 }
 
@@ -154,62 +177,70 @@ void relocate_and_undo (void)
   }
 }
 
+void change_root (void)
+{
+  double radi = d20.radius;
+  double r1 = (90 - (30 * d20.rotation)),
+      r2 = (90 - (30 * d20.rotation) - 120),
+      r3 = (90 - (30 * d20.rotation) + 120);
+  r1 *= M_PI/180;
+  r2 *= M_PI/180;
+  r3 *= M_PI/180;
 
+  d20.current.A->pts[0] = d20.x + sin(r1) * radi;
+  d20.current.A->pts[1] = d20.y + cos(r1) * radi;
+
+  d20.current.B->pts[0] = d20.x + sin(r2) * radi;
+  d20.current.B->pts[1] = d20.y + cos(r2) * radi;
+
+  d20.current.C->pts[0] = d20.x + sin(r3) * radi;
+  d20.current.C->pts[1] = d20.y + cos(r3) * radi;
+}
 
 void app_usage ()
 {
-  int mX, mY;
-  mouse_position (&mX, &mY);
+
 
   if (!d20.num_faces)
   { //  root triangle is not pinned
-
+    int change = 0;
     if (mouse_moves())
     { // set triangle position
-      d20.x = mX;
-      d20.y = mY;
+      d20.x = application.mX;
+      d20.y = application.mY;
+      mouse_position (&application.mX, &application.mY);
+      ++ change;
     }
     else
     {
-    if (mouse_left() == -1)
-    {
-      // pin
-    }
-    int scroll = mouse_scroll();
-    if (rotate_root_triangle())
-    {
-      if (scroll)
+      if (mouse_left() == -1)
       {
-        // increase radius
-        d20.radius += scroll*1.75;
+        // pin
       }
-    }
-    else
-    {
-      if (scroll)
+      int scroll = mouse_scroll();
+      if (rotate_root_triangle())
       {
-        // rotate
-        d20.rotation += scroll;
+        if (scroll)
+        {
+          // increase radius
+          d20.radius += scroll*1.75;
+          ++ change;
+        }
       }
+      else
+      {
+        if (scroll)
+        {
+          // rotate
+          d20.rotation += scroll;
+          ++ change;
+        }
+      }
+
     }
-    }
+    if (change)
+      change_root ();
 
-    double radi = d20.radius;
-    double r1 = (90 - (30 * d20.rotation)),
-        r2 = (90 - (30 * d20.rotation) - 120),
-        r3 = (90 - (30 * d20.rotation) + 120);
-    r1 *= M_PI/180;
-    r2 *= M_PI/180;
-    r3 *= M_PI/180;
-
-    d20.pos[0]->pts[0] = d20.x + sin(r1) * radi;
-    d20.pos[0]->pts[1] = d20.y + cos(r1) * radi;
-
-    d20.pos[1]->pts[0] = d20.x + sin(r2) * radi;
-    d20.pos[1]->pts[1] = d20.y + cos(r2) * radi;
-
-    d20.pos[2]->pts[0] = d20.x + sin(r3) * radi;
-    d20.pos[2]->pts[1] = d20.y + cos(r3) * radi;
 
   }
   else
@@ -244,6 +275,7 @@ void app_usage ()
       //selecting a triangle with position
       if (mouse_moves ())
       {
+        mouse_position (&application.mX, &application.mY);
 
       }
     }
