@@ -94,7 +94,7 @@ void draw_line2 (SDL_Surface *surface,
 
   //  Drawing
   vtx2i_t p = {.pts={x,y}};
-  plot (surface, &p, color);
+
   while (*v != *v2)
   {
     p.pts[0] = x;

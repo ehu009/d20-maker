@@ -95,6 +95,7 @@ struct working_triangle
 //  vtx2d_t **A, **B, **C;
 };
 
+typedef struct working_triangle triangle_t;
 
 static struct
 {
@@ -103,7 +104,7 @@ static struct
   int rotation;
   int num_faces;
 
-  struct working_triangle current;
+  triangle_t current;
   slot_t vertex[NUM_D20_VTX];
 } d20;
 
@@ -189,13 +190,11 @@ SDL_Rect *get_bounds_of_triangle (vtx2d_t *a, vtx2d_t *b, vtx2d_t *c)
     if (highest.pts[1] <= c->pts[1])
       highest.pts[1] = c->pts[1];
 
-    ptr->x = lowest.pts[0];
-    ptr->y = lowest.pts[1];
-    ptr->w = highest.pts[0] + 1.5;
-    ptr->h = highest.pts[1] + 1.5;
+    ptr->x = lowest.pts[0] + 0.5;
+    ptr->y = lowest.pts[1] + 0.5;
+    ptr->w = highest.pts[0] + 1.5 - lowest.pts[0];
+    ptr->h = highest.pts[1] + 1.5 - lowest.pts[1];
 
-    ptr->w -= ptr->x;
-    ptr->h -= ptr->y;
   }
   return ptr;
 }
@@ -203,23 +202,19 @@ SDL_Rect *get_bounds_of_triangle (vtx2d_t *a, vtx2d_t *b, vtx2d_t *c)
 
 
 
-void fill_test (vtx2d_t *a, vtx2d_t *b, vtx2d_t *c)
+void fill_triangle (vtx2d_t *a, vtx2d_t *b, vtx2d_t *c, plot_func plot, COLOR color)
 {
   SDL_Rect *rect = get_bounds_of_triangle (a, b, c);
 
   SDL_Surface *surf = NULL;
 
-
-
   #if SDL_BYTEORDER == SDL_BIG_ENDIAN
     surf = SDL_CreateRGBSurface (0, rect->w, rect->h, 32, 0xFF000000, 0x00FF0000, 0x0000FF00, 0x000000FF);
   #else
-    surf = SDL_CreateRGBSurface (0, rect->w, rect->h, 32, 0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000);
+    surf = SDL_CreateRGBSurface (0, rect->w, rect->h , 32, 0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000);
   #endif
 
-
   SDL_SetSurfaceBlendMode(surf,SDL_BLENDMODE_BLEND);
- // SDL_BlitSurface (canvas, &rect, surf, NULL);
 
   SDL_Rect clip_rect;
   SDL_GetClipRect(canvas, &clip_rect);
@@ -236,11 +231,21 @@ void fill_test (vtx2d_t *a, vtx2d_t *b, vtx2d_t *c)
   B.pts[1] -= rect->y;
   C.pts[1] -= rect->y;
 
-  uint32_t pixel, markup = SDL_MapRGBA(surf->format, 0xff,0xff,0,0);
+  COLOR pixel, fill = color, markup = SDL_MapRGBA(surf->format, 0xff,0xff,0,0);
+  if (plot != invertPixel)
+  {
+    unsigned R = (color & 0x00ff0000)>>16,
+        G = (color & 0x0000ff00)>>8,
+        B = (color & 0x000000ff),
+        A = (color & 0xff000000)>>24;
+    fill = SDL_MapRGBA(surf->format, R, G, B, A);
+    if (markup == fill)
+      markup = SDL_MapRGBA(surf->format, 0xff,0xee,0,0);
+  }
 
   draw_line2 (surf, &A, &B, colourPixel, markup);
-  draw_line2 (surf, &C, &B, colourPixel, markup);
-  draw_line2 (surf, &A, &C, colourPixel, markup);
+  draw_line2 (surf, &B, &C, colourPixel, markup);
+  draw_line2 (surf, &C, &A, colourPixel, markup);
 
   vtx2i_t p;
   int i = 0, j = 0;
@@ -274,57 +279,35 @@ void fill_test (vtx2d_t *a, vtx2d_t *b, vtx2d_t *c)
       }
       p.pts[1] = upper;
       vtx2i_t p2 = {.pts = {i, lower}};
-      draw_line2 (surf, &p, &p2, invertPixel, 0);
+      draw_line2 (surf, &p, &p2, plot, fill);
     }
   }
 
   SDL_SetClipRect(canvas, &clip_rect);
-
-
   SDL_BlitSurface (surf, NULL, canvas, rect);
 
   SDL_FreeSurface (surf);
   free(rect);
 }
-/*
- uint32_t pixel;
 
-  for (i = b_x; i <= surf->w; i++)
-  {
-    int upper = -1, lower = -1;
 
-    for (j = b_y; j <= surf->h; j++)
-    {
-      pixel = getPixel(surf, i, j);
-      if (pixel != markup)
-        continue;
-      upper = j;
-      break;
-
-    }
-    *
-  }
-  */
 void draw_root (void)
 {
   vtx2i_t p1, p2, p3;
   get_vtx2i_from_vtx2d(d20.current.A->pos[0], &p1);
   get_vtx2i_from_vtx2d(d20.current.B->pos[0], &p2);
   get_vtx2i_from_vtx2d(d20.current.C->pos[0], &p3);
-
+/*
   draw_line2 (canvas, &p1, &p2, invertPixel, 0);
   draw_line2 (canvas, &p2, &p3, invertPixel, 0);
   draw_line2 (canvas, &p3, &p1, invertPixel, 0);
-  /*
-  draw_line(canvas, p1.pts[0],p1.pts[1], p2.pts[0],p2.pts[1], colourPixel, 0x00ff00);
-  draw_line(canvas, p3.pts[0],p3.pts[1], p2.pts[0],p2.pts[1], colourPixel, 0x00ff00);
-  draw_line(canvas, p1.pts[0],p1.pts[1], p3.pts[0],p3.pts[1], colourPixel, 0x00ff00);
 */
+
   vtx2d_t a  = {.pts = {30,30}},
       b = {.pts = {30, 80}},
       c = {.pts = {application.mX, application.mY}};
 
-  fill_test(&a, &b, &c);
+  fill_triangle (d20.current.A->pos[0], d20.current.B->pos[0], d20.current.C->pos[0], invertPixel, 0);
 
 }
 
@@ -356,23 +339,46 @@ void relocate_and_undo (void)
 void change_root (void)
 {
   double radi = d20.radius;
-  double r1 = (90 - (30 * d20.rotation)),
-      r2 = (90 - (30 * d20.rotation) - 120),
-      r3 = (90 - (30 * d20.rotation) + 120);
-  r1 *= M_PI/180;
-  r2 *= M_PI/180;
-  r3 *= M_PI/180;
+  double half = 0.5;
+  double root3 = sqrt(3.0);
 
+  double aX = radi, aY = radi,
+      bX = radi, bY = radi,
+      cX = radi, cY = radi;
+
+  switch (d20.rotation)
+  {
+    case 0:
+      aX *= root3*half;   aY *= -half;
+      bX *= -root3*half;  bY *= -half;
+      cX *= 0;   cY *= 1;
+      break;
+    case 1:
+      aX *= 1;   aY *= 0;
+      bX *= -half;  bY *= -root3*half;
+      cX *= -half;  cY *= root3*half;
+      break;
+    case 2:
+      aX *= root3*half;   aY *= half;
+      bX *= 0;   bY *= -1;
+      cX *= -root3*half;  cY *= half;
+      break;
+    case 3:
+      aX *= half; aY *= -root3*half;
+      bX *= -1;   bY *= 0;
+      cX *= half; cY *= root3*half;
+      break;
+  }
   vtx2d_t *ptr;
   ptr = d20.current.A->pos[0];
-  ptr->pts[0] = d20.x + sin(r1) * radi;
-  ptr->pts[1] = d20.y + cos(r1) * radi;
+  ptr->pts[0] = d20.x + aX;
+  ptr->pts[1] = d20.y + aY;
   ptr = d20.current.B->pos[0];
-  ptr->pts[0] = d20.x + sin(r2) * radi;
-  ptr->pts[1] = d20.y + cos(r2) * radi;
+  ptr->pts[0] = d20.x + bX;
+  ptr->pts[1] = d20.y + bY;
   ptr = d20.current.C->pos[0];
-  ptr->pts[0] = d20.x + sin(r3) * radi;
-  ptr->pts[1] = d20.y + cos(r3) * radi;
+  ptr->pts[0] = d20.x + cX;
+  ptr->pts[1] = d20.y + cY;
 }
 
 void app_usage ()
@@ -411,6 +417,9 @@ void app_usage ()
         {
           // rotate
           d20.rotation += scroll;
+          while (d20.rotation < 0)
+            d20.rotation += 4;
+          d20.rotation %= 4;
           ++ change;
         }
       }
