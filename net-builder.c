@@ -34,7 +34,7 @@ static struct
 } application;
 
 
-int rotate_root_triangle(void)
+int change_root_size (void)
 { //  toggle between rotation and resizing of root triangle
   if((mouse_middle() == -1)
       ||  (mouse_right() == -1))
@@ -211,7 +211,7 @@ void fill_triangle (vtx2d_t *a, vtx2d_t *b, vtx2d_t *c, plot_func plot, COLOR co
   #if SDL_BYTEORDER == SDL_BIG_ENDIAN
     surf = SDL_CreateRGBSurface (0, rect->w, rect->h, 32, 0xFF000000, 0x00FF0000, 0x0000FF00, 0x000000FF);
   #else
-    surf = SDL_CreateRGBSurface (0, rect->w, rect->h , 32, 0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000);
+    surf = SDL_CreateRGBSurface (0, rect->w, rect->h, 32, 0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000);
   #endif
 
   SDL_SetSurfaceBlendMode(surf,SDL_BLENDMODE_BLEND);
@@ -297,18 +297,8 @@ void draw_root (void)
   get_vtx2i_from_vtx2d(d20.current.A->pos[0], &p1);
   get_vtx2i_from_vtx2d(d20.current.B->pos[0], &p2);
   get_vtx2i_from_vtx2d(d20.current.C->pos[0], &p3);
-/*
-  draw_line2 (canvas, &p1, &p2, invertPixel, 0);
-  draw_line2 (canvas, &p2, &p3, invertPixel, 0);
-  draw_line2 (canvas, &p3, &p1, invertPixel, 0);
-*/
-
-  vtx2d_t a  = {.pts = {30,30}},
-      b = {.pts = {30, 80}},
-      c = {.pts = {application.mX, application.mY}};
 
   fill_triangle (d20.current.A->pos[0], d20.current.B->pos[0], d20.current.C->pos[0], invertPixel, 0);
-
 }
 
 
@@ -319,7 +309,6 @@ void app_draw (void)
 
   if (!d20.num_faces)
   {
-    //fill_invert_screen_triangle (d20.pos[0], d20.pos[1], d20.pos[2], canvas);
     draw_root ();
   }
 }
@@ -336,7 +325,7 @@ void relocate_and_undo (void)
   }
 }
 
-void change_root (void)
+void reposition_root_vertices (void)
 {
   double radi = d20.radius;
   double half = 0.5;
@@ -381,6 +370,31 @@ void change_root (void)
   ptr->pts[1] = d20.y + cY;
 }
 
+
+
+int rotate_root (int diff)
+{ // rotate
+  if (diff)
+  {
+    d20.rotation += diff;
+    while (d20.rotation < 0)
+      d20.rotation += 4;
+    d20.rotation %= 4;
+    return 1;;
+  }
+  return 0;
+}
+
+int resize_root (int diff)
+{ // increase radius
+  if (diff)
+  {
+    d20.radius += diff*1.75;
+    return 1;
+  }
+  return 0;
+}
+
 void app_usage ()
 {
 
@@ -389,7 +403,7 @@ void app_usage ()
   { //  root triangle is not pinned
     int change = 0;
     if (mouse_moves())
-    { // set triangle position
+    { // set root position
       d20.x = application.mX;
       d20.y = application.mY;
       mouse_position (&application.mX, &application.mY);
@@ -402,33 +416,13 @@ void app_usage ()
         // pin
       }
       int scroll = mouse_scroll();
-      if (rotate_root_triangle())
-      {
-        if (scroll)
-        {
-          // increase radius
-          d20.radius += scroll*1.75;
-          ++ change;
-        }
-      }
+      if (change_root_size())
+      { change += resize_root(scroll);  }
       else
-      {
-        if (scroll)
-        {
-          // rotate
-          d20.rotation += scroll;
-          while (d20.rotation < 0)
-            d20.rotation += 4;
-          d20.rotation %= 4;
-          ++ change;
-        }
-      }
-
+      { change += rotate_root(scroll);  }
     }
     if (change)
-      change_root ();
-
-
+      reposition_root_vertices ();
   }
   else
   {
