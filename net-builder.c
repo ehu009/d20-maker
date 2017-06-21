@@ -106,11 +106,10 @@ static struct
   int x, y;
   double radius;
   int rotation;
-  int num_faces;
 
-  triangle_t *current;
   chain_t *available, *faces;
   chainslider_t *free_selector, *used_selector;
+  triangle_t *current_used, *current_free;
 
   slot_t vertex[NUM_D20_VTX];
 } d20;
@@ -161,7 +160,6 @@ void app_start (void)
     s->invalid = NULL;
   }
 
-  d20.num_faces = 0;
   d20.radius = 30.0;
   d20.x = 50;
   d20.y = 50;
@@ -176,7 +174,8 @@ void app_start (void)
   t->A->pos[0] = calloc (1, sizeof(vtx2d_t));
   t->B->pos[0] = calloc (1, sizeof(vtx2d_t));
   t->C->pos[0] = calloc (1, sizeof(vtx2d_t));
-  d20.current = t;
+  d20.current_free = t;
+  d20.current_used = t;
 
   d20.free_selector = NULL;
   d20.used_selector = NULL;
@@ -200,8 +199,13 @@ void app_free (void)
     if (s->invalid != NULL)
       free (s->invalid);
   }
-  if (d20.current != NULL)
-    free(d20.current);
+  if (d20.faces == NULL)
+  {
+    if (d20.current_free != NULL)
+      free(d20.current_free);
+    return;
+  }
+
   triangle_t *t;
   if (d20.available != NULL)
   {
@@ -467,10 +471,37 @@ void app_draw (void)
 
   if (d20.faces == NULL)
   {
-    draw_unpinned (d20.current);
+    draw_unpinned (d20.current_free);
   }
   else
   {
+    //  draw pinned triangles
+    triangle_t *start = slider_current (d20.used_selector),
+        *cur = start;
+    do
+    {
+      if (cur != d20.current_used)
+        draw_pinned (cur);
+      else
+        draw_selected (cur, 0xff000000);
+      slider_procede (d20.used_selector);
+      cur = slider_current (d20.used_selector);
+    }
+    while (cur != start);
+
+    //  draw free tirangles
+    start = slider_current (d20.free_selector);
+    cur = start;
+    do
+    {
+      if (cur != d20.current_free)
+        draw_unpinned (cur);
+      else
+        draw_pinned (cur);
+      slider_procede (d20.free_selector);
+      cur = slider_current (d20.free_selector);
+    }
+    while (cur != start);
 
 
   }
@@ -523,17 +554,68 @@ void reposition_root_vertices (void)
   }
 
   vtx2d_t *ptr;
-  ptr = d20.current->A->pos[0];
+  ptr = d20.current_free->A->pos[0];
   ptr->pts[0] = d20.x + aX;
   ptr->pts[1] = d20.y + aY;
-  ptr = d20.current->B->pos[0];
+  ptr = d20.current_free->B->pos[0];
   ptr->pts[0] = d20.x + bX;
   ptr->pts[1] = d20.y + bY;
-  ptr = d20.current->C->pos[0];
+  ptr = d20.current_free->C->pos[0];
   ptr->pts[0] = d20.x + cX;
   ptr->pts[1] = d20.y + cY;
 }
 
+
+
+
+
+
+slot_t *find_slot_opposing (slot_t *anchor1, slot_t *anchor2, slot_t *opposer)
+        {
+          slot_t *r = NULL;
+          int link1 = 0, link2;
+          for (;  link1 < NUM_VTX_POS; link1 ++)
+          {
+            if (r != NULL)
+              break;
+            slot_t *cur1 = anchor1->links[link1];
+            if (cur1 == opposer)
+              continue;
+            for (link2 = 0; link2 < NUM_VTX_POS; link2 ++)
+            {
+              if (r != NULL)
+                break;
+              slot_t *cur2 = anchor2->links[link2];
+              if (cur2 == opposer)
+                continue;
+              if (cur1 == cur2)
+                r = cur1;
+            }
+          }
+          return r;
+        }
+
+        vtx2d_t *find_vector_opposing (vtx2d_t *anchor1, vtx2d_t *anchor2, vtx2d_t *opposer)
+        {
+          /*
+          vtx2d_t *ptA = anchor->A->pos[anchor->pos_A],
+              *ptB = anchor->B->pos[anchor->pos_B],
+              *ptC = anchor->C->pos[anchor->pos_C];
+              */
+          vtx2d_t middle = {.pts = {anchor2->pts[0] - anchor1->pts[0], anchor2->pts[1] - anchor1->pts[1]}};
+          middle.pts[0] /= 2;
+          middle.pts[1] /= 2;
+          middle.pts[0] += anchor1->pts[0];
+          middle.pts[1] += anchor1->pts[1];
+
+          vtx2d_t *vector = malloc (sizeof(vtx2d_t));
+          *vector = (vtx2d_t) {.pts = {opposer->pts[0] - middle.pts[0], opposer->pts[1] - middle.pts[1]}};
+          vector->pts[0] *= -1;
+          vector->pts[1] *= -1;
+          vector->pts[0] += middle.pts[0];
+          vector->pts[1] += middle.pts[1];
+          return vector;
+        }
 
 
 
@@ -558,78 +640,100 @@ void app_usage ()
       if (mouse_left() == -1)
       {
         // pin root triangle
-        d20.faces = make_chain (d20.current);
+        d20.faces = make_chain (d20.current_free);
         d20.used_selector = make_chainslider (d20.faces);
 
-        triangle_t *anchor = d20.current;
-
-        //  A, B of anchor first
-
-
-        d20.current = malloc (sizeof(triangle_t));
+        triangle_t *t = NULL, *anchor = d20.current_free;
         slot_t *new = NULL;
-        int c_from_a = 0, c_from_b;
-        for (;  c_from_a < NUM_VTX_POS; c_from_a ++)
-        {
-          if (new != NULL)
-            break;
-          slot_t *curA = anchor->A->links[c_from_a];
-          if (curA == anchor->C)
-          {
-            printf("iterating A; skipped one\n");
-            continue;
-          }
-          for (c_from_b = 0; c_from_b < NUM_VTX_POS; c_from_b ++)
-          {
-            if (new != NULL)
-              break;
 
-            slot_t *curB = anchor->B->links[c_from_b];
-            if (curB == anchor->C)
-            {
-              printf("iterating A; skipped one\n");
-              continue;
-            }
-            printf("comparison - A:%p, B:%p\n",curA,curB);
-            if (curA == curB)
-              new = curA;
+        {
+        //  A, B of anchor
+
+          new = find_slot_opposing (anchor->A, anchor->B, anchor->C);
+          new->pos[0] = find_vector_opposing (anchor->A->pos[anchor->pos_A], anchor->B->pos[anchor->pos_B], anchor->C->pos[anchor->pos_C]);
+
+          t = malloc (sizeof(triangle_t));
+          t->A = anchor->A;
+          t->pos_A = anchor->pos_A;
+          t->B = anchor->B;
+          t->pos_B = anchor->pos_B;
+          t->C = new;
+          t->pos_C = 0;
+
+          if (d20.available == NULL)
+          {
+            d20.available = make_chain (t);
+            if (d20.free_selector == NULL)
+              d20.free_selector = make_chainslider (d20.available);
+          }
+          else
+          {
+            if (d20.free_selector == NULL)
+              d20.free_selector = make_chainslider (d20.available);
+
+            slider_insert_after (d20.free_selector, (void *) t);
+          }
+
+        }
+        {
+        //  B, C of anchor
+
+          new = find_slot_opposing (anchor->B, anchor->C, anchor->A);
+          new->pos[0] = find_vector_opposing (anchor->B->pos[anchor->pos_B], anchor->C->pos[anchor->pos_C], anchor->A->pos[anchor->pos_A]);
+
+          t = malloc (sizeof(triangle_t));
+          t->A = anchor->B;
+          t->pos_A = anchor->pos_B;
+          t->B = anchor->C;
+          t->pos_B = anchor->pos_C;
+          t->C = new;
+          t->pos_C = 0;
+
+          if (d20.available == NULL)
+          {
+            d20.available = make_chain (t);
+            if (d20.free_selector == NULL)
+              d20.free_selector = make_chainslider (d20.available);
+          }
+          else
+          {
+            if (d20.free_selector == NULL)
+              d20.free_selector = make_chainslider (d20.available);
+
+            slider_insert_after (d20.free_selector, (void *) t);
           }
         }
-        if (new == NULL)
         {
-          printf("FUCK\nfromA: %d\nfromB: %d\n",c_from_a,c_from_b);
+        //  C, A of anchor
+
+          new = find_slot_opposing (anchor->C, anchor->A, anchor->B);
+          new->pos[0] = find_vector_opposing (anchor->C->pos[anchor->pos_C], anchor->A->pos[anchor->pos_A], anchor->B->pos[anchor->pos_B]);
+
+          t = malloc (sizeof(triangle_t));
+          t->A = anchor->C;
+          t->pos_A = anchor->pos_C;
+          t->B = anchor->A;
+          t->pos_B = anchor->pos_A;
+          t->C = new;
+          t->pos_C = 0;
+
+          if (d20.available == NULL)
+          {
+            d20.available = make_chain (t);
+            if (d20.free_selector == NULL)
+              d20.free_selector = make_chainslider (d20.available);
+          }
+          else
+          {
+            if (d20.free_selector == NULL)
+              d20.free_selector = make_chainslider (d20.available);
+
+            slider_insert_after (d20.free_selector, (void *) t);
+          }
         }
-        vtx2d_t *ptA = anchor->A->pos[anchor->pos_A],
-            *ptB = anchor->B->pos[anchor->pos_B],
-            *ptC = anchor->C->pos[anchor->pos_C];
-        vtx2d_t middle = {.pts = {ptB->pts[0] - ptA->pts[0], ptB->pts[1] - ptA->pts[1]}};
-        middle.pts[0] /= 2;
-        middle.pts[1] /= 2;
-        middle.pts[0] += ptA->pts[0];
-        middle.pts[1] += ptA->pts[1];
 
-        vtx2d_t *vector = malloc (sizeof(vtx2d_t));
-        *vector = (vtx2d_t) {.pts = {ptC->pts[0] - middle.pts[0], ptC->pts[1] - middle.pts[1]}};
-        vector->pts[0] *= -1;
-        vector->pts[1] *= -1;
-        vector->pts[0] += middle.pts[0];
-        vector->pts[1] += middle.pts[1];
-
-        new->pos[0] = vector;
-
-        d20.current->A = anchor->A;
-        d20.current->pos_A = anchor->pos_A;
-        d20.current->B = anchor->B;
-        d20.current->pos_B = anchor->pos_B;
-        d20.current->C = new;
-        d20.current->pos_C = 0;
-
-
-
-
-
-
-
+        d20.current_free = slider_current (d20.free_selector);
+        d20.current_used = slider_current (d20.used_selector);
 
       }
       int scroll = mouse_scroll();
@@ -650,6 +754,7 @@ void app_usage ()
     if (mouse_left() == -1)
     {
       //  pinning
+      printf("not yet tho\n");
     }
     int scroll = mouse_scroll();
     if (use_scroll_selector())
