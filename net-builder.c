@@ -44,7 +44,7 @@ int change_root_size (void)
   return application.rotate_root;
 }
 
-int slide_selector(void)
+int use_scroll_selector(void)
 { //  toggle between using mouse wheel or position for selections
   if(mouse_middle() == -1)
   {
@@ -89,13 +89,15 @@ struct vertex_slot
 
 typedef struct vertex_slot slot_t;
 
-struct working_triangle
+
+struct triangle_face
 {
   slot_t *A, *B, *C;
-//  vtx2d_t **A, **B, **C;
+  int pos_A, pos_B, pos_C;
 };
 
-typedef struct working_triangle triangle_t;
+
+typedef struct triangle_face triangle_t;
 
 static struct
 {
@@ -104,11 +106,34 @@ static struct
   int rotation;
   int num_faces;
 
-  triangle_t current;
+  triangle_t *current;
   slot_t vertex[NUM_D20_VTX];
 } d20;
 
 
+
+int rotate_root (int diff)
+{ // rotate
+  if (diff)
+  {
+    d20.rotation += diff;
+    while (d20.rotation < 0)
+      d20.rotation += 4;
+    d20.rotation %= 4;
+    return 1;;
+  }
+  return 0;
+}
+
+int resize_root (int diff)
+{ // increase radius
+  if (diff)
+  {
+    d20.radius += diff*1.75;
+    return 1;
+  }
+  return 0;
+}
 
 void app_start (void)
 {
@@ -122,14 +147,13 @@ void app_start (void)
   for (; j < NUM_D20_VTX; j ++)
   {
     s = &d20.vertex[j];
-    s->pinned = 0;
+    s->pinned = -1;
     for (; k < NUM_VTX_POS; k++)
     {
       s->pos[k] = NULL;
       s->links[k] = &d20.vertex[d20_model[j].pts[k]];
     }
     s->invalid = NULL;
-
   }
 
   d20.num_faces = 0;
@@ -137,13 +161,17 @@ void app_start (void)
   d20.x = 50;
   d20.y = 50;
 
-  d20.current.A = &d20.vertex[0];
-  d20.current.B = &d20.vertex[1];
-  d20.current.C = &d20.vertex[2];
-
-  d20.current.A->pos[0] = calloc (1, sizeof(vtx2d_t));
-  d20.current.B->pos[0] = calloc (1, sizeof(vtx2d_t));
-  d20.current.C->pos[0] = calloc (1, sizeof(vtx2d_t));
+  triangle_t *t = malloc(sizeof(triangle_t));
+  t->A = &d20.vertex[0];
+  t->B = &d20.vertex[1];
+  t->C = &d20.vertex[2];
+  t->pos_A = 0;
+  t->pos_B = 0;
+  t->pos_C = 0;
+  t->A->pos[0] = calloc (1, sizeof(vtx2d_t));
+  t->B->pos[0] = calloc (1, sizeof(vtx2d_t));
+  t->C->pos[0] = calloc (1, sizeof(vtx2d_t));
+  d20.current = t;
 }
 
 void app_free (void)
@@ -151,6 +179,7 @@ void app_free (void)
   //  free initialized structures
   int j = 0, k = 0;
   slot_t *s;
+  free(d20.current);
   for (; j < NUM_D20_VTX; j ++)
   {
     s = &d20.vertex[j];
@@ -190,17 +219,14 @@ SDL_Rect *get_bounds_of_triangle (vtx2d_t *a, vtx2d_t *b, vtx2d_t *c)
     if (highest.pts[1] <= c->pts[1])
       highest.pts[1] = c->pts[1];
 
-    ptr->x = lowest.pts[0] + 0.5;
-    ptr->y = lowest.pts[1] + 0.5;
-    ptr->w = highest.pts[0] + 1.5 - lowest.pts[0];
-    ptr->h = highest.pts[1] + 1.5 - lowest.pts[1];
+    ptr->x = lowest.pts[0];
+    ptr->y = lowest.pts[1];
+    ptr->w = highest.pts[0] + 2.5 - lowest.pts[0];
+    ptr->h = highest.pts[1] + 2.5 - lowest.pts[1];
 
   }
   return ptr;
 }
-
-
-
 
 void fill_triangle (vtx2d_t *a, vtx2d_t *b, vtx2d_t *c, plot_func plot, COLOR color)
 {
@@ -290,16 +316,97 @@ void fill_triangle (vtx2d_t *a, vtx2d_t *b, vtx2d_t *c, plot_func plot, COLOR co
   free(rect);
 }
 
-
-void draw_root (void)
+int triangle_contains (triangle_t *t, vtx2i_t point)
 {
-  vtx2i_t p1, p2, p3;
-  get_vtx2i_from_vtx2d(d20.current.A->pos[0], &p1);
-  get_vtx2i_from_vtx2d(d20.current.B->pos[0], &p2);
-  get_vtx2i_from_vtx2d(d20.current.C->pos[0], &p3);
 
-  fill_triangle (d20.current.A->pos[0], d20.current.B->pos[0], d20.current.C->pos[0], invertPixel, 0);
+  vtx2d_t *a = t->A->pos[t->pos_A],
+      *b = t->B->pos[t->pos_B],
+      *c = t->C->pos[t->pos_C];
+
+  SDL_Rect *rect = get_bounds_of_triangle (a, b, c);
+  if ((point.pts[0] < rect->x)
+      ||  (point.pts[0] > rect->x + rect->w)
+      ||  (point.pts[1] < rect->y)
+      ||  (point.pts[1] > rect->y + rect->h))
+    return 0;
+
+  SDL_Surface *surf = NULL;
+
+  #if SDL_BYTEORDER == SDL_BIG_ENDIAN
+    surf = SDL_CreateRGBSurface (0, rect->w, rect->h, 32, 0xFF000000, 0x00FF0000, 0x0000FF00, 0x000000FF);
+  #else
+    surf = SDL_CreateRGBSurface (0, rect->w, rect->h, 32, 0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000);
+  #endif
+
+  vtx2i_t A, B, C;
+  get_vtx2i_from_vtx2d (a, &A);
+  get_vtx2i_from_vtx2d (b, &B);
+  get_vtx2i_from_vtx2d (c, &C);
+  A.pts[0] -= rect->x;
+  B.pts[0] -= rect->x;
+  C.pts[0] -= rect->x;
+  A.pts[1] -= rect->y;
+  B.pts[1] -= rect->y;
+  C.pts[1] -= rect->y;
+
+  point.pts[0] -= rect->x;
+  point.pts[1] -= rect->y;
+
+  COLOR pixel, markup = SDL_MapRGBA(surf->format, 0xff, 0xff, 0xff, 0xff);
+
+  draw_line2 (surf, &A, &B, colourPixel, markup);
+  draw_line2 (surf, &B, &C, colourPixel, markup);
+  draw_line2 (surf, &C, &A, colourPixel, markup);
+
+  vtx2i_t p;
+  int j = 0, upper = -1, lower = -1;
+
+  p.pts[0] = point.pts[0];
+
+  for (j = 0; j <= rect->h; j++)
+  {
+    p.pts[1] = j;
+    pixel = getPixel (surf, &p);
+    if (pixel == markup)
+    {
+      if (upper == -1)
+        upper = j;
+      else
+      {
+        lower = j;
+        break;
+      }
+    }
+  }
+  SDL_FreeSurface (surf);
+  free(rect);
+  if (lower == -1)
+  {
+    return point.pts[1] == upper;
+  }
+  else
+  {
+    return ((point.pts[1] >= upper) && (point.pts[1] <= lower));
+  }
 }
+
+
+
+
+
+void draw_unpinned (triangle_t *t)
+{
+  fill_triangle (t->A->pos[t->pos_A], t->B->pos[t->pos_B], t->C->pos[t->pos_C], invertPixel, 0);
+}
+
+void draw_selected (triangle_t *t, COLOR colour)
+{
+  fill_triangle (t->A->pos[t->pos_A], t->B->pos[t->pos_B], t->C->pos[t->pos_C], colourPixel, colour);
+}
+
+
+
+
 
 
 void app_draw (void)
@@ -309,7 +416,7 @@ void app_draw (void)
 
   if (!d20.num_faces)
   {
-    draw_root ();
+    draw_unpinned (d20.current);
   }
 }
 
@@ -358,42 +465,23 @@ void reposition_root_vertices (void)
       cX *= half; cY *= root3*half;
       break;
   }
+
   vtx2d_t *ptr;
-  ptr = d20.current.A->pos[0];
+  ptr = d20.current->A->pos[0];
   ptr->pts[0] = d20.x + aX;
   ptr->pts[1] = d20.y + aY;
-  ptr = d20.current.B->pos[0];
+  ptr = d20.current->B->pos[0];
   ptr->pts[0] = d20.x + bX;
   ptr->pts[1] = d20.y + bY;
-  ptr = d20.current.C->pos[0];
+  ptr = d20.current->C->pos[0];
   ptr->pts[0] = d20.x + cX;
   ptr->pts[1] = d20.y + cY;
 }
 
 
 
-int rotate_root (int diff)
-{ // rotate
-  if (diff)
-  {
-    d20.rotation += diff;
-    while (d20.rotation < 0)
-      d20.rotation += 4;
-    d20.rotation %= 4;
-    return 1;;
-  }
-  return 0;
-}
 
-int resize_root (int diff)
-{ // increase radius
-  if (diff)
-  {
-    d20.radius += diff*1.75;
-    return 1;
-  }
-  return 0;
-}
+
 
 void app_usage ()
 {
@@ -436,7 +524,7 @@ void app_usage ()
     }
 
     int scroll = mouse_scroll();
-    if (slide_selector())
+    if (use_scroll_selector())
     {
       // selecting a triangle with the wheel
       if (scroll)
