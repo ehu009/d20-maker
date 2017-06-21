@@ -147,13 +147,13 @@ void app_start (void)
   application.status = APP_START;
 
   // initialize structures
-  int j = 0, k = 0;
+  int j = 0, k;
   slot_t *s;
   for (; j < NUM_D20_VTX; j ++)
   {
     s = &d20.vertex[j];
     s->pinned = -1;
-    for (; k < NUM_VTX_POS; k++)
+    for (k = 0; k < NUM_VTX_POS; k++)
     {
       s->pos[k] = NULL;
       s->links[k] = &d20.vertex[d20_model[j].pts[k]];
