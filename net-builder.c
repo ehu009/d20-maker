@@ -1,5 +1,7 @@
 #include "net-builder.h"
 
+#include "chain.h"
+
 #include    <math.h>
 
 //  distance between two points
@@ -107,6 +109,9 @@ static struct
   int num_faces;
 
   triangle_t *current;
+  chain_t *available, *faces;
+  chainslider_t *free_selector, *used_selector;
+
   slot_t vertex[NUM_D20_VTX];
 } d20;
 
@@ -172,6 +177,11 @@ void app_start (void)
   t->B->pos[0] = calloc (1, sizeof(vtx2d_t));
   t->C->pos[0] = calloc (1, sizeof(vtx2d_t));
   d20.current = t;
+
+  d20.free_selector = NULL;
+  d20.used_selector = NULL;
+  d20.faces = NULL;
+  d20.available = NULL;
 }
 
 void app_free (void)
@@ -179,7 +189,6 @@ void app_free (void)
   //  free initialized structures
   int j = 0, k = 0;
   slot_t *s;
-  free(d20.current);
   for (; j < NUM_D20_VTX; j ++)
   {
     s = &d20.vertex[j];
@@ -190,6 +199,31 @@ void app_free (void)
     }
     if (s->invalid != NULL)
       free (s->invalid);
+  }
+  if (d20.current != NULL)
+    free(d20.current);
+  triangle_t *t;
+  if (d20.available != NULL)
+  {
+    if (d20.free_selector == NULL)
+      d20.free_selector = make_chainslider (d20.available);
+    while (chain_size (d20.available) > 1)
+      slider_remove_next (d20.free_selector);
+    t = slider_current(d20.free_selector);
+    free(t);
+    free_chainslider (d20.free_selector);
+    free_chain (d20.available);
+  }
+  if (d20.faces != NULL)
+  {
+    if (d20.used_selector == NULL)
+      d20.used_selector = make_chainslider (d20.faces);
+    while (chain_size (d20.faces) > 1)
+      slider_remove_next (d20.used_selector);
+    t = slider_current(d20.used_selector);
+    free(t);
+    free_chainslider (d20.used_selector);
+    free_chain (d20.faces);
   }
 }
 
@@ -226,6 +260,18 @@ SDL_Rect *get_bounds_of_triangle (vtx2d_t *a, vtx2d_t *b, vtx2d_t *c)
 
   }
   return ptr;
+}
+
+void draw_triangle (vtx2d_t *a, vtx2d_t *b, vtx2d_t *c, plot_func plot, COLOR color)
+{
+  vtx2i_t A, B, C;
+  get_vtx2i_from_vtx2d (a, &A);
+  get_vtx2i_from_vtx2d (b, &B);
+  get_vtx2i_from_vtx2d (c, &C);
+
+  draw_line2 (canvas, &A, &B, plot, color);
+  draw_line2 (canvas, &B, &C, plot, color);
+  draw_line2 (canvas, &C, &A, plot, color);
 }
 
 void fill_triangle (vtx2d_t *a, vtx2d_t *b, vtx2d_t *c, plot_func plot, COLOR color)
@@ -399,6 +445,11 @@ void draw_unpinned (triangle_t *t)
   fill_triangle (t->A->pos[t->pos_A], t->B->pos[t->pos_B], t->C->pos[t->pos_C], invertPixel, 0);
 }
 
+void draw_pinned (triangle_t *t)
+{
+  draw_triangle (t->A->pos[t->pos_A], t->B->pos[t->pos_B], t->C->pos[t->pos_C], invertPixel, 0);
+}
+
 void draw_selected (triangle_t *t, COLOR colour)
 {
   fill_triangle (t->A->pos[t->pos_A], t->B->pos[t->pos_B], t->C->pos[t->pos_C], colourPixel, colour);
@@ -414,9 +465,14 @@ void app_draw (void)
   SDL_FillRect (canvas, NULL, 0x0ff);
   SDL_BlitSurface (src_image, NULL, canvas, NULL);
 
-  if (!d20.num_faces)
+  if (d20.faces == NULL)
   {
     draw_unpinned (d20.current);
+  }
+  else
+  {
+
+
   }
 }
 
@@ -487,7 +543,7 @@ void app_usage ()
 {
 
 
-  if (!d20.num_faces)
+  if (d20.faces == NULL)
   { //  root triangle is not pinned
     int change = 0;
     if (mouse_moves())
@@ -501,7 +557,80 @@ void app_usage ()
     {
       if (mouse_left() == -1)
       {
-        // pin
+        // pin root triangle
+        d20.faces = make_chain (d20.current);
+        d20.used_selector = make_chainslider (d20.faces);
+
+        triangle_t *anchor = d20.current;
+
+        //  A, B of anchor first
+
+
+        d20.current = malloc (sizeof(triangle_t));
+        slot_t *new = NULL;
+        int c_from_a = 0, c_from_b;
+        for (;  c_from_a < NUM_VTX_POS; c_from_a ++)
+        {
+          if (new != NULL)
+            break;
+          slot_t *curA = anchor->A->links[c_from_a];
+          if (curA == anchor->C)
+          {
+            printf("iterating A; skipped one\n");
+            continue;
+          }
+          for (c_from_b = 0; c_from_b < NUM_VTX_POS; c_from_b ++)
+          {
+            if (new != NULL)
+              break;
+
+            slot_t *curB = anchor->B->links[c_from_b];
+            if (curB == anchor->C)
+            {
+              printf("iterating A; skipped one\n");
+              continue;
+            }
+            printf("comparison - A:%p, B:%p\n",curA,curB);
+            if (curA == curB)
+              new = curA;
+          }
+        }
+        if (new == NULL)
+        {
+          printf("FUCK\nfromA: %d\nfromB: %d\n",c_from_a,c_from_b);
+        }
+        vtx2d_t *ptA = anchor->A->pos[anchor->pos_A],
+            *ptB = anchor->B->pos[anchor->pos_B],
+            *ptC = anchor->C->pos[anchor->pos_C];
+        vtx2d_t middle = {.pts = {ptB->pts[0] - ptA->pts[0], ptB->pts[1] - ptA->pts[1]}};
+        middle.pts[0] /= 2;
+        middle.pts[1] /= 2;
+        middle.pts[0] += ptA->pts[0];
+        middle.pts[1] += ptA->pts[1];
+
+        vtx2d_t *vector = malloc (sizeof(vtx2d_t));
+        *vector = (vtx2d_t) {.pts = {ptC->pts[0] - middle.pts[0], ptC->pts[1] - middle.pts[1]}};
+        vector->pts[0] *= -1;
+        vector->pts[1] *= -1;
+        vector->pts[0] += middle.pts[0];
+        vector->pts[1] += middle.pts[1];
+
+        new->pos[0] = vector;
+
+        d20.current->A = anchor->A;
+        d20.current->pos_A = anchor->pos_A;
+        d20.current->B = anchor->B;
+        d20.current->pos_B = anchor->pos_B;
+        d20.current->C = new;
+        d20.current->pos_C = 0;
+
+
+
+
+
+
+
+
       }
       int scroll = mouse_scroll();
       if (change_root_size())
@@ -522,7 +651,6 @@ void app_usage ()
     {
       //  pinning
     }
-
     int scroll = mouse_scroll();
     if (use_scroll_selector())
     {
