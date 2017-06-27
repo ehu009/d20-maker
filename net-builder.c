@@ -256,11 +256,13 @@ SDL_Rect *get_bounds_of_triangle (vtx2d_t *a, vtx2d_t *b, vtx2d_t *c)
       highest.pts[0] = c->pts[0];
     if (highest.pts[1] <= c->pts[1])
       highest.pts[1] = c->pts[1];
+    highest.pts[0] -= lowest.pts[0];
+    highest.pts[1] -= lowest.pts[1];
 
     ptr->x = lowest.pts[0];
     ptr->y = lowest.pts[1];
-    ptr->w = highest.pts[0] + 2.5 - lowest.pts[0];
-    ptr->h = highest.pts[1] + 2.5 - lowest.pts[1];
+    ptr->w = 2.5 + highest.pts[0];
+    ptr->h = 2.5 + highest.pts[1];
 
   }
   return ptr;
@@ -374,6 +376,10 @@ int triangle_contains (triangle_t *t, vtx2i_t point)
       *c = t->C->pos[t->pos_C];
 
   SDL_Rect *rect = get_bounds_of_triangle (a, b, c);
+
+
+
+
   if ((point.pts[0] < rect->x)
       ||  (point.pts[0] > rect->x + rect->w)
       ||  (point.pts[1] < rect->y)
@@ -402,8 +408,7 @@ int triangle_contains (triangle_t *t, vtx2i_t point)
   point.pts[0] -= rect->x;
   point.pts[1] -= rect->y;
 
-  COLOR pixel, markup = SDL_MapRGBA(surf->format, 0xff, 0xff, 0xff, 0xff);
-
+  COLOR pixel, markup = SDL_MapRGBA(surf->format, 0xff, 0x00, 0xff, 0x00);
   draw_line2 (surf, &A, &B, colourPixel, markup);
   draw_line2 (surf, &B, &C, colourPixel, markup);
   draw_line2 (surf, &C, &A, colourPixel, markup);
@@ -412,32 +417,36 @@ int triangle_contains (triangle_t *t, vtx2i_t point)
   int j = 0, upper = -1, lower = -1;
 
   p.pts[0] = point.pts[0];
-
   for (j = 0; j <= rect->h; j++)
   {
     p.pts[1] = j;
     pixel = getPixel (surf, &p);
     if (pixel == markup)
     {
-      if (upper == -1)
-        upper = j;
-      else
+      if (lower == -1)
       {
         lower = j;
         break;
       }
     }
   }
+  for (j = rect->h; j > 0; j--)
+  {
+    p.pts[1] = j;
+    pixel = getPixel (surf, &p);
+    if (pixel == markup)
+    {
+      if (upper == -1)
+      {
+        upper = j;
+        break;
+      }
+    }
+  }
   SDL_FreeSurface (surf);
   free(rect);
-  if (lower == -1)
-  {
-    return point.pts[1] == upper;
-  }
-  else
-  {
-    return ((point.pts[1] >= upper) && (point.pts[1] <= lower));
-  }
+
+  return ((point.pts[1] >= lower) && (point.pts[1] <= upper));
 }
 
 
@@ -497,12 +506,11 @@ void app_draw (void)
       if (cur != d20.current_free)
         draw_unpinned (cur);
       else
-        draw_pinned (cur);
+        draw_selected (cur, 0xffff0000);
       slider_procede (d20.free_selector);
       cur = slider_current (d20.free_selector);
     }
     while (cur != start);
-
 
   }
 }
@@ -595,13 +603,8 @@ slot_t *find_slot_opposing (slot_t *anchor1, slot_t *anchor2, slot_t *opposer)
           return r;
         }
 
-        vtx2d_t *find_vector_opposing (vtx2d_t *anchor1, vtx2d_t *anchor2, vtx2d_t *opposer)
+vtx2d_t *find_vector_opposing (vtx2d_t *anchor1, vtx2d_t *anchor2, vtx2d_t *opposer)
         {
-          /*
-          vtx2d_t *ptA = anchor->A->pos[anchor->pos_A],
-              *ptB = anchor->B->pos[anchor->pos_B],
-              *ptC = anchor->C->pos[anchor->pos_C];
-              */
           vtx2d_t middle = {.pts = {anchor2->pts[0] - anchor1->pts[0], anchor2->pts[1] - anchor1->pts[1]}};
           middle.pts[0] /= 2;
           middle.pts[1] /= 2;
@@ -646,34 +649,34 @@ void app_usage ()
         triangle_t *t = NULL, *anchor = d20.current_free;
         slot_t *new = NULL;
 
+        t = malloc (sizeof(triangle_t));
+        if (d20.available == NULL)
+        {
+          d20.available = make_chain (t);
+          if (d20.free_selector == NULL)
+            d20.free_selector = make_chainslider (d20.available);
+        }
+        else
+        {
+          if (d20.free_selector == NULL)
+            d20.free_selector = make_chainslider (d20.available);
+
+          slider_insert_after (d20.free_selector, (void *) t);
+        }
+
+
         {
         //  A, B of anchor
-
           new = find_slot_opposing (anchor->A, anchor->B, anchor->C);
           new->pos[0] = find_vector_opposing (anchor->A->pos[anchor->pos_A], anchor->B->pos[anchor->pos_B], anchor->C->pos[anchor->pos_C]);
 
-          t = malloc (sizeof(triangle_t));
+
           t->A = anchor->A;
           t->pos_A = anchor->pos_A;
           t->B = anchor->B;
           t->pos_B = anchor->pos_B;
           t->C = new;
           t->pos_C = 0;
-
-          if (d20.available == NULL)
-          {
-            d20.available = make_chain (t);
-            if (d20.free_selector == NULL)
-              d20.free_selector = make_chainslider (d20.available);
-          }
-          else
-          {
-            if (d20.free_selector == NULL)
-              d20.free_selector = make_chainslider (d20.available);
-
-            slider_insert_after (d20.free_selector, (void *) t);
-          }
-
         }
         {
         //  B, C of anchor
@@ -765,6 +768,7 @@ void app_usage ()
         if (scroll == -1)
         {
           // backwards
+
         }
         if (scroll == 1)
         {
@@ -778,11 +782,57 @@ void app_usage ()
       if (mouse_moves ())
       {
         mouse_position (&application.mX, &application.mY);
+        vtx2i_t m = {.pts = {application.mX, application.mY}};
+/*
+        d20.current_used = NULL;
+        d20.current_free = NULL;
+  */
+        triangle_t *new_cUsed = NULL, *new_cFree = NULL;
+
+        triangle_t *start = slider_current (d20.used_selector),
+            *cur = start;
+        do
+        {
+          if (triangle_contains (cur, m))
+          {
+            new_cUsed = cur;
+
+            break;
+          }
+          slider_procede (d20.used_selector);
+          cur = slider_current (d20.used_selector);
+        }
+        while (cur != start);
+/*
+        if (d20.current_used != new_cUsed)
+            printf("change current used\n");
+            */
+        d20.current_used = new_cUsed;
+
+
+        start = slider_current (d20.free_selector);
+        cur = start;
+        do
+        {
+          if (triangle_contains (cur, m))
+          {
+            new_cFree=  cur;
+            break;
+          }
+          slider_procede (d20.free_selector);
+          cur = slider_current (d20.free_selector);
+        }
+        while (cur != start);
+        if (d20.current_free != new_cFree)
+            printf("change current free\n");
+          d20.current_free = new_cFree;
 
       }
     }
   }
 }
+
+
 
 
 
