@@ -4,6 +4,10 @@
 #include "screen-triangles.h"
 #include    <math.h>
 
+
+extern SDL_Rect draw_area;
+
+
 //  distance between two points
 double distance (double x1, double y1, double x2, double y2)
 { //  pythagorean root of squared sides summed
@@ -29,6 +33,9 @@ static struct
   //  togglers
   char rotate_root;
   char use_slider;
+  //  relocation
+  char being_relocated;
+  int diff_x, diff_y;
   //  other things
   //  ...
   int mX, mY;
@@ -144,7 +151,7 @@ void app_start (void)
   application.rotate_root = 1;
   application.use_slider = 1;
   application.status = APP_START;
-
+  application.being_relocated = 0;
   // initialize structures
   int j = 0, k;
   slot_t *s;
@@ -174,6 +181,9 @@ void app_start (void)
   t->A->pos[0] = calloc (1, sizeof(vtx2d_t));
   t->B->pos[0] = calloc (1, sizeof(vtx2d_t));
   t->C->pos[0] = calloc (1, sizeof(vtx2d_t));
+  t->A->pinned = 0;
+  t->B->pinned = 0;
+  t->C->pinned = 0;
   d20.current_free = t;
   d20.current_used = t;
 
@@ -276,7 +286,7 @@ void draw_triangle_coloured (tripoint_t *t, COLOR colour)
 void app_draw (void)
 {
   SDL_FillRect (canvas, NULL, 0x0ff);
-  SDL_BlitSurface (src_image, NULL, canvas, NULL);
+  SDL_BlitSurface (src_image, NULL, canvas, &draw_area);
 
   if (d20.faces == NULL)
   {
@@ -319,11 +329,22 @@ void relocate_and_undo (void)
 {
   if (mouse_middle() == -1)
   {
-    //  relocate
+    //  undoing
+  }
+  if (mouse_right() == 1)
+  {
+    if (application.being_relocated == 0)
+    {
+      application.being_relocated ++;
+      application.diff_x = application.mX - d20.x;
+      application.diff_y = application.mY - d20.y;
+    }
   }
   if (mouse_right() == -1)
   {
-    //  undoing
+    if (application.being_relocated == 0)
+      application.being_relocated --;
+    //  free up vertices that are outside screen boundaries
   }
 }
 
@@ -426,8 +447,10 @@ vtx2d_t *find_vector_opposing (vtx2d_t *anchor1, vtx2d_t *anchor2, vtx2d_t *oppo
 
 void app_usage ()
 {
-
-
+  if (mouse_moves ())
+  {
+    mouse_position (&application.mX, &application.mY);
+  }
   if (d20.faces == NULL)
   { //  root triangle is not pinned
     int change = 0;
@@ -559,6 +582,7 @@ void app_usage ()
       //  pinning
       printf("not yet tho\n");
     }
+    /*
     int scroll = mouse_scroll();
     if (use_scroll_selector())
     {
@@ -578,53 +602,63 @@ void app_usage ()
     }
     else
     {
+    */
       //selecting a triangle by position
       if (mouse_moves ())
       {
-        mouse_position (&application.mX, &application.mY);
-        vtx2i_t m = {.pts = {application.mX, application.mY}};
-
-        tripoint_t *new_cUsed = NULL, *new_cFree = NULL;
-
-        tripoint_t *start = slider_current (d20.used_selector),
-            *cur = start;
-        triangle_t tmp_triangle;
-        do
+        if (application.being_relocated)
         {
-          read_triangle_from_tripoint(cur, &tmp_triangle);
-          if (triangle_contains (&tmp_triangle, m))
-          {
-            new_cUsed = cur;
+          //  reposition vertices
 
-            break;
-          }
-          slider_procede (d20.used_selector);
-          cur = slider_current (d20.used_selector);
+
         }
-        while (cur != start);
-
-        d20.current_used = new_cUsed;
-
-
-        start = slider_current (d20.free_selector);
-        cur = start;
-        do
+        else
         {
-          read_triangle_from_tripoint(cur, &tmp_triangle);
-          if (triangle_contains (&tmp_triangle, m))
-          {
-            new_cFree=  cur;
-            break;
-          }
-          slider_procede (d20.free_selector);
-          cur = slider_current (d20.free_selector);
-        }
-        while (cur != start);
-        if (d20.current_free != new_cFree)
-          d20.current_free = new_cFree;
+          vtx2i_t m = {.pts = {application.mX, application.mY}};
 
+          tripoint_t *new_cUsed = NULL, *new_cFree = NULL;
+
+          tripoint_t *start = slider_current (d20.used_selector),
+              *cur = start;
+          triangle_t tmp_triangle;
+          do
+          {
+            read_triangle_from_tripoint(cur, &tmp_triangle);
+            if (triangle_contains (&tmp_triangle, m))
+            {
+              new_cUsed = cur;
+
+              break;
+            }
+            slider_procede (d20.used_selector);
+            cur = slider_current (d20.used_selector);
+          }
+          while (cur != start);
+
+          d20.current_used = new_cUsed;
+
+
+          start = slider_current (d20.free_selector);
+          cur = start;
+          do
+          {
+            read_triangle_from_tripoint(cur, &tmp_triangle);
+            if (triangle_contains (&tmp_triangle, m))
+            {
+              new_cFree=  cur;
+              break;
+            }
+            slider_procede (d20.free_selector);
+            cur = slider_current (d20.free_selector);
+          }
+          while (cur != start);
+          if (d20.current_free != new_cFree)
+            d20.current_free = new_cFree;
+        }
       }
+    /*
     }
+    */
   }
 }
 

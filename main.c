@@ -13,8 +13,10 @@ const uint32_t update_interval = 1000/64;
 
 static uint32_t draw_callback (uint32_t interval, void *param);
 
-#define SIDE_BAR_W  400
-#define SIDE_BAR_H  400
+#define BORDER_SIZE 7
+
+#define SIDE_BAR_W  400 + BORDER_SIZE
+#define SIDE_BAR_H  400 + 2*BORDER_SIZE
 
 SDL_Window *myWindow = NULL;
 #define WINDOW_TITLE  "Icosahedron maker\0"
@@ -23,7 +25,7 @@ SDL_Window *myWindow = NULL;
 SDL_Surface *canvas = NULL,
     *src_image = NULL;
 
-unsigned canvasW, canvasH;
+SDL_Rect draw_area;
 
 
 static int exit_condition (SDL_Event *event);
@@ -115,11 +117,13 @@ int init (void)
     return 0;
   }
 
-  canvasW = src_image->w;
-  canvasH = src_image->h;
+  draw_area.x = BORDER_SIZE;
+  draw_area.y = BORDER_SIZE;
+  draw_area.w = src_image->w;
+  draw_area.h = src_image->h;
 
-  unsigned screenH = canvasH,
-      screenW = SIDE_BAR_W + canvasW;
+  unsigned screenH = draw_area.h + 2*BORDER_SIZE,
+      screenW = SIDE_BAR_W + draw_area.w;
   if (screenH < SIDE_BAR_H)
     screenH = SIDE_BAR_H;
 
