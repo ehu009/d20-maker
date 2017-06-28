@@ -4,25 +4,25 @@
 
   #include  "SDL2/SDL.h"
 
+  /*
+   *  Keeping track of mouse input
+   */
   typedef unsigned char mouse_data;
 
-  struct mouse_object
+  typedef struct mouse_object
   {
     int _x, _y;
     int moving;
     mouse_data buttons;
-  };
-
-  typedef struct mouse_object mouse_t;
+  } mouse_t;
 
   mouse_t mouse;
+
   /*
-   *  controls state
+   *  Mouse state maintenance prototypes
    */
-  //  call on successfully popping event from queue
   int mouse_update (SDL_Event *e);
 
-  //  call when event queue is empty
   void mouse_reset (void);
 
 #endif  /*  MOUSE_H_  */

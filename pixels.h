@@ -8,7 +8,10 @@
 
     #define   COLOR  uint32_t
 
-    //  change/read pixel values at a point on a surface
+
+    /*
+     *  Change/read pixel values at a point on a surface
+     */
 
     COLOR getPixel (SDL_Surface *src, vtx2i_t *p);
 

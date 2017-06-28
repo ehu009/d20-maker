@@ -579,46 +579,46 @@ void reposition_root_vertices (void)
 
 
 slot_t *find_slot_opposing (slot_t *anchor1, slot_t *anchor2, slot_t *opposer)
-        {
-          slot_t *r = NULL;
-          int link1 = 0, link2;
-          for (;  link1 < NUM_VTX_POS; link1 ++)
-          {
-            if (r != NULL)
-              break;
-            slot_t *cur1 = anchor1->links[link1];
-            if (cur1 == opposer)
-              continue;
-            for (link2 = 0; link2 < NUM_VTX_POS; link2 ++)
-            {
-              if (r != NULL)
-                break;
-              slot_t *cur2 = anchor2->links[link2];
-              if (cur2 == opposer)
-                continue;
-              if (cur1 == cur2)
-                r = cur1;
-            }
-          }
-          return r;
-        }
+{
+  slot_t *r = NULL;
+  int link1 = 0, link2;
+  for (;  link1 < NUM_VTX_POS; link1 ++)
+  {
+    if (r != NULL)
+      break;
+    slot_t *cur1 = anchor1->links[link1];
+    if (cur1 == opposer)
+      continue;
+    for (link2 = 0; link2 < NUM_VTX_POS; link2 ++)
+    {
+      if (r != NULL)
+        break;
+      slot_t *cur2 = anchor2->links[link2];
+      if (cur2 == opposer)
+        continue;
+      if (cur1 == cur2)
+        r = cur1;
+    }
+  }
+  return r;
+}
 
 vtx2d_t *find_vector_opposing (vtx2d_t *anchor1, vtx2d_t *anchor2, vtx2d_t *opposer)
-        {
-          vtx2d_t middle = {.pts = {anchor2->pts[0] - anchor1->pts[0], anchor2->pts[1] - anchor1->pts[1]}};
-          middle.pts[0] /= 2;
-          middle.pts[1] /= 2;
-          middle.pts[0] += anchor1->pts[0];
-          middle.pts[1] += anchor1->pts[1];
+{
+  vtx2d_t middle = {.pts = {anchor2->pts[0] - anchor1->pts[0], anchor2->pts[1] - anchor1->pts[1]}};
+  middle.pts[0] /= 2;
+  middle.pts[1] /= 2;
+  middle.pts[0] += anchor1->pts[0];
+  middle.pts[1] += anchor1->pts[1];
 
-          vtx2d_t *vector = malloc (sizeof(vtx2d_t));
-          *vector = (vtx2d_t) {.pts = {opposer->pts[0] - middle.pts[0], opposer->pts[1] - middle.pts[1]}};
-          vector->pts[0] *= -1;
-          vector->pts[1] *= -1;
-          vector->pts[0] += middle.pts[0];
-          vector->pts[1] += middle.pts[1];
-          return vector;
-        }
+  vtx2d_t *vector = malloc (sizeof(vtx2d_t));
+  *vector = (vtx2d_t) {.pts = {opposer->pts[0] - middle.pts[0], opposer->pts[1] - middle.pts[1]}};
+  vector->pts[0] *= -1;
+  vector->pts[1] *= -1;
+  vector->pts[0] += middle.pts[0];
+  vector->pts[1] += middle.pts[1];
+  return vector;
+}
 
 
 
@@ -778,15 +778,12 @@ void app_usage ()
     }
     else
     {
-      //selecting a triangle with position
+      //selecting a triangle by position
       if (mouse_moves ())
       {
         mouse_position (&application.mX, &application.mY);
         vtx2i_t m = {.pts = {application.mX, application.mY}};
-/*
-        d20.current_used = NULL;
-        d20.current_free = NULL;
-  */
+
         triangle_t *new_cUsed = NULL, *new_cFree = NULL;
 
         triangle_t *start = slider_current (d20.used_selector),
@@ -803,10 +800,7 @@ void app_usage ()
           cur = slider_current (d20.used_selector);
         }
         while (cur != start);
-/*
-        if (d20.current_used != new_cUsed)
-            printf("change current used\n");
-            */
+
         d20.current_used = new_cUsed;
 
 
@@ -824,7 +818,6 @@ void app_usage ()
         }
         while (cur != start);
         if (d20.current_free != new_cFree)
-            printf("change current free\n");
           d20.current_free = new_cFree;
 
       }

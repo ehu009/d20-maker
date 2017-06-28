@@ -1,7 +1,12 @@
 #include <stdlib.h>
-#include <stdio.h>
 
 #include "chain.h"
+
+
+
+/*
+ *  Ring-linked list link data type
+ */
 
 struct chain_link
 {
@@ -10,7 +15,7 @@ struct chain_link
 };
 
 struct chain_link *new_link (void *item)
-{
+{ //  Create a link that can compose part of a ring-linked list
   struct chain_link *ptr = calloc (1, sizeof (struct chain_link));
   if (ptr != NULL)
   {
@@ -20,6 +25,9 @@ struct chain_link *new_link (void *item)
 }
 
 
+/*
+ *  Ring-linked list data type
+ */
 
 struct linked_chain
 {
@@ -30,8 +38,12 @@ struct linked_chain
 typedef struct linked_chain chain_t;
 
 
+/*
+ *  Ring-linked list functionality
+ */
+
 chain_t *make_chain (void *start_item)
-{
+{ //  Create a ring-linked list having one starting item
   chain_t *chain = calloc (1, sizeof (chain_t));
   if (chain != NULL)
   {
@@ -53,7 +65,8 @@ chain_t *make_chain (void *start_item)
 }
 
 void free_chain (chain_t *chain)
-{
+{ //  Destroy a chain and all of its links
+  //    does not destroy added items
   if (chain == NULL)
     return;
   struct chain_link *ptr, *link = chain->head;
@@ -68,10 +81,8 @@ void free_chain (chain_t *chain)
   free (chain);
 }
 
-
-
 int chain_size (chain_t *chain)
-{
+{ //  Get length of ring-linked list
   return chain->links;
 }
 
@@ -84,11 +95,9 @@ int chain_size (chain_t *chain)
 
 
 
-
-
-
-
-
+/*
+ *  Ring-linked list manipulator data type
+ */
 
 struct chain_iterator
 {
@@ -99,9 +108,11 @@ struct chain_iterator
 typedef struct chain_iterator chainslider_t;
 
 
-
+/*
+ *  Ring-linked list manipulator functionality
+ */
 chainslider_t *make_chainslider (chain_t *linked_chain)
-{
+{ //  Create ring-linked list manipulator
   chainslider_t *slider = calloc (1, sizeof (chainslider_t));
   if (slider != NULL)
   {
@@ -112,12 +123,14 @@ chainslider_t *make_chainslider (chain_t *linked_chain)
 }
 
 void free_chainslider (chainslider_t *slider)
-{
+{ //  Destroy ring-linked list manipulator
   free (slider);
 }
 
 
-
+/*
+ *  Move manipulator along ring-linked list
+ */
 
 void slider_recede (chainslider_t *slider)
 {
@@ -129,18 +142,21 @@ void slider_procede (chainslider_t *slider)
     slider->current = slider->current->next;
 }
 
+
+/*
+ *  Read data from ring-linked list manipulator
+ */
+
 void *slider_current (chainslider_t *slider)
 {
   return slider->current->item;
 }
 
 
-
 /*
-  * need insertion, removal
-  * on both next, prev side
-  *
-  */
+ * Insertion / removal of items to / from a ring-linked list using manipulator
+ */
+
   #define LOOP struct chain_link
 int slider_insert_before (chainslider_t *chain_iterator, void *item)
 {
@@ -196,8 +212,6 @@ int slider_insert_after (chainslider_t *slider, void *item)
   slider->linked_chain->links ++;
   return 0;
 }
-
-
 
 void slider_remove_prev (chainslider_t *slider)
 {

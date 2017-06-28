@@ -3,31 +3,29 @@
 
 
 
-
-/*
- *
- */
-
 #define STATE mouse.buttons
 
+
+
+
 void mouse_reset (void)
-{
+{ //  Reset mouse state
   STATE = 0;
   mouse.moving = 0;
 }
 
 void mouse_handle_move (SDL_Event *e)
-{
+{ //  Handle mouse movement
   mouse._x = e->motion.x;
   mouse._y = e->motion.y;
   mouse.moving = 1;
 }
 
 /*
- *
+ *  Bitmask identities of mouse buttons
  */
 #define SET(bit)  STATE |= bit
-//
+
 #define MASK_L_UP   1
 #define MASK_R_UP   2
 #define MASK_M_UP   4
@@ -37,11 +35,13 @@ void mouse_handle_move (SDL_Event *e)
 #define MASK_WHEEL_UP   64
 #define MASK_WHEEL_DOWN 128
 
+
 /*
- *  event handles
+ *  Mouse event handles
  */
+
 void mouse_handle_up (SDL_Event *e)
-{
+{ //  Handle mouse button release
   if (e->button.state == SDL_RELEASED
       &&  e->button.clicks == 1)
   {
@@ -55,7 +55,7 @@ void mouse_handle_up (SDL_Event *e)
 }
 
 void mouse_handle_down (SDL_Event *e)
-{
+{ //  Handle mouse button press
   if (e->button.state == SDL_PRESSED
       &&  e->button.clicks == 1)
   {
@@ -69,7 +69,7 @@ void mouse_handle_down (SDL_Event *e)
 }
 
 void mouse_handle_scroll (SDL_Event *e)
-{
+{ //  Handle mouse scroll event
   if (e->wheel.y < 0)
     SET(MASK_WHEEL_DOWN);
   if (e->wheel.y > 0)
@@ -77,7 +77,7 @@ void mouse_handle_scroll (SDL_Event *e)
 }
 
 int mouse_update (SDL_Event *e)
-{
+{ //  Check for and handle mouse events
   int q = 1;
   mouse.moving = 0;
   switch (e->type)
@@ -92,10 +92,10 @@ int mouse_update (SDL_Event *e)
 
 
 /*
- *
+ *  Read based on bitmasks
  */
 #define IS_BIT_SET(bit, num) ((num & bit) != 0)
-//
+
 #define IS_L_UP(x)   IS_BIT_SET(MASK_L_UP, x)
 #define IS_L_DOWN(x) IS_BIT_SET(MASK_L_DOWN, x)
 #define IS_R_UP(x)   IS_BIT_SET(MASK_R_UP, x)
@@ -107,7 +107,7 @@ int mouse_update (SDL_Event *e)
 
 
 /*
- *
+ *  Read mouse movement state
  */
 int mouse_moves (void)
 {
@@ -122,7 +122,7 @@ void mouse_position (int *x, int *y)
 
 
 /*
- *
+ *  Read mouse button state
  */
 int mouse_left (void)
 {
