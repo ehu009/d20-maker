@@ -242,21 +242,21 @@ void read_triangle_from_tripoint (tripoint_t *src, triangle_t *dst)
 
 
 
-void draw_unpinned (tripoint_t *t)
+void draw_triangle_transparent (tripoint_t *t)
 {
   triangle_t tmp;
   read_triangle_from_tripoint(t, &tmp);
   fill_triangle (&tmp, invertPixel, 0);
 }
 
-void draw_pinned (tripoint_t *t)
+void draw_triangle_outline (tripoint_t *t)
 {
   triangle_t tmp;
   read_triangle_from_tripoint(t, &tmp);
   draw_triangle (&tmp, invertPixel, 0);
 }
 
-void draw_selected (tripoint_t *t, COLOR colour)
+void draw_triangle_coloured (tripoint_t *t, COLOR colour)
 {
   triangle_t tmp;
   read_triangle_from_tripoint(t, &tmp);
@@ -269,7 +269,8 @@ void draw_selected (tripoint_t *t, COLOR colour)
 
 
 
-
+#define   CLR_SELECTED_PINNED   0xff000000
+#define   CLR_SELECTED_UNPINNED 0xffff0000
 
 
 void app_draw (void)
@@ -279,7 +280,7 @@ void app_draw (void)
 
   if (d20.faces == NULL)
   {
-    draw_unpinned (d20.current_free);
+    draw_triangle_transparent (d20.current_free);
   }
   else
   {
@@ -289,9 +290,9 @@ void app_draw (void)
     do
     {
       if (cur != d20.current_used)
-        draw_pinned (cur);
+        draw_triangle_outline (cur);
       else
-        draw_selected (cur, 0xff000000);
+        draw_triangle_coloured (cur, CLR_SELECTED_PINNED);
       slider_procede (d20.used_selector);
       cur = slider_current (d20.used_selector);
     }
@@ -303,9 +304,9 @@ void app_draw (void)
     do
     {
       if (cur != d20.current_free)
-        draw_unpinned (cur);
+        draw_triangle_transparent (cur);
       else
-        draw_selected (cur, 0xffff0000);
+        draw_triangle_coloured (cur, CLR_SELECTED_UNPINNED);
       slider_procede (d20.free_selector);
       cur = slider_current (d20.free_selector);
     }
