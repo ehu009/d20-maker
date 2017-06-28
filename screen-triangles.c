@@ -36,20 +36,23 @@ SDL_Rect *get_bounds_of_triangle (vtx2d_t *a, vtx2d_t *b, vtx2d_t *c)
   return ptr;
 }
 
-void draw_triangle (vtx2d_t *a, vtx2d_t *b, vtx2d_t *c, plot_func plot, COLOR color)
+void draw_triangle (triangle_t *t, plot_func plot, COLOR color)
 {
   vtx2i_t A, B, C;
-  get_vtx2i_from_vtx2d (a, &A);
-  get_vtx2i_from_vtx2d (b, &B);
-  get_vtx2i_from_vtx2d (c, &C);
+  get_vtx2i_from_vtx2d (t->pts[0], &A);
+  get_vtx2i_from_vtx2d (t->pts[1], &B);
+  get_vtx2i_from_vtx2d (t->pts[2], &C);
 
   draw_line2 (canvas, &A, &B, plot, color);
   draw_line2 (canvas, &B, &C, plot, color);
   draw_line2 (canvas, &C, &A, plot, color);
 }
 
-void fill_triangle (vtx2d_t *a, vtx2d_t *b, vtx2d_t *c, plot_func plot, COLOR color)
+void fill_triangle (triangle_t *t, plot_func plot, COLOR color)
 {
+  vtx2d_t *a = t->pts[0],
+      *b = t->pts[1],
+      *c = t->pts[2];
   SDL_Rect *rect = get_bounds_of_triangle (a, b, c);
 
   SDL_Surface *surf = NULL;
@@ -136,8 +139,11 @@ void fill_triangle (vtx2d_t *a, vtx2d_t *b, vtx2d_t *c, plot_func plot, COLOR co
   free(rect);
 }
 
-int triangle_contains (vtx2d_t *a, vtx2d_t *b, vtx2d_t *c, vtx2i_t point)
+int triangle_contains (triangle_t *t, vtx2i_t point)
 {
+  vtx2d_t *a = t->pts[0],
+      *b = t->pts[1],
+      *c = t->pts[2];
   SDL_Rect *rect = get_bounds_of_triangle (a, b, c);
   if ((point.pts[0] < rect->x)
       ||  (point.pts[0] > rect->x + rect->w)
@@ -205,6 +211,6 @@ int triangle_contains (vtx2d_t *a, vtx2d_t *b, vtx2d_t *c, vtx2i_t point)
   SDL_FreeSurface (surf);
   free(rect);
 
-  return ((point.pts[1] >= lower) && (point.pts[1] <= upper));
+  return ((point.pts[1] > lower) && (point.pts[1] < upper));
 }
 

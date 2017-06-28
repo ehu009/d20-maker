@@ -99,7 +99,7 @@ struct triangle_face
 };
 
 
-typedef struct triangle_face triangle_t;
+typedef struct triangle_face tripoint_t;
 
 static struct
 {
@@ -109,7 +109,7 @@ static struct
 
   chain_t *available, *faces;
   chainslider_t *free_selector, *used_selector;
-  triangle_t *current_used, *current_free;
+  tripoint_t *current_used, *current_free;
 
   slot_t vertex[NUM_D20_VTX];
 } d20;
@@ -164,7 +164,7 @@ void app_start (void)
   d20.x = 50;
   d20.y = 50;
 
-  triangle_t *t = malloc(sizeof(triangle_t));
+  tripoint_t *t = malloc(sizeof(tripoint_t));
   t->A = &d20.vertex[0];
   t->B = &d20.vertex[1];
   t->C = &d20.vertex[2];
@@ -206,7 +206,7 @@ void app_free (void)
     return;
   }
 
-  triangle_t *t;
+  tripoint_t *t;
   if (d20.available != NULL)
   {
     if (d20.free_selector == NULL)
@@ -233,23 +233,39 @@ void app_free (void)
 
 
 
-
-
-
-void draw_unpinned (triangle_t *t)
+void read_triangle_from_tripoint (tripoint_t *src, triangle_t *dst)
 {
-  fill_triangle (t->A->pos[t->pos_A], t->B->pos[t->pos_B], t->C->pos[t->pos_C], invertPixel, 0);
+  dst->pts[0] = src->A->pos[src->pos_A];
+  dst->pts[1] = src->B->pos[src->pos_B];
+  dst->pts[2] = src->C->pos[src->pos_C];
 }
 
-void draw_pinned (triangle_t *t)
+
+
+void draw_unpinned (tripoint_t *t)
 {
-  draw_triangle (t->A->pos[t->pos_A], t->B->pos[t->pos_B], t->C->pos[t->pos_C], invertPixel, 0);
+  triangle_t tmp;
+  read_triangle_from_tripoint(t, &tmp);
+  fill_triangle (&tmp, invertPixel, 0);
 }
 
-void draw_selected (triangle_t *t, COLOR colour)
+void draw_pinned (tripoint_t *t)
 {
-  fill_triangle (t->A->pos[t->pos_A], t->B->pos[t->pos_B], t->C->pos[t->pos_C], colourPixel, colour);
+  triangle_t tmp;
+  read_triangle_from_tripoint(t, &tmp);
+  draw_triangle (&tmp, invertPixel, 0);
 }
+
+void draw_selected (tripoint_t *t, COLOR colour)
+{
+  triangle_t tmp;
+  read_triangle_from_tripoint(t, &tmp);
+  fill_triangle (&tmp, colourPixel, colour);
+}
+
+
+
+
 
 
 
@@ -268,7 +284,7 @@ void app_draw (void)
   else
   {
     //  draw pinned triangles
-    triangle_t *start = slider_current (d20.used_selector),
+    tripoint_t *start = slider_current (d20.used_selector),
         *cur = start;
     do
     {
@@ -429,10 +445,10 @@ void app_usage ()
         d20.faces = make_chain (d20.current_free);
         d20.used_selector = make_chainslider (d20.faces);
 
-        triangle_t *t = NULL, *anchor = d20.current_free;
+        tripoint_t *t = NULL, *anchor = d20.current_free;
         slot_t *new = NULL;
 
-        t = malloc (sizeof(triangle_t));
+        t = malloc (sizeof(tripoint_t));
         if (d20.available == NULL)
         {
           d20.available = make_chain (t);
@@ -467,7 +483,7 @@ void app_usage ()
           new = find_slot_opposing (anchor->B, anchor->C, anchor->A);
           new->pos[0] = find_vector_opposing (anchor->B->pos[anchor->pos_B], anchor->C->pos[anchor->pos_C], anchor->A->pos[anchor->pos_A]);
 
-          t = malloc (sizeof(triangle_t));
+          t = malloc (sizeof(tripoint_t));
           t->A = anchor->B;
           t->pos_A = anchor->pos_B;
           t->B = anchor->C;
@@ -495,7 +511,7 @@ void app_usage ()
           new = find_slot_opposing (anchor->C, anchor->A, anchor->B);
           new->pos[0] = find_vector_opposing (anchor->C->pos[anchor->pos_C], anchor->A->pos[anchor->pos_A], anchor->B->pos[anchor->pos_B]);
 
-          t = malloc (sizeof(triangle_t));
+          t = malloc (sizeof(tripoint_t));
           t->A = anchor->C;
           t->pos_A = anchor->pos_C;
           t->B = anchor->A;
@@ -567,13 +583,15 @@ void app_usage ()
         mouse_position (&application.mX, &application.mY);
         vtx2i_t m = {.pts = {application.mX, application.mY}};
 
-        triangle_t *new_cUsed = NULL, *new_cFree = NULL;
+        tripoint_t *new_cUsed = NULL, *new_cFree = NULL;
 
-        triangle_t *start = slider_current (d20.used_selector),
+        tripoint_t *start = slider_current (d20.used_selector),
             *cur = start;
+        triangle_t tmp_triangle;
         do
         {
-          if (triangle_contains (cur->A->pos[cur->pos_A], cur->B->pos[cur->pos_B], cur->C->pos[cur->pos_C], m))
+          read_triangle_from_tripoint(cur, &tmp_triangle);
+          if (triangle_contains (&tmp_triangle, m))
           {
             new_cUsed = cur;
 
@@ -591,7 +609,8 @@ void app_usage ()
         cur = start;
         do
         {
-          if (triangle_contains (cur->A->pos[cur->pos_A], cur->B->pos[cur->pos_B], cur->C->pos[cur->pos_C], m))
+          read_triangle_from_tripoint(cur, &tmp_triangle);
+          if (triangle_contains (&tmp_triangle, m))
           {
             new_cFree=  cur;
             break;
