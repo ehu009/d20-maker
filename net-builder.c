@@ -348,7 +348,14 @@ void relocate_and_undo (void)
   }
 }
 
-void adjust_root (triangle_t *r, SDL_Rect *R)
+
+void adjust_root_coordinate (double *coordinate, double *error, int reference, int limit)
+{
+  if (coordinate != error)
+    *coordinate = limit + ((reference - *error) + (*coordinate - reference));
+}
+
+void adjust_root_singleton (triangle_t *r, SDL_Rect *R)
 {
   double *lX = &r->pts[0]->pts[0], *lY = &r->pts[0]->pts[1],
       *hX = &r->pts[0]->pts[0], *hY = &r->pts[0]->pts[1];
@@ -371,51 +378,41 @@ void adjust_root (triangle_t *r, SDL_Rect *R)
   //  lower limits
   if (*lX < R->x)
   {
-    if (&r->pts[1]->pts[0] != lX)
-      r->pts[1]->pts[0] = R->x + ((d20.x - *lX) + (r->pts[1]->pts[0] - d20.x));
-    if (&r->pts[2]->pts[0] != lX)
-      r->pts[2]->pts[0] = R->x + ((d20.x - *lX) + (r->pts[2]->pts[0] - d20.x));
-    if (&r->pts[0]->pts[0] != lX)
-      r->pts[0]->pts[0] = R->x + ((d20.x - *lX) + (r->pts[0]->pts[0] - d20.x));
+    adjust_root_coordinate (&r->pts[0]->pts[0], lX, d20.x, R->x);
+    adjust_root_coordinate (&r->pts[1]->pts[0], lX, d20.x, R->x);
+    adjust_root_coordinate (&r->pts[2]->pts[0], lX, d20.x, R->x);
+
     *lX = R->x;
   }
   if (*lY < R->y)
   {
-    if (&r->pts[1]->pts[1] != lY)
-      r->pts[1]->pts[1] = R->y + ((d20.y - *lY) + (r->pts[1]->pts[1] - d20.y));
-    if (&r->pts[2]->pts[1] != lY)
-      r->pts[2]->pts[1] = R->y + ((d20.y - *lY) + (r->pts[2]->pts[1] - d20.y));
-    if (&r->pts[0]->pts[1] != lY)
-      r->pts[0]->pts[1] = R->y + ((d20.y - *lY) + (r->pts[0]->pts[1] - d20.y));
+    adjust_root_coordinate (&r->pts[0]->pts[1], lY, d20.y, R->y);
+    adjust_root_coordinate (&r->pts[1]->pts[1], lY, d20.y, R->y);
+    adjust_root_coordinate (&r->pts[2]->pts[1], lY, d20.y, R->y);
+
     *lY = R->y;
   }
   // upper limits
   if (*hX > R->x + R->w)
   {
-    if (&r->pts[1]->pts[0] != hX)
-      r->pts[1]->pts[0] = R->x + R->w + ((d20.x - *hX) + (r->pts[1]->pts[0] - d20.x));
-    if (&r->pts[2]->pts[0] != hX)
-      r->pts[2]->pts[0] = R->x + R->w + ((d20.x - *hX) + (r->pts[2]->pts[0] - d20.x));
-    if (&r->pts[0]->pts[0] != hX)
-      r->pts[0]->pts[0] = R->x + R->w + ((d20.x - *hX) + (r->pts[0]->pts[0] - d20.x));
+    adjust_root_coordinate (&r->pts[0]->pts[0], hX, d20.x, R->x + R->w);
+    adjust_root_coordinate (&r->pts[1]->pts[0], hX, d20.x, R->x + R->w);
+    adjust_root_coordinate (&r->pts[2]->pts[0], hX, d20.x, R->x + R->w);
+
     *hX = R->x + R->w;
   }
   if (*hY > R->y + R->h)
   {
-    if (&r->pts[1]->pts[1] != hY)
-      r->pts[1]->pts[1] = R->y + R->h + ((d20.y - *hY) + (r->pts[1]->pts[1] - d20.y));
-    if (&r->pts[2]->pts[1] != hY)
-      r->pts[2]->pts[1] = R->y + R->h + ((d20.y - *hY) + (r->pts[2]->pts[1] - d20.y));
-    if (&r->pts[0]->pts[1] != hY)
-      r->pts[0]->pts[1] = R->y + R->h + ((d20.y - *hY) + (r->pts[0]->pts[1] - d20.y));
+    adjust_root_coordinate (&r->pts[0]->pts[1], hY, d20.y, R->y + R->h);
+    adjust_root_coordinate (&r->pts[1]->pts[1], hY, d20.y, R->y + R->h);
+    adjust_root_coordinate (&r->pts[2]->pts[1], hY, d20.y, R->y + R->h);
+
     *hY = R->y + R->h;
   }
 }
 
 
-
-
-void reposition_root_vertices (void)
+void standard_root (triangle_t *dst)
 {
   double radi = d20.radius;
   double half = 0.5;
@@ -448,24 +445,25 @@ void reposition_root_vertices (void)
       cX *= half; cY *= root3*half;
       break;
   }
-  aX += d20.x;
-  bX += d20.x;
-  cX += d20.x;
-  aY += d20.y;
-  bY += d20.y;
-  cY += d20.y;
+  vtx2d_t *ptr = dst->pts[0];
+  ptr->pts[0] = aX + d20.x;
+  ptr->pts[1] = aY + d20.y;
+  ptr = dst->pts[1];
+  ptr->pts[0] = bX + d20.x;
+  ptr->pts[1] = bY + d20.y;
+  ptr = dst->pts[2];
+  ptr->pts[0] = cX + d20.x;
+  ptr->pts[1] = cY + d20.y;
+}
 
+void reposition_root_vertices (void)
+{
   vtx2d_t a, b, c;
-  a.pts[0] = aX;
-  a.pts[1] = aY;
-  b.pts[0] = bX;
-  b.pts[1] = bY;
-  c.pts[0] = cX;
-  c.pts[1] = cY;
   triangle_t root = {.pts = {&a, &b, &c}};
 
+  standard_root (&root);
+  adjust_root_singleton (&root, &draw_area);
 
-  adjust_root (&root, &draw_area);
   vtx2d_t *ptr;
   ptr = d20.current_free->A->pos[0];
   ptr->pts[0] = a.pts[0];
