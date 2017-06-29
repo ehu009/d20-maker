@@ -348,6 +348,73 @@ void relocate_and_undo (void)
   }
 }
 
+void adjust_root (triangle_t *r, SDL_Rect *R)
+{
+  double *lX = &r->pts[0]->pts[0], *lY = &r->pts[0]->pts[1],
+      *hX = &r->pts[0]->pts[0], *hY = &r->pts[0]->pts[1];
+  if (*lX > r->pts[1]->pts[0])
+    lX = &r->pts[1]->pts[0];
+  if (*lY > r->pts[1]->pts[1])
+    lY = &r->pts[1]->pts[1];
+  if (*lX > r->pts[2]->pts[0])
+    lX = &r->pts[2]->pts[0];
+  if (*lY > r->pts[2]->pts[1])
+    lY = &r->pts[2]->pts[1];
+  if (*hX < r->pts[1]->pts[0])
+    hX = &r->pts[1]->pts[0];
+  if (*hY < r->pts[1]->pts[1])
+    hY = &r->pts[1]->pts[1];
+  if (*hX < r->pts[2]->pts[0])
+    hX = &r->pts[2]->pts[0];
+  if (*hY < r->pts[2]->pts[1])
+    hY = &r->pts[2]->pts[1];
+  //  lower limits
+  if (*lX < R->x)
+  {
+    if (&r->pts[1]->pts[0] != lX)
+      r->pts[1]->pts[0] = R->x + ((d20.x - *lX) + (r->pts[1]->pts[0] - d20.x));
+    if (&r->pts[2]->pts[0] != lX)
+      r->pts[2]->pts[0] = R->x + ((d20.x - *lX) + (r->pts[2]->pts[0] - d20.x));
+    if (&r->pts[0]->pts[0] != lX)
+      r->pts[0]->pts[0] = R->x + ((d20.x - *lX) + (r->pts[0]->pts[0] - d20.x));
+    *lX = R->x;
+  }
+  if (*lY < R->y)
+  {
+    if (&r->pts[1]->pts[1] != lY)
+      r->pts[1]->pts[1] = R->y + ((d20.y - *lY) + (r->pts[1]->pts[1] - d20.y));
+    if (&r->pts[2]->pts[1] != lY)
+      r->pts[2]->pts[1] = R->y + ((d20.y - *lY) + (r->pts[2]->pts[1] - d20.y));
+    if (&r->pts[0]->pts[1] != lY)
+      r->pts[0]->pts[1] = R->y + ((d20.y - *lY) + (r->pts[0]->pts[1] - d20.y));
+    *lY = R->y;
+  }
+  // upper limits
+  if (*hX > R->x + R->w)
+  {
+    if (&r->pts[1]->pts[0] != hX)
+      r->pts[1]->pts[0] = R->x + R->w + ((d20.x - *hX) + (r->pts[1]->pts[0] - d20.x));
+    if (&r->pts[2]->pts[0] != hX)
+      r->pts[2]->pts[0] = R->x + R->w + ((d20.x - *hX) + (r->pts[2]->pts[0] - d20.x));
+    if (&r->pts[0]->pts[0] != hX)
+      r->pts[0]->pts[0] = R->x + R->w + ((d20.x - *hX) + (r->pts[0]->pts[0] - d20.x));
+    *hX = R->x + R->w;
+  }
+  if (*hY > R->y + R->h)
+  {
+    if (&r->pts[1]->pts[1] != hY)
+      r->pts[1]->pts[1] = R->y + R->h + ((d20.y - *hY) + (r->pts[1]->pts[1] - d20.y));
+    if (&r->pts[2]->pts[1] != hY)
+      r->pts[2]->pts[1] = R->y + R->h + ((d20.y - *hY) + (r->pts[2]->pts[1] - d20.y));
+    if (&r->pts[0]->pts[1] != hY)
+      r->pts[0]->pts[1] = R->y + R->h + ((d20.y - *hY) + (r->pts[0]->pts[1] - d20.y));
+    *hY = R->y + R->h;
+  }
+}
+
+
+
+
 void reposition_root_vertices (void)
 {
   double radi = d20.radius;
@@ -388,77 +455,27 @@ void reposition_root_vertices (void)
   bY += d20.y;
   cY += d20.y;
 
+  vtx2d_t a, b, c;
+  a.pts[0] = aX;
+  a.pts[1] = aY;
+  b.pts[0] = bX;
+  b.pts[1] = bY;
+  c.pts[0] = cX;
+  c.pts[1] = cY;
+  triangle_t root = {.pts = {&a, &b, &c}};
+
+
+  adjust_root (&root, &draw_area);
   vtx2d_t *ptr;
   ptr = d20.current_free->A->pos[0];
-  double *lX = &aX, *lY = &aY,
-      *hX = &aX, *hY = &aY;
-  if (*lX > bX)
-    lX = &bX;
-  if (*lY > bY)
-    lY = &bY;
-  if (*lX > cX)
-    lX = &cX;
-  if (*lY > cY)
-    lY = &cY;
-  if (*hX < bX)
-    hX = &bX;
-  if (*hY < bY)
-    hY = &bY;
-  if (*hX < cX)
-    hX = &cX;
-  if (*hY < cY)
-    hY = &cY;
-
-  if (*lX < draw_area.x)
-  {
-    if (&bX != lX)
-      bX = draw_area.x + ((d20.x - *lX) + (bX - d20.x));
-    if (&cX != lX)
-      cX = draw_area.x + ((d20.x - *lX) + (cX - d20.x));
-    if (&aX != lX)
-      aX = draw_area.x + ((d20.x - *lX) + (aX - d20.x));
-    *lX = draw_area.x;
-  }
-  if (*lY < draw_area.y)
-  {
-    if (&bY != lY)
-      bY = draw_area.y + ((d20.y - *lY) + (bY - d20.y));
-    if (&cY != lY)
-      cY = draw_area.y + ((d20.y - *lY) + (cY - d20.y));
-    if (&aY != lY)
-      aY = draw_area.y + ((d20.y - *lY) + (aY - d20.y));
-    *lY = draw_area.y;
-  }
-
-  if (*hX > draw_area.x + draw_area.w)
-  {
-    if (&bX != hX)
-      bX = draw_area.x + draw_area.w + ((d20.x - *hX) + (bX - d20.x));
-    if (&cX != hX)
-      cX = draw_area.x + draw_area.w + ((d20.x - *hX) + (cX - d20.x));
-    if (&aX != hX)
-      aX = draw_area.x + draw_area.w + ((d20.x - *hX) + (aX - d20.x));
-    *hX = draw_area.x + draw_area.w;
-  }
-  if (*hY > draw_area.y + draw_area.h)
-  {
-    if (&bY != hY)
-      bY = draw_area.y + draw_area.h + ((d20.y - *hY) + (bY - d20.y));
-    if (&cY != hY)
-      cY = draw_area.y + draw_area.h + ((d20.y - *hY) + (cY - d20.y));
-    if (&aY != hY)
-      aY = draw_area.y + draw_area.h + ((d20.y - *hY) + (aY - d20.y));
-    *hY = draw_area.y + draw_area.h;
-  }
-
-  ptr->pts[0] = aX;
-  ptr->pts[1] = aY;
+  ptr->pts[0] = a.pts[0];
+  ptr->pts[1] = a.pts[1];
   ptr = d20.current_free->B->pos[0];
-  ptr->pts[0] = bX;
-  ptr->pts[1] = bY;
+  ptr->pts[0] = b.pts[0];
+  ptr->pts[1] = b.pts[1];
   ptr = d20.current_free->C->pos[0];
-  ptr->pts[0] = cX;
-  ptr->pts[1] = cY;
+  ptr->pts[0] = c.pts[0];
+  ptr->pts[1] = c.pts[1];
 }
 
 
@@ -520,8 +537,7 @@ void app_usage ()
   }
   if (d20.faces == NULL)
   { //  root triangle is not pinned
-    //int change = 0;
-    int mouse_outside = 0;
+
     if (mouse_moves())
     { // set root position
       d20.x = application.mX;
