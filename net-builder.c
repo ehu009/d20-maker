@@ -381,17 +381,84 @@ void reposition_root_vertices (void)
       cX *= half; cY *= root3*half;
       break;
   }
+  aX += d20.x;
+  bX += d20.x;
+  cX += d20.x;
+  aY += d20.y;
+  bY += d20.y;
+  cY += d20.y;
 
   vtx2d_t *ptr;
   ptr = d20.current_free->A->pos[0];
-  ptr->pts[0] = d20.x + aX;
-  ptr->pts[1] = d20.y + aY;
+  double *lX = &aX, *lY = &aY,
+      *hX = &aX, *hY = &aY;
+  if (*lX > bX)
+    lX = &bX;
+  if (*lY > bY)
+    lY = &bY;
+  if (*lX > cX)
+    lX = &cX;
+  if (*lY > cY)
+    lY = &cY;
+  if (*hX < bX)
+    hX = &bX;
+  if (*hY < bY)
+    hY = &bY;
+  if (*hX < cX)
+    hX = &cX;
+  if (*hY < cY)
+    hY = &cY;
+
+  if (*lX < draw_area.x)
+  {
+    if (&bX != lX)
+      bX = draw_area.x + ((d20.x - *lX) + (bX - d20.x));
+    if (&cX != lX)
+      cX = draw_area.x + ((d20.x - *lX) + (cX - d20.x));
+    if (&aX != lX)
+      aX = draw_area.x + ((d20.x - *lX) + (aX - d20.x));
+    *lX = draw_area.x;
+  }
+  if (*lY < draw_area.y)
+  {
+    if (&bY != lY)
+      bY = draw_area.y + ((d20.y - *lY) + (bY - d20.y));
+    if (&cY != lY)
+      cY = draw_area.y + ((d20.y - *lY) + (cY - d20.y));
+    if (&aY != lY)
+      aY = draw_area.y + ((d20.y - *lY) + (aY - d20.y));
+    *lY = draw_area.y;
+  }
+
+  if (*hX > draw_area.x + draw_area.w)
+  {
+    if (&bX != hX)
+      bX = draw_area.x + draw_area.w + ((d20.x - *hX) + (bX - d20.x));
+    if (&cX != hX)
+      cX = draw_area.x + draw_area.w + ((d20.x - *hX) + (cX - d20.x));
+    if (&aX != hX)
+      aX = draw_area.x + draw_area.w + ((d20.x - *hX) + (aX - d20.x));
+    *hX = draw_area.x + draw_area.w;
+  }
+  if (*hY > draw_area.y + draw_area.h)
+  {
+    if (&bY != hY)
+      bY = draw_area.y + draw_area.h + ((d20.y - *hY) + (bY - d20.y));
+    if (&cY != hY)
+      cY = draw_area.y + draw_area.h + ((d20.y - *hY) + (cY - d20.y));
+    if (&aY != hY)
+      aY = draw_area.y + draw_area.h + ((d20.y - *hY) + (aY - d20.y));
+    *hY = draw_area.y + draw_area.h;
+  }
+
+  ptr->pts[0] = aX;
+  ptr->pts[1] = aY;
   ptr = d20.current_free->B->pos[0];
-  ptr->pts[0] = d20.x + bX;
-  ptr->pts[1] = d20.y + bY;
+  ptr->pts[0] = bX;
+  ptr->pts[1] = bY;
   ptr = d20.current_free->C->pos[0];
-  ptr->pts[0] = d20.x + cX;
-  ptr->pts[1] = d20.y + cY;
+  ptr->pts[0] = cX;
+  ptr->pts[1] = cY;
 }
 
 
@@ -453,13 +520,12 @@ void app_usage ()
   }
   if (d20.faces == NULL)
   { //  root triangle is not pinned
-    int change = 0;
+    //int change = 0;
+    int mouse_outside = 0;
     if (mouse_moves())
     { // set root position
       d20.x = application.mX;
       d20.y = application.mY;
-      mouse_position (&application.mX, &application.mY);
-      ++ change;
     }
     else
     {
@@ -476,6 +542,7 @@ void app_usage ()
         if (d20.available == NULL)
         {
           d20.available = make_chain (t);
+
           if (d20.free_selector == NULL)
             d20.free_selector = make_chainslider (d20.available);
         }
@@ -562,14 +629,15 @@ void app_usage ()
         d20.current_used = slider_current (d20.used_selector);
 
       }
+
       int scroll = mouse_scroll();
+
       if (change_root_size())
-      { change += resize_root(scroll);  }
+          resize_root(scroll);
       else
-      { change += rotate_root(scroll);  }
+          rotate_root(scroll);
     }
-    if (change)
-      reposition_root_vertices ();
+    reposition_root_vertices();
   }
   else
   {
