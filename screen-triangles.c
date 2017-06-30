@@ -149,7 +149,10 @@ int triangle_contains (triangle_t *t, vtx2i_t point)
       ||  (point.pts[0] > rect->x + rect->w)
       ||  (point.pts[1] < rect->y)
       ||  (point.pts[1] > rect->y + rect->h))
+  {
+    free (rect);
     return 0;
+  }
 
   SDL_Surface *surf = NULL;
 
