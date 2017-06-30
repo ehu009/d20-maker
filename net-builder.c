@@ -32,7 +32,7 @@ static struct
 {
   //  togglers
   char rotate_root;
-  char use_slider;
+  char relocate_mode;
   //  relocation
   char being_relocated;
   int diff_x, diff_y;
@@ -53,13 +53,14 @@ int change_root_size (void)
   return application.rotate_root;
 }
 
-int use_scroll_selector(void)
+int relocate_mode (void)
 { //  toggle between using mouse wheel or position for selections
-  if(mouse_middle() == -1)
+  if((mouse_middle() == -1)
+      ||  (mouse_right() == -1))
   {
-    application.use_slider ^= 1;
+    application.relocate_mode ^= 1;
   }
-  return application.use_slider;
+  return application.relocate_mode;
 }
 
 
@@ -150,7 +151,7 @@ int resize_root (int diff)
 void app_start (void)
 {
   application.rotate_root = 1;
-  application.use_slider = 1;
+  application.relocate_mode = 0;
   application.status = APP_START;
   application.being_relocated = 0;
   // initialize structures
@@ -332,28 +333,54 @@ void app_draw (void)
   }
 }
 
-void relocate_and_undo (void)
+void select_triangle (void)
 {
-  if (mouse_middle() == -1)
+  vtx2i_t m = {.pts = {application.mX, application.mY}};
+
+  tripoint_t *new_cUsed = NULL, *new_cFree = NULL;
+
+  tripoint_t *start = slider_current (d20.used_selector),
+      *cur = start;
+  triangle_t tmp_triangle;
+
+  do
   {
-    //  undoing
-  }
-  if (mouse_right() == 1)
-  {
-    if (application.being_relocated == 0)
+    read_triangle_from_tripoint(cur, &tmp_triangle);
+    if (triangle_contains (&tmp_triangle, m))
     {
-      application.being_relocated ++;
-      application.diff_x = application.mX - d20.x;
-      application.diff_y = application.mY - d20.y;
+      new_cUsed = cur;
+
+      break;
     }
+    slider_procede (d20.used_selector);
+    cur = slider_current (d20.used_selector);
   }
-  if (mouse_right() == -1)
+  while (cur != start);
+  if (d20.current_used != new_cUsed)
+    d20.current_used = new_cUsed;
+
+  if (d20.free_selector != NULL)
   {
-    if (application.being_relocated == 0)
-      application.being_relocated --;
-    //  free up vertices that are outside screen boundaries
+  start = slider_current (d20.free_selector);
+  cur = start;
+  do
+  {
+    read_triangle_from_tripoint(cur, &tmp_triangle);
+    if (triangle_contains (&tmp_triangle, m))
+    {
+      new_cFree = cur;
+      break;
+    }
+    slider_procede (d20.free_selector);
+    cur = slider_current (d20.free_selector);
+  }
+  while (cur != start);
+  if (d20.current_free != new_cFree)
+    d20.current_free = new_cFree;
   }
 }
+
+
 
 
 void adjust_root_coordinate (double *coordinate, double *error, int reference, int limit)
@@ -507,6 +534,10 @@ int SDLRect_contains (vtx2d_t *p, SDL_Rect *limit)
 
 
 
+
+
+
+
 slot_t *find_slot_opposing (slot_t *anchor1, slot_t *anchor2, slot_t *opposer)
 {
   slot_t *r = NULL;
@@ -551,6 +582,86 @@ vtx2d_t *find_vector_opposing (vtx2d_t *anchor1, vtx2d_t *anchor2, vtx2d_t *oppo
 
 
 
+
+void pin_root ()
+{
+  d20.faces = make_chain (d20.current_free);
+  d20.used_selector = make_chainslider (d20.faces);
+  d20.current_used = d20.current_free;
+  d20.current_free = NULL;
+
+  slot_t *new = NULL;
+  tripoint_t *t = NULL, *anchor = d20.current_used;
+  vtx2d_t *tmp_pos = NULL;
+
+  //  A, B as anchor
+  new = find_slot_opposing (anchor->A, anchor->B, anchor->C);
+  tmp_pos = find_vector_opposing (anchor->A->pos[anchor->pos_A], anchor->B->pos[anchor->pos_B], anchor->C->pos[anchor->pos_C]);
+  if (SDLRect_contains(tmp_pos, &draw_area))
+  {
+    t = malloc (sizeof(tripoint_t));
+    if (d20.available == NULL)
+    {
+      d20.available = make_chain (t);
+      if (d20.free_selector == NULL)
+        d20.free_selector = make_chainslider (d20.available);
+    }
+    else
+      slider_insert_after (d20.free_selector, (void *) t);
+
+    bcopy(anchor, t, sizeof(tripoint_t));
+    t->C = new;
+    t->pos_C = 0;
+    new->pos[0] = tmp_pos;
+  }
+
+  //  B, C as anchor
+  new = find_slot_opposing (anchor->B, anchor->C, anchor->A);
+  tmp_pos = find_vector_opposing (anchor->B->pos[anchor->pos_B], anchor->C->pos[anchor->pos_C], anchor->A->pos[anchor->pos_A]);
+  if (SDLRect_contains(tmp_pos, &draw_area))
+  {
+    t = malloc (sizeof(tripoint_t));
+    if (d20.available == NULL)
+    {
+      d20.available = make_chain (t);
+      if (d20.free_selector == NULL)
+        d20.free_selector = make_chainslider (d20.available);
+    }
+    else
+      slider_insert_after (d20.free_selector, (void *) t);
+
+    bcopy(anchor, t, sizeof(tripoint_t));
+    t->A = new;
+    t->pos_A = 0;
+    new->pos[0] = tmp_pos;
+  }
+
+  //  C, A as anchor
+  new = find_slot_opposing (anchor->C, anchor->A, anchor->B);
+  tmp_pos = find_vector_opposing (anchor->C->pos[anchor->pos_C], anchor->A->pos[anchor->pos_A], anchor->B->pos[anchor->pos_B]);
+  if (SDLRect_contains(tmp_pos, &draw_area))
+  {
+    t = malloc (sizeof(tripoint_t));
+    if (d20.available == NULL)
+    {
+      d20.available = make_chain (t);
+      if (d20.free_selector == NULL)
+        d20.free_selector = make_chainslider (d20.available);
+    }
+    else
+      slider_insert_after (d20.free_selector, (void *) t);
+
+    bcopy(anchor, t, sizeof(tripoint_t));
+    t->B = new;
+    t->pos_B = 0;
+    new->pos[0] = tmp_pos;
+  }
+  if (d20.free_selector != NULL)
+    d20.current_free = slider_current (d20.free_selector);
+
+}
+
+
 void app_usage ()
 {
   if (mouse_moves ())
@@ -593,186 +704,64 @@ void app_usage ()
           if (!reposition_root_vertices())
             rotate_root(-scroll);
         }
-
       }
     }
 
     if (mouse_left() == -1)
     {
       // pin root triangle
-      d20.faces = make_chain (d20.current_free);
-      d20.used_selector = make_chainslider (d20.faces);
-      d20.current_used = d20.current_free;
-      d20.current_free = NULL;
-
-      slot_t *new = NULL;
-      tripoint_t *t = NULL, *anchor = d20.current_used;
-      vtx2d_t *tmp_pos = NULL;
-
-      //  A, B as anchor
-      new = find_slot_opposing (anchor->A, anchor->B, anchor->C);
-      tmp_pos = find_vector_opposing (anchor->A->pos[anchor->pos_A], anchor->B->pos[anchor->pos_B], anchor->C->pos[anchor->pos_C]);
-      if (SDLRect_contains(tmp_pos, &draw_area))
-      {
-        t = malloc (sizeof(tripoint_t));
-        if (d20.available == NULL)
-        {
-          d20.available = make_chain (t);
-          if (d20.free_selector == NULL)
-            d20.free_selector = make_chainslider (d20.available);
-        }
-        else
-          slider_insert_after (d20.free_selector, (void *) t);
-
-        bcopy(anchor, t, sizeof(tripoint_t));
-        t->C = new;
-        t->pos_C = 0;
-        new->pos[0] = tmp_pos;
-      }
-      //  B, C as anchor
-      new = find_slot_opposing (anchor->B, anchor->C, anchor->A);
-      tmp_pos = find_vector_opposing (anchor->B->pos[anchor->pos_B], anchor->C->pos[anchor->pos_C], anchor->A->pos[anchor->pos_A]);
-      if (SDLRect_contains(tmp_pos, &draw_area))
-      {
-        t = malloc (sizeof(tripoint_t));
-        if (d20.available == NULL)
-        {
-          d20.available = make_chain (t);
-          if (d20.free_selector == NULL)
-            d20.free_selector = make_chainslider (d20.available);
-
-        }
-        else
-          slider_insert_after (d20.free_selector, (void *) t);
-
-        bcopy(anchor, t, sizeof(tripoint_t));
-        t->A = new;
-        t->pos_A = 0;
-        new->pos[0] = tmp_pos;
-      }
-
-      //  C, A as anchor
-      new = find_slot_opposing (anchor->C, anchor->A, anchor->B);
-      tmp_pos = find_vector_opposing (anchor->C->pos[anchor->pos_C], anchor->A->pos[anchor->pos_A], anchor->B->pos[anchor->pos_B]);
-      if (SDLRect_contains(tmp_pos, &draw_area))
-      {
-        t = malloc (sizeof(tripoint_t));
-        if (d20.available == NULL)
-        {
-          d20.available = make_chain (t);
-          if (d20.free_selector == NULL)
-            d20.free_selector = make_chainslider (d20.available);
-        }
-        else
-          slider_insert_after (d20.free_selector, (void *) t);
-
-        bcopy(anchor, t, sizeof(tripoint_t));
-        t->B = new;
-        t->pos_B = 0;
-        new->pos[0] = tmp_pos;
-
-      }
-      if (d20.free_selector != NULL)
-        d20.current_free = slider_current (d20.free_selector);
+      pin_root();
     }
 
   }
   else
   {
     //  root triangle has been pinned
-
-    relocate_and_undo();
+    int relocate = relocate_mode();
 
     if (mouse_left() == -1)
     {
-      //  pinning
-      printf("not yet tho\n");
-    }
-    /*
-    int scroll = mouse_scroll();
-    if (use_scroll_selector())
-    {
-      // selecting a triangle with the wheel
-      if (scroll)
+      if (relocate)
       {
-        if (scroll == -1)
+        if (application.being_relocated)
+          application.being_relocated --;
+        else
         {
-          // backwards
+          application.being_relocated ++;
+          application.diff_x = application.mX - d20.x;
+          application.diff_y = application.mY - d20.y;
+        }
+      }
+      else
+      {
+        if (d20.current_free != NULL)
+        { // pin
+
 
         }
-        if (scroll == 1)
-        {
-          // forwards
+        else if (d20.current_used != NULL)
+        { //  undo
+
+
         }
       }
     }
-    else
+
+    if (mouse_moves ())
     {
-    */
-
-
+      if (relocate)
+      {
         if (application.being_relocated)
         {
           //  reposition vertices
 
-
         }
-        else
-        {
-
-        //selecting a triangle by position
-      if (mouse_moves ())
-      {
-          vtx2i_t m = {.pts = {application.mX, application.mY}};
-
-          tripoint_t *new_cUsed = NULL, *new_cFree = NULL;
-
-          tripoint_t *start = slider_current (d20.used_selector),
-              *cur = start;
-          triangle_t tmp_triangle;
-
-          do
-          {
-            read_triangle_from_tripoint(cur, &tmp_triangle);
-            if (triangle_contains (&tmp_triangle, m))
-            {
-              new_cUsed = cur;
-
-              break;
-            }
-            slider_procede (d20.used_selector);
-            cur = slider_current (d20.used_selector);
-          }
-          while (cur != start);
-          if (d20.current_used != new_cUsed)
-            d20.current_used = new_cUsed;
-
-          if (d20.free_selector != NULL)
-          {
-          start = slider_current (d20.free_selector);
-          cur = start;
-          do
-          {
-            read_triangle_from_tripoint(cur, &tmp_triangle);
-            if (triangle_contains (&tmp_triangle, m))
-            {
-              new_cFree = cur;
-              break;
-            }
-            slider_procede (d20.free_selector);
-            cur = slider_current (d20.free_selector);
-          }
-          while (cur != start);
-          if (d20.current_free != new_cFree)
-            d20.current_free = new_cFree;
-          }
-        }
-
       }
-
-    /*
+      else
+      {
+        select_triangle();
+      }
     }
-    */
   }
 }
 
