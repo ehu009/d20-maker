@@ -138,9 +138,10 @@ int rotate_root (int diff)
 
 int resize_root (int diff)
 { // increase radius
-  if (diff)
+  double add = 1.75 * diff;
+  if (diff && (d20.radius + add > 0))
   {
-    d20.radius += diff*1.75;
+    d20.radius += add;
     return 1;
   }
   return 0;
@@ -185,7 +186,7 @@ void app_start (void)
   t->B->pinned = 0;
   t->C->pinned = 0;
   d20.current_free = t;
-  d20.current_used = t;
+  d20.current_used = NULL;
 
   d20.free_selector = NULL;
   d20.used_selector = NULL;
@@ -287,28 +288,33 @@ void app_draw (void)
 {
   SDL_FillRect (canvas, NULL, 0x0ff);
   SDL_BlitSurface (src_image, NULL, canvas, &draw_area);
-
   if (d20.faces == NULL)
   {
     draw_triangle_transparent (d20.current_free);
   }
   else
   {
+  tripoint_t *start, *cur;
     //  draw pinned triangles
-    tripoint_t *start = slider_current (d20.used_selector),
-        *cur = start;
+    if ((d20.faces != NULL) && (d20.used_selector != NULL))
+    {
+    start = slider_current (d20.used_selector);
+    cur = start;
     do
     {
       if (cur != d20.current_used)
         draw_triangle_outline (cur);
       else
         draw_triangle_coloured (cur, CLR_SELECTED_PINNED);
+
       slider_procede (d20.used_selector);
       cur = slider_current (d20.used_selector);
     }
     while (cur != start);
-
+    }
     //  draw free tirangles
+    if ((d20.available != NULL) && (d20.free_selector != NULL))
+    {
     start = slider_current (d20.free_selector);
     cur = start;
     do
@@ -317,11 +323,12 @@ void app_draw (void)
         draw_triangle_transparent (cur);
       else
         draw_triangle_coloured (cur, CLR_SELECTED_UNPINNED);
+
       slider_procede (d20.free_selector);
       cur = slider_current (d20.free_selector);
     }
     while (cur != start);
-
+    }
   }
 }
 
@@ -355,7 +362,7 @@ void adjust_root_coordinate (double *coordinate, double *error, int reference, i
     *coordinate = limit + ((reference - *error) + (*coordinate - reference));
 }
 
-void adjust_root_singleton (triangle_t *r, SDL_Rect *R)
+int adjust_root_singleton (triangle_t *r, SDL_Rect *R)
 {
   double *lX = &r->pts[0]->pts[0], *lY = &r->pts[0]->pts[1],
       *hX = &r->pts[0]->pts[0], *hY = &r->pts[0]->pts[1];
@@ -375,6 +382,13 @@ void adjust_root_singleton (triangle_t *r, SDL_Rect *R)
     hX = &r->pts[2]->pts[0];
   if (*hY < r->pts[2]->pts[1])
     hY = &r->pts[2]->pts[1];
+
+  if ( R->h < (*hY - *lY))
+    return 0;
+  if ( R->w < (*hX - *lX))
+    return 0;
+
+
   //  lower limits
   if (*lX < R->x)
   {
@@ -409,6 +423,7 @@ void adjust_root_singleton (triangle_t *r, SDL_Rect *R)
 
     *hY = R->y + R->h;
   }
+  return 1;
 }
 
 
@@ -456,13 +471,14 @@ void standard_root (triangle_t *dst)
   ptr->pts[1] = cY + d20.y;
 }
 
-void reposition_root_vertices (void)
+int reposition_root_vertices (void)
 {
   vtx2d_t a, b, c;
   triangle_t root = {.pts = {&a, &b, &c}};
 
   standard_root (&root);
-  adjust_root_singleton (&root, &draw_area);
+  if (adjust_root_singleton (&root, &draw_area))
+  {
 
   vtx2d_t *ptr;
   ptr = d20.current_free->A->pos[0];
@@ -474,10 +490,20 @@ void reposition_root_vertices (void)
   ptr = d20.current_free->C->pos[0];
   ptr->pts[0] = c.pts[0];
   ptr->pts[1] = c.pts[1];
+  return 1;
+  }
+  else
+    return 0;
 }
 
 
-
+int SDLRect_contains (vtx2d_t *p, SDL_Rect *limit)
+{
+  int r = 0;
+  r |= ((p->pts[0] < limit->x) || (p->pts[0] > limit->x + limit->w));
+  r |= ((p->pts[1] < limit->y) || (p->pts[1] > limit->y + limit->h));
+  return (r == 0);
+}
 
 
 
@@ -525,8 +551,6 @@ vtx2d_t *find_vector_opposing (vtx2d_t *anchor1, vtx2d_t *anchor2, vtx2d_t *oppo
 
 
 
-
-
 void app_usage ()
 {
   if (mouse_moves ())
@@ -535,123 +559,123 @@ void app_usage ()
   }
   if (d20.faces == NULL)
   { //  root triangle is not pinned
-
     if (mouse_moves())
-    { // set root position
+    {
       d20.x = application.mX;
       d20.y = application.mY;
+      reposition_root_vertices();
     }
     else
     {
-      if (mouse_left() == -1)
+      int resize = change_root_size();
+      int scroll = mouse_scroll();
+      if (scroll)
       {
-        // pin root triangle
-        d20.faces = make_chain (d20.current_free);
-        d20.used_selector = make_chainslider (d20.faces);
+        if (resize)
+        {
+          if (scroll < 0)
+          {
+            resize_root(scroll);
+            reposition_root_vertices();
+          }
+          else
+          {
+            resize_root(scroll);
+            if ((scroll > 0) && !reposition_root_vertices())
+            {
+              resize_root(-scroll);
+            }
+          }
+        }
+        else
+        {
+          rotate_root(scroll);
+          if (!reposition_root_vertices())
+            rotate_root(-scroll);
+        }
 
-        tripoint_t *t = NULL, *anchor = d20.current_free;
-        slot_t *new = NULL;
+      }
+    }
 
+    if (mouse_left() == -1)
+    {
+      // pin root triangle
+      d20.faces = make_chain (d20.current_free);
+      d20.used_selector = make_chainslider (d20.faces);
+      d20.current_used = d20.current_free;
+      d20.current_free = NULL;
+
+      slot_t *new = NULL;
+      tripoint_t *t = NULL, *anchor = d20.current_used;
+      vtx2d_t *tmp_pos = NULL;
+
+      //  A, B as anchor
+      new = find_slot_opposing (anchor->A, anchor->B, anchor->C);
+      tmp_pos = find_vector_opposing (anchor->A->pos[anchor->pos_A], anchor->B->pos[anchor->pos_B], anchor->C->pos[anchor->pos_C]);
+      if (SDLRect_contains(tmp_pos, &draw_area))
+      {
         t = malloc (sizeof(tripoint_t));
         if (d20.available == NULL)
         {
           d20.available = make_chain (t);
-
           if (d20.free_selector == NULL)
             d20.free_selector = make_chainslider (d20.available);
         }
         else
+          slider_insert_after (d20.free_selector, (void *) t);
+
+        bcopy(anchor, t, sizeof(tripoint_t));
+        t->C = new;
+        t->pos_C = 0;
+        new->pos[0] = tmp_pos;
+      }
+      //  B, C as anchor
+      new = find_slot_opposing (anchor->B, anchor->C, anchor->A);
+      tmp_pos = find_vector_opposing (anchor->B->pos[anchor->pos_B], anchor->C->pos[anchor->pos_C], anchor->A->pos[anchor->pos_A]);
+      if (SDLRect_contains(tmp_pos, &draw_area))
+      {
+        t = malloc (sizeof(tripoint_t));
+        if (d20.available == NULL)
         {
+          d20.available = make_chain (t);
           if (d20.free_selector == NULL)
             d20.free_selector = make_chainslider (d20.available);
 
+        }
+        else
           slider_insert_after (d20.free_selector, (void *) t);
-        }
 
-
-        {
-        //  A, B of anchor
-          new = find_slot_opposing (anchor->A, anchor->B, anchor->C);
-          new->pos[0] = find_vector_opposing (anchor->A->pos[anchor->pos_A], anchor->B->pos[anchor->pos_B], anchor->C->pos[anchor->pos_C]);
-
-
-          t->A = anchor->A;
-          t->pos_A = anchor->pos_A;
-          t->B = anchor->B;
-          t->pos_B = anchor->pos_B;
-          t->C = new;
-          t->pos_C = 0;
-        }
-        {
-        //  B, C of anchor
-
-          new = find_slot_opposing (anchor->B, anchor->C, anchor->A);
-          new->pos[0] = find_vector_opposing (anchor->B->pos[anchor->pos_B], anchor->C->pos[anchor->pos_C], anchor->A->pos[anchor->pos_A]);
-
-          t = malloc (sizeof(tripoint_t));
-          t->A = anchor->B;
-          t->pos_A = anchor->pos_B;
-          t->B = anchor->C;
-          t->pos_B = anchor->pos_C;
-          t->C = new;
-          t->pos_C = 0;
-
-          if (d20.available == NULL)
-          {
-            d20.available = make_chain (t);
-            if (d20.free_selector == NULL)
-              d20.free_selector = make_chainslider (d20.available);
-          }
-          else
-          {
-            if (d20.free_selector == NULL)
-              d20.free_selector = make_chainslider (d20.available);
-
-            slider_insert_after (d20.free_selector, (void *) t);
-          }
-        }
-        {
-        //  C, A of anchor
-
-          new = find_slot_opposing (anchor->C, anchor->A, anchor->B);
-          new->pos[0] = find_vector_opposing (anchor->C->pos[anchor->pos_C], anchor->A->pos[anchor->pos_A], anchor->B->pos[anchor->pos_B]);
-
-          t = malloc (sizeof(tripoint_t));
-          t->A = anchor->C;
-          t->pos_A = anchor->pos_C;
-          t->B = anchor->A;
-          t->pos_B = anchor->pos_A;
-          t->C = new;
-          t->pos_C = 0;
-
-          if (d20.available == NULL)
-          {
-            d20.available = make_chain (t);
-            if (d20.free_selector == NULL)
-              d20.free_selector = make_chainslider (d20.available);
-          }
-          else
-          {
-            if (d20.free_selector == NULL)
-              d20.free_selector = make_chainslider (d20.available);
-
-            slider_insert_after (d20.free_selector, (void *) t);
-          }
-        }
-
-        d20.current_free = slider_current (d20.free_selector);
-        d20.current_used = slider_current (d20.used_selector);
-
+        bcopy(anchor, t, sizeof(tripoint_t));
+        t->A = new;
+        t->pos_A = 0;
+        new->pos[0] = tmp_pos;
       }
 
-      int scroll = mouse_scroll();
+      //  C, A as anchor
+      new = find_slot_opposing (anchor->C, anchor->A, anchor->B);
+      tmp_pos = find_vector_opposing (anchor->C->pos[anchor->pos_C], anchor->A->pos[anchor->pos_A], anchor->B->pos[anchor->pos_B]);
+      if (SDLRect_contains(tmp_pos, &draw_area))
+      {
+        t = malloc (sizeof(tripoint_t));
+        if (d20.available == NULL)
+        {
+          d20.available = make_chain (t);
+          if (d20.free_selector == NULL)
+            d20.free_selector = make_chainslider (d20.available);
+        }
+        else
+          slider_insert_after (d20.free_selector, (void *) t);
 
-      if (change_root_size())
-          resize_root(scroll);
-      else
-          rotate_root(scroll);
+        bcopy(anchor, t, sizeof(tripoint_t));
+        t->B = new;
+        t->pos_B = 0;
+        new->pos[0] = tmp_pos;
+
+      }
+      if (d20.free_selector != NULL)
+        d20.current_free = slider_current (d20.free_selector);
     }
-    reposition_root_vertices();
+
   }
   else
   {
@@ -685,9 +709,8 @@ void app_usage ()
     else
     {
     */
-      //selecting a triangle by position
-      if (mouse_moves ())
-      {
+
+
         if (application.being_relocated)
         {
           //  reposition vertices
@@ -696,6 +719,10 @@ void app_usage ()
         }
         else
         {
+
+        //selecting a triangle by position
+      if (mouse_moves ())
+      {
           vtx2i_t m = {.pts = {application.mX, application.mY}};
 
           tripoint_t *new_cUsed = NULL, *new_cFree = NULL;
@@ -703,6 +730,7 @@ void app_usage ()
           tripoint_t *start = slider_current (d20.used_selector),
               *cur = start;
           triangle_t tmp_triangle;
+
           do
           {
             read_triangle_from_tripoint(cur, &tmp_triangle);
@@ -716,10 +744,11 @@ void app_usage ()
             cur = slider_current (d20.used_selector);
           }
           while (cur != start);
+          if (d20.current_used != new_cUsed)
+            d20.current_used = new_cUsed;
 
-          d20.current_used = new_cUsed;
-
-
+          if (d20.free_selector != NULL)
+          {
           start = slider_current (d20.free_selector);
           cur = start;
           do
@@ -727,7 +756,7 @@ void app_usage ()
             read_triangle_from_tripoint(cur, &tmp_triangle);
             if (triangle_contains (&tmp_triangle, m))
             {
-              new_cFree=  cur;
+              new_cFree = cur;
               break;
             }
             slider_procede (d20.free_selector);
@@ -736,8 +765,11 @@ void app_usage ()
           while (cur != start);
           if (d20.current_free != new_cFree)
             d20.current_free = new_cFree;
+          }
         }
+
       }
+
     /*
     }
     */
