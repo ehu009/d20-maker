@@ -614,6 +614,10 @@ void pin_root ()
     t->pos_C = 0;
     new->pos[0] = tmp_pos;
   }
+  else
+  {
+    free(tmp_pos);
+  }
 
   //  B, C as anchor
   new = find_slot_opposing (anchor->B, anchor->C, anchor->A);
@@ -634,6 +638,10 @@ void pin_root ()
     t->A = new;
     t->pos_A = 0;
     new->pos[0] = tmp_pos;
+  }
+  else
+  {
+    free(tmp_pos);
   }
 
   //  C, A as anchor
@@ -656,6 +664,11 @@ void pin_root ()
     t->pos_B = 0;
     new->pos[0] = tmp_pos;
   }
+  else
+  {
+    free(tmp_pos);
+  }
+
   if (d20.free_selector != NULL)
     d20.current_free = slider_current (d20.free_selector);
 
@@ -741,8 +754,16 @@ void app_usage ()
         }
         else if (d20.current_used != NULL)
         { //  undo
+          if (chain_size(d20.faces) == 1)
+          {
+            app_free();
+            app_start();
+          }
+          else
+          {
 
 
+          }
         }
       }
     }
