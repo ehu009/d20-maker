@@ -224,7 +224,11 @@ void app_free (void)
     if (d20.free_selector == NULL)
       d20.free_selector = make_chainslider (d20.available);
     while (chain_size (d20.available) > 1)
+    {
+      free(slider_current(d20.free_selector));
+      slider_recede(d20.free_selector);
       slider_remove_next (d20.free_selector);
+    }
     t = slider_current(d20.free_selector);
     free(t);
     free_chainslider (d20.free_selector);
@@ -235,7 +239,11 @@ void app_free (void)
     if (d20.used_selector == NULL)
       d20.used_selector = make_chainslider (d20.faces);
     while (chain_size (d20.faces) > 1)
+    {
+      free(slider_current(d20.used_selector));
+      slider_recede(d20.used_selector);
       slider_remove_next (d20.used_selector);
+    }
     t = slider_current(d20.used_selector);
     free(t);
     free_chainslider (d20.used_selector);
@@ -585,8 +593,10 @@ vtx2d_t *find_vector_opposing (vtx2d_t *anchor1, vtx2d_t *anchor2, vtx2d_t *oppo
 
 void pin_root ()
 {
-  d20.faces = make_chain (d20.current_free);
-  d20.used_selector = make_chainslider (d20.faces);
+  if (d20.faces == NULL)
+    d20.faces = make_chain (d20.current_free);
+  if (d20.used_selector == NULL)
+    d20.used_selector = make_chainslider (d20.faces);
   d20.current_used = d20.current_free;
   d20.current_free = NULL;
 
@@ -668,10 +678,10 @@ void pin_root ()
   {
     free(tmp_pos);
   }
-
+/*
   if (d20.free_selector != NULL)
     d20.current_free = slider_current (d20.free_selector);
-
+*/
 }
 
 
