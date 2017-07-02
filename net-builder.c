@@ -198,12 +198,12 @@ void app_start (void)
 void app_free (void)
 {
   //  free initialized structures
-  int j = 0, k = 0;
+  int j = 0, k;
   slot_t *s;
   for (; j < NUM_D20_VTX; j ++)
   {
     s = &d20.vertex[j];
-    for (; k < NUM_VTX_POS; k++)
+    for (k = 0; k < NUM_VTX_POS; k++)
     {
       if (s->pos[k] != NULL)
         free (s->pos[k]);
