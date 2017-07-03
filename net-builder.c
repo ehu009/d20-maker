@@ -684,13 +684,13 @@ d20.current_used = NULL; //d20.current_free;
 }
 
 
-int find_suitable_index(slot_t *s)
+int find_suitable_index(slot_t *s, vtx2d_t *pos)
 {
   int k = 0;
   int idx = -1;
   while (k < NUM_VTX_POS)
   {
-    if (s->pos[k] == NULL)
+    if ((s->pos[k] == NULL) || (s->pos[k] == pos))
     {
       idx = k;
       break;
@@ -736,7 +736,34 @@ int equal_triangles (tripoint_t *A, tripoint_t *B)
   return (eq == 3);
 }
 
-int triangle_exists (tripoint_t *t)
+
+int equal_vertices (vtx2d_t *A, vtx2d_t *B, double acc)
+{
+  return (approximates(A->pts[0], B->pts[0], acc) && approximates(A->pts[1], B->pts[1], acc));
+}
+
+vtx2d_t *position_exists (vtx2d_t *p)
+{
+  vtx2d_t *ptr = NULL;
+  int j, k;
+  for(j = 0; j < NUM_D20_VTX; j++)
+  {
+    if (ptr != NULL)
+      break;
+    slot_t *s = &d20.vertex[j];
+    for (k=0; k < NUM_VTX_POS; k ++)
+    {
+      if ((s->pos[k] == NULL) || (ptr != NULL))
+        break;
+      if (equal_vertices (s->pos[k], p, 1.5))
+        ptr = s->pos[k];
+    }
+  }
+  return ptr;
+}
+
+
+int already_pinned (tripoint_t *t)
 {
   int eq = 0;
   tripoint_t *start = slider_current (d20.used_selector),
@@ -753,24 +780,6 @@ int triangle_exists (tripoint_t *t)
     cur = slider_current (d20.used_selector);
   }
   while (cur != start);
-  if (eq)
-    return 1;
-
-  start = slider_current (d20.free_selector);
-  cur = start;
-
-  do
-  {
-    if (equal_triangles(cur, t))
-    {
-      eq ++;
-      break;
-    }
-    slider_procede (d20.free_selector);
-    cur = slider_current (d20.free_selector);
-  }
-  while (cur != start);
-
   return eq;
 }
 
@@ -788,20 +797,37 @@ void create_neighbor_triangles_for (tripoint_t *p)
     bcopy(p, t, sizeof(tripoint_t));
     t->C = new;
 
-    if (triangle_exists(t))
+    if (already_pinned(t))
     {
       free(t);
+      printf("already exists\t\t%d\n",__LINE__);
     }
     else
     {
       tmp_pos = find_vector_opposing (p->A->pos[p->pos_A], p->B->pos[p->pos_B], p->C->pos[p->pos_C]);
       if (SDLRect_contains(tmp_pos, &draw_area))
       {
+        vtx2d_t *pos = position_exists(tmp_pos);
+        if (pos != NULL)
+        {
+          free(tmp_pos);
+          tmp_pos = pos;
+        }
         slider_insert_after (d20.free_selector, (void *) t);
 
-        int idx = find_suitable_index(new);
-        t->pos_C = idx;
-        new->pos[idx] = tmp_pos;
+        int idx = find_suitable_index(new, tmp_pos);
+        if (idx == -1)
+        {
+          printf("idx not suitable\t\t%d\n",__LINE__);
+          if (pos == NULL)
+            free(tmp_pos);
+          free(t);
+        }
+        else
+        {
+          t->pos_C = idx;
+          new->pos[idx] = tmp_pos;
+        }
       }
       else
       {
@@ -817,20 +843,37 @@ void create_neighbor_triangles_for (tripoint_t *p)
     bcopy(p, t, sizeof(tripoint_t));
     t->A = new;
 
-    if (triangle_exists(t))
+    if (already_pinned(t))
     {
       free(t);
+      printf("already exists\t\t%d\n",__LINE__);
     }
     else
     {
       tmp_pos = find_vector_opposing (p->B->pos[p->pos_B], p->C->pos[p->pos_C], p->A->pos[p->pos_A]);
       if (SDLRect_contains(tmp_pos, &draw_area))
       {
+      vtx2d_t *pos = position_exists(tmp_pos);
+        if (pos != NULL)
+        {
+          free(tmp_pos);
+          tmp_pos = pos;
+        }
         slider_insert_after (d20.free_selector, (void *) t);
 
-        int idx = find_suitable_index(new);
-        t->pos_A = idx;
-        new->pos[idx] = tmp_pos;
+        int idx = find_suitable_index(new, tmp_pos);
+        if (idx == -1)
+        {
+        printf("idx not suitable\t\t%d\n",__LINE__);
+          if (pos == NULL)
+            free(tmp_pos);
+          free(t);
+        }
+        else
+        {
+          t->pos_A = idx;
+          new->pos[idx] = tmp_pos;
+          }
       }
       else
       {
@@ -846,20 +889,37 @@ void create_neighbor_triangles_for (tripoint_t *p)
     bcopy(p, t, sizeof(tripoint_t));
     t->B = new;
 
-    if (triangle_exists(t))
+    if (already_pinned(t))
     {
       free(t);
+      printf("already exists\t\t%d\n",__LINE__);
     }
     else
     {
       tmp_pos = find_vector_opposing (p->C->pos[p->pos_C], p->A->pos[p->pos_A], p->B->pos[p->pos_B]);
       if (SDLRect_contains(tmp_pos, &draw_area))
       {
+      vtx2d_t *pos = position_exists(tmp_pos);
+        if (pos != NULL)
+        {
+          free(tmp_pos);
+          tmp_pos = pos;
+        }
         slider_insert_after (d20.free_selector, (void *) t);
 
-        int idx = find_suitable_index(new);
-        t->pos_B = idx;
-        new->pos[idx] = tmp_pos;
+        int idx = find_suitable_index(new, tmp_pos);
+        if (idx == -1)
+        {
+        printf("idx not suitable\t\t%d\n",__LINE__);
+          if (pos == NULL)
+            free(tmp_pos);
+          free(t);
+        }
+        else
+        {
+          t->pos_B = idx;
+          new->pos[idx] = tmp_pos;
+        }
       }
       else
       {
@@ -887,6 +947,23 @@ void pin (void)
   create_neighbor_triangles_for (anchor);
 
   slider_insert_after (d20.used_selector, anchor);
+
+
+  //  remove duplicates
+  tripoint_t *start = slider_current (d20.free_selector),
+      *cur = start;
+  do
+  {
+    if (equal_faces(cur, anchor))
+    {
+      slider_recede(d20.free_selector);
+      slider_remove_next(d20.free_selector);
+      free(cur);
+    }
+    slider_procede (d20.free_selector);
+    cur = slider_current (d20.free_selector);
+  }
+  while (cur != start);
 
   if (chain_size(d20.faces) == 20)
     application.status = APP_END;
