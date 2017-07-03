@@ -692,20 +692,38 @@ int find_suitable_index(slot_t *s)
   return k;
 }
 
+int equal_faces (tripoint_t *A, tripoint_t *B)
+{
+  int eq = 0;
+  eq += (A->A == B->A);
+  eq += (A->A == B->B);
+  eq += (A->A == B->C);
+
+  eq += (A->B == B->A);
+  eq += (A->B == B->B);
+  eq += (A->B == B->C);
+
+  eq += (A->C == B->A);
+  eq += (A->C == B->B);
+  eq += (A->C == B->C);
+
+  return (eq == 3);
+}
+
 int equal_triangles (tripoint_t *A, tripoint_t *B)
 {
   int eq = 0;
-  eq += ((A->A == B->A) );//&& (A->pos_A == B->pos_A));
-  eq += ((A->A == B->B) );//&& (A->pos_A == B->pos_B));
-  eq += ((A->A == B->C) );//&& (A->pos_A == B->pos_C));
+  eq += ((A->A == B->A) && (A->pos_A == B->pos_A));
+  eq += ((A->A == B->B) && (A->pos_A == B->pos_B));
+  eq += ((A->A == B->C) && (A->pos_A == B->pos_C));
 
-  eq += ((A->B == B->A) );//&& (A->pos_B == B->pos_A));
-  eq += ((A->B == B->B) );//&& (A->pos_B == B->pos_B));
-  eq += ((A->B == B->C) );//&& (A->pos_B == B->pos_C));
+  eq += ((A->B == B->A) && (A->pos_B == B->pos_A));
+  eq += ((A->B == B->B) && (A->pos_B == B->pos_B));
+  eq += ((A->B == B->C) && (A->pos_B == B->pos_C));
 
-  eq += ((A->C == B->A) );//&& (A->pos_C == B->pos_A));
-  eq += ((A->C == B->B) );//&& (A->pos_C == B->pos_B));
-  eq += ((A->C == B->C) );//&& (A->pos_C == B->pos_C));
+  eq += ((A->C == B->A) && (A->pos_C == B->pos_A));
+  eq += ((A->C == B->B) && (A->pos_C == B->pos_B));
+  eq += ((A->C == B->C) && (A->pos_C == B->pos_C));
 
   return (eq == 3);
 }
@@ -718,7 +736,7 @@ int triangle_exists (tripoint_t *t)
 
   do
   {
-    if (equal_triangles(cur, t))
+    if (equal_faces(cur, t))
     {
       eq ++;
       break;
@@ -744,6 +762,7 @@ int triangle_exists (tripoint_t *t)
     cur = slider_current (d20.free_selector);
   }
   while (cur != start);
+
   return eq;
 }
 
