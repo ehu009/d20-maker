@@ -687,9 +687,17 @@ d20.current_used = NULL; //d20.current_free;
 int find_suitable_index(slot_t *s)
 {
   int k = 0;
-  while (s->pos[k] != NULL)
+  int idx = -1;
+  while (k < NUM_VTX_POS)
+  {
+    if (s->pos[k] == NULL)
+    {
+      idx = k;
+      break;
+    }
     ++k;
-  return k;
+  }
+  return idx;
 }
 
 int equal_faces (tripoint_t *A, tripoint_t *B)
@@ -865,6 +873,10 @@ void create_neighbor_triangles_for (tripoint_t *p)
 void pin (void)
 {
   tripoint_t *anchor = d20.current_free;
+
+  anchor->A->pinned = anchor->pos_A;
+  anchor->B->pinned = anchor->pos_B;
+  anchor->C->pinned = anchor->pos_C;
 
   d20.current_used = NULL;
   d20.current_free = NULL;
