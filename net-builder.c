@@ -312,9 +312,10 @@ void app_draw (void)
     do
     {
       if (cur != d20.current_used)
-        draw_triangle_outline (cur);
-      else
+//        draw_triangle_outline (cur);
         draw_triangle_coloured (cur, CLR_SELECTED_PINNED);
+      else
+        draw_triangle_transparent (cur);
 
       slider_procede (d20.used_selector);
       cur = slider_current (d20.used_selector);
@@ -591,18 +592,20 @@ vtx2d_t *find_vector_opposing (vtx2d_t *anchor1, vtx2d_t *anchor2, vtx2d_t *oppo
 
 
 
-void pin_root ()
+void pin_root (void)
 {
   if (d20.faces == NULL)
     d20.faces = make_chain (d20.current_free);
   if (d20.used_selector == NULL)
     d20.used_selector = make_chainslider (d20.faces);
-  d20.current_used = d20.current_free;
-  d20.current_free = NULL;
+
 
   slot_t *new = NULL;
-  tripoint_t *t = NULL, *anchor = d20.current_used;
+  tripoint_t *t = NULL, *anchor = d20.current_free;
   vtx2d_t *tmp_pos = NULL;
+
+d20.current_used = NULL; //d20.current_free;
+  d20.current_free = NULL;
 
   //  A, B as anchor
   new = find_slot_opposing (anchor->A, anchor->B, anchor->C);
@@ -678,11 +681,189 @@ void pin_root ()
   {
     free(tmp_pos);
   }
-/*
-  if (d20.free_selector != NULL)
-    d20.current_free = slider_current (d20.free_selector);
-*/
 }
+
+
+int find_suitable_index(slot_t *s)
+{
+  int k = 0;
+  while (s->pos[k] != NULL)
+    ++k;
+  return k;
+}
+
+int equal_triangles (tripoint_t *A, tripoint_t *B)
+{
+  int eq = 0;
+  eq += ((A->A == B->A) );//&& (A->pos_A == B->pos_A));
+  eq += ((A->A == B->B) );//&& (A->pos_A == B->pos_B));
+  eq += ((A->A == B->C) );//&& (A->pos_A == B->pos_C));
+
+  eq += ((A->B == B->A) );//&& (A->pos_B == B->pos_A));
+  eq += ((A->B == B->B) );//&& (A->pos_B == B->pos_B));
+  eq += ((A->B == B->C) );//&& (A->pos_B == B->pos_C));
+
+  eq += ((A->C == B->A) );//&& (A->pos_C == B->pos_A));
+  eq += ((A->C == B->B) );//&& (A->pos_C == B->pos_B));
+  eq += ((A->C == B->C) );//&& (A->pos_C == B->pos_C));
+
+  return (eq == 3);
+}
+
+int triangle_exists (tripoint_t *t)
+{
+  int eq = 0;
+  tripoint_t *start = slider_current (d20.used_selector),
+      *cur = start;
+
+  do
+  {
+    if (equal_triangles(cur, t))
+    {
+      eq ++;
+      break;
+    }
+    slider_procede (d20.used_selector);
+    cur = slider_current (d20.used_selector);
+  }
+  while (cur != start);
+  if (eq)
+    return 1;
+
+  start = slider_current (d20.free_selector);
+  cur = start;
+
+  do
+  {
+    if (equal_triangles(cur, t))
+    {
+      eq ++;
+      break;
+    }
+    slider_procede (d20.free_selector);
+    cur = slider_current (d20.free_selector);
+  }
+  while (cur != start);
+  return eq;
+}
+
+
+void create_neighbor_triangles_for (tripoint_t *p)
+{
+  slot_t *new = NULL;
+  tripoint_t *t = NULL;
+  vtx2d_t *tmp_pos = NULL;
+
+  //  A, B as anchor points
+  {
+    t = malloc (sizeof(tripoint_t));
+    new = find_slot_opposing (p->A, p->B, p->C);
+    bcopy(p, t, sizeof(tripoint_t));
+    t->C = new;
+
+    if (triangle_exists(t))
+    {
+      free(t);
+    }
+    else
+    {
+      tmp_pos = find_vector_opposing (p->A->pos[p->pos_A], p->B->pos[p->pos_B], p->C->pos[p->pos_C]);
+      if (SDLRect_contains(tmp_pos, &draw_area))
+      {
+        slider_insert_after (d20.free_selector, (void *) t);
+
+        int idx = find_suitable_index(new);
+        t->pos_C = idx;
+        new->pos[idx] = tmp_pos;
+      }
+      else
+      {
+        free(tmp_pos);
+        free(t);
+      }
+    }
+  }
+  //  B, C as anchor points
+  {
+    t = malloc (sizeof(tripoint_t));
+    new = find_slot_opposing (p->B, p->C, p->A);
+    bcopy(p, t, sizeof(tripoint_t));
+    t->A = new;
+
+    if (triangle_exists(t))
+    {
+      free(t);
+    }
+    else
+    {
+      tmp_pos = find_vector_opposing (p->B->pos[p->pos_B], p->C->pos[p->pos_C], p->A->pos[p->pos_A]);
+      if (SDLRect_contains(tmp_pos, &draw_area))
+      {
+        slider_insert_after (d20.free_selector, (void *) t);
+
+        int idx = find_suitable_index(new);
+        t->pos_A = idx;
+        new->pos[idx] = tmp_pos;
+      }
+      else
+      {
+        free(tmp_pos);
+        free(t);
+      }
+    }
+  }
+  //  C, A as anchor
+  {
+    t = malloc (sizeof(tripoint_t));
+    new = find_slot_opposing (p->C, p->A, p->B);
+    bcopy(p, t, sizeof(tripoint_t));
+    t->B = new;
+
+    if (triangle_exists(t))
+    {
+      free(t);
+    }
+    else
+    {
+      tmp_pos = find_vector_opposing (p->C->pos[p->pos_C], p->A->pos[p->pos_A], p->B->pos[p->pos_B]);
+      if (SDLRect_contains(tmp_pos, &draw_area))
+      {
+        slider_insert_after (d20.free_selector, (void *) t);
+
+        int idx = find_suitable_index(new);
+        t->pos_B = idx;
+        new->pos[idx] = tmp_pos;
+      }
+      else
+      {
+        free(tmp_pos);
+        free(t);
+      }
+    }
+  }
+}
+
+void pin (void)
+{
+  tripoint_t *anchor = d20.current_free;
+
+  d20.current_used = NULL;
+  d20.current_free = NULL;
+
+  slider_procede(d20.free_selector);
+  slider_remove_prev(d20.free_selector);
+
+  create_neighbor_triangles_for (anchor);
+
+  slider_insert_after (d20.used_selector, anchor);
+
+  if (chain_size(d20.faces) == 20)
+    application.status = APP_END;
+}
+
+
+
+
 
 
 void app_usage ()
@@ -758,9 +939,9 @@ void app_usage ()
       else
       {
         if (d20.current_free != NULL)
-        { // pin
-
-
+        {
+          if (application.status != APP_END)
+          pin();
         }
         else if (d20.current_used != NULL)
         { //  undo
