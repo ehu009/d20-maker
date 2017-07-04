@@ -638,6 +638,7 @@ d20.current_used = NULL; //d20.current_free;
   else
   {
     free(tmp_pos);
+    free(t);
   }
 
   //  B, C as anchor
@@ -662,6 +663,7 @@ d20.current_used = NULL; //d20.current_free;
   else
   {
     free(tmp_pos);
+    free(t);
   }
 
   //  C, A as anchor
@@ -686,6 +688,7 @@ d20.current_used = NULL; //d20.current_free;
   else
   {
     free(tmp_pos);
+    free(t);
   }
 }
 
