@@ -360,7 +360,7 @@ void select_triangle (void)
   tripoint_t *start = slider_current (d20.used_selector),
       *cur = start;
   triangle_t tmp_triangle;
-
+printf("started looking for sel pinned..");
   do
   {
     read_triangle_from_tripoint(cur, &tmp_triangle);
@@ -376,11 +376,12 @@ void select_triangle (void)
   while (cur != start);
   if (d20.current_used != new_cUsed)
     d20.current_used = new_cUsed;
-
+printf("\tdone\n");
   if (d20.free_selector != NULL)
   {
   start = slider_current (d20.free_selector);
   cur = start;
+  printf("started looking for sel unpinned..");
   do
   {
     read_triangle_from_tripoint(cur, &tmp_triangle);
@@ -395,6 +396,7 @@ void select_triangle (void)
   while (cur != start);
   if (d20.current_free != new_cFree)
     d20.current_free = new_cFree;
+  printf("\tdone\n");
   }
 }
 
@@ -725,22 +727,29 @@ int equal_vertices (vtx2d_t *A, vtx2d_t *B, double acc)
 vtx2d_t *position_exists (vtx2d_t *p)
 {
   vtx2d_t *ptr = NULL;
-/*
-  int j, k;
-  for(j = 0; j < NUM_D20_VTX; j++)
+
+  chainslider_t *slider = make_chainslider(d20.positions);
+  vtx2d_t *start = slider_current(slider),
+      *cur = start;
+  printf("started looking for preexcisting coordinate..");
+  do
   {
-    if (ptr != NULL)
-      break;
-    slot_t *s = &d20.vertex[j];
-    for (k=0; k < NUM_VTX_POS; k ++)
+    if (equal_vertices(cur, p, 2.5))
     {
-      if ((s->pos[k] == NULL) || (ptr != NULL))
-        break;
-      if (equal_vertices (s->pos[k], p, 1.5))
-        ptr = s->pos[k];
+      ptr = cur;
+      break;
     }
+    slider_procede (slider);
+    cur = slider_current (slider);
   }
-  */
+  while (cur != start);
+  printf("\tdone\n");
+
+  if (ptr == NULL)
+    slider_insert_after(slider, p);
+
+  free(slider);
+
   return ptr;
 }
 
@@ -750,7 +759,7 @@ int already_pinned (tripoint_t *t)
   int eq = 0;
   tripoint_t *start = slider_current (d20.used_selector),
       *cur = start;
-
+  printf("started looking for preexcisting face..");
   do
   {
     if (equal_faces(cur, t))
@@ -762,6 +771,7 @@ int already_pinned (tripoint_t *t)
     cur = slider_current (d20.used_selector);
   }
   while (cur != start);
+  printf("\tdone\n");
   return eq;
 }
 
@@ -857,7 +867,7 @@ void create_neighbor_triangles_for (tripoint_t *p)
       tmp_pos = find_vector_opposing (p->pC, p->pA, p->pB);
       if (SDLRect_contains(tmp_pos, &draw_area))
       {
-      vtx2d_t *pos = position_exists(tmp_pos);
+        vtx2d_t *pos = position_exists(tmp_pos);
         if (pos != NULL)
         {
           free(tmp_pos);
@@ -895,6 +905,7 @@ void pin (void)
   //  remove duplicates
   tripoint_t *start = slider_current (d20.free_selector),
       *cur = start;
+      printf("started looking for duplicate unpinned");
   do
   {
     if (equal_faces(cur, anchor))
@@ -907,7 +918,7 @@ void pin (void)
     cur = slider_current (d20.free_selector);
   }
   while (cur != start);
-
+printf("\tdone\n");
   if (chain_size(d20.faces) == 20)
     application.status = APP_END;
 }
