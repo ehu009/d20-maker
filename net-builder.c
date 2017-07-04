@@ -640,6 +640,10 @@ void create_root_neighbor (char k)
 
   if (SDLRect_contains(tmp_pos, &draw_area))
   {
+    chainslider_t *slider = make_chainslider(d20.positions);
+    slider_insert_after(slider, tmp_pos);
+    free(slider);
+
     t = malloc (sizeof(tripoint_t));
     insert(t);
     bcopy(anchor, t, sizeof(tripoint_t));
