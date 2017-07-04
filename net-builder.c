@@ -601,6 +601,69 @@ vtx2d_t *find_vector_opposing (vtx2d_t *anchor1, vtx2d_t *anchor2, vtx2d_t *oppo
 
 
 
+void create_root_neighbor (char k)
+{
+
+  void insert (tripoint_t *ptr)
+  {
+    if (d20.available == NULL)
+    {
+      d20.available = make_chain (ptr);
+      if (d20.free_selector == NULL)
+        d20.free_selector = make_chainslider (d20.available);
+    }
+    else
+      slider_insert_after (d20.free_selector, (void *) ptr);
+  }
+
+  slot_t *new = NULL;
+  tripoint_t *t = NULL, *anchor = d20.current_free;
+  vtx2d_t *tmp_pos = NULL;
+
+  switch (k)
+  {
+    case 'A':
+      new = find_slot_opposing (anchor->sB, anchor->sC, anchor->sA);
+      tmp_pos = find_vector_opposing (anchor->pB, anchor->pC, anchor->pA);
+      break;
+    case 'B':
+      new = find_slot_opposing (anchor->sC, anchor->sA, anchor->sB);
+      tmp_pos = find_vector_opposing (anchor->pC, anchor->pA, anchor->pB);
+      break;
+    case 'C':
+      new = find_slot_opposing (anchor->sA, anchor->sB, anchor->sC);
+      tmp_pos = find_vector_opposing (anchor->pA, anchor->pB, anchor->pC);
+      break;
+  }
+
+  if (SDLRect_contains(tmp_pos, &draw_area))
+  {
+    t = malloc (sizeof(tripoint_t));
+    insert(t);
+    bcopy(anchor, t, sizeof(tripoint_t));
+    switch (k)
+    {
+      case 'A':
+        t->sA = new;
+        t->pA = tmp_pos;
+        break;
+      case 'B':
+        t->sB = new;
+        t->pB = tmp_pos;
+        break;
+      case 'C':
+        t->sC = new;
+        t->pC = tmp_pos;
+        break;
+    }
+  }
+  else
+  {
+    free(tmp_pos);
+    free(t);
+  }
+}
+
 void pin_root (void)
 {
   if (d20.faces == NULL)
@@ -608,88 +671,12 @@ void pin_root (void)
   if (d20.used_selector == NULL)
     d20.used_selector = make_chainslider (d20.faces);
 
+  create_root_neighbor('A');
+  create_root_neighbor('B');
+  create_root_neighbor('C');
 
-  slot_t *new = NULL;
-  tripoint_t *t = NULL, *anchor = d20.current_free;
-  vtx2d_t *tmp_pos = NULL;
-
-d20.current_used = NULL; //d20.current_free;
+  d20.current_used = NULL;
   d20.current_free = NULL;
-
-  //  A, B as anchor
-  new = find_slot_opposing (anchor->sA, anchor->sB, anchor->sC);
-  tmp_pos = find_vector_opposing (anchor->pA, anchor->pB, anchor->pC);
-  if (SDLRect_contains(tmp_pos, &draw_area))
-  {
-    t = malloc (sizeof(tripoint_t));
-    if (d20.available == NULL)
-    {
-      d20.available = make_chain (t);
-      if (d20.free_selector == NULL)
-        d20.free_selector = make_chainslider (d20.available);
-    }
-    else
-      slider_insert_after (d20.free_selector, (void *) t);
-
-    bcopy(anchor, t, sizeof(tripoint_t));
-    t->sC = new;
-    t->pC = tmp_pos;
-  }
-  else
-  {
-    free(tmp_pos);
-    free(t);
-  }
-
-  //  B, C as anchor
-  new = find_slot_opposing (anchor->sB, anchor->sC, anchor->sA);
-  tmp_pos = find_vector_opposing (anchor->pB, anchor->pC, anchor->pA);
-  if (SDLRect_contains(tmp_pos, &draw_area))
-  {
-    t = malloc (sizeof(tripoint_t));
-    if (d20.available == NULL)
-    {
-      d20.available = make_chain (t);
-      if (d20.free_selector == NULL)
-        d20.free_selector = make_chainslider (d20.available);
-    }
-    else
-      slider_insert_after (d20.free_selector, (void *) t);
-
-    bcopy(anchor, t, sizeof(tripoint_t));
-    t->sA = new;
-    t->pA = tmp_pos;
-  }
-  else
-  {
-    free(tmp_pos);
-    free(t);
-  }
-
-  //  C, A as anchor
-  new = find_slot_opposing (anchor->sC, anchor->sA, anchor->sB);
-  tmp_pos = find_vector_opposing (anchor->pC, anchor->pA, anchor->pB);
-  if (SDLRect_contains(tmp_pos, &draw_area))
-  {
-    t = malloc (sizeof(tripoint_t));
-    if (d20.available == NULL)
-    {
-      d20.available = make_chain (t);
-      if (d20.free_selector == NULL)
-        d20.free_selector = make_chainslider (d20.available);
-    }
-    else
-      slider_insert_after (d20.free_selector, (void *) t);
-
-    bcopy(anchor, t, sizeof(tripoint_t));
-    t->sB = new;
-    t->pB = tmp_pos;
-  }
-  else
-  {
-    free(tmp_pos);
-    free(t);
-  }
 }
 
 
