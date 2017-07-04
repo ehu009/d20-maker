@@ -39,7 +39,7 @@
 
   void *slider_current (chainslider_t *slider);
 
-  int slider_insert_before (chainslider_t *chain_iterator, void *item);
+  int slider_insert_before (chainslider_t *slider, void *item);
   int slider_insert_after (chainslider_t *slider, void *item);
 
   void slider_remove_prev (chainslider_t *slider);
