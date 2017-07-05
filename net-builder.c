@@ -750,7 +750,7 @@ int already_pinned (tripoint_t *t)
     cur = slider_current (slider);
   }
   while (cur != start);
-
+  free_chainslider(slider);
   return eq;
 }
 
@@ -1002,8 +1002,8 @@ void app_usage ()
         else
         {
           application.being_relocated ++;
-          application.diff_x = application.mX - d20.x;
-          application.diff_y = application.mY - d20.y;
+          application.diff_x = d20.x - application.mX;
+          application.diff_y = d20.y - application.mY;
         }
       }
       else
@@ -1038,6 +1038,8 @@ void app_usage ()
         if (application.being_relocated)
         {
           //  reposition vertices
+
+
 
         }
       }
