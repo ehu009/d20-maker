@@ -192,27 +192,6 @@ void app_start (void)
 void app_free (void)
 {
   //  free initialized structures
-  int j = 0, k;
-  /*
-  slot_t *s;
-  for (; j < NUM_D20_VTX; j ++)
-  {
-    s = &d20.vertex[j];
-    for (k = 0; k < NUM_VTX_POS; k++)
-    {
-      if (s->pos[k] != NULL)
-        free (s->pos[k]);
-    }
-    if (s->invalid != NULL)
-      free (s->invalid);
-  }
-  if (d20.faces == NULL)
-  {
-    if (d20.current_free != NULL)
-      free(d20.current_free);
-    return;
-  }*/
-  tripoint_t *t;
   chainslider_t *slider;
   if (d20.available != NULL)
   {
@@ -301,6 +280,7 @@ void app_draw (void)
 {
   printf("drawing...");
   fflush(stdout);
+
   SDL_FillRect (canvas, NULL, 0x0ff);
   SDL_BlitSurface (src_image, NULL, canvas, &draw_area);
   if (d20.faces == NULL)
@@ -320,7 +300,6 @@ void app_draw (void)
       do
       {
         if (cur != d20.current_used)
-  //        draw_triangle_outline (cur);
           draw_triangle_coloured (cur, CLR_SELECTED_PINNED);
         else
           draw_triangle_transparent (cur);
@@ -358,6 +337,8 @@ void select_triangle (void)
 {
   printf("selecting...");
   fflush(stdout);
+
+  triangle_t tmp_triangle;
   vtx2i_t m = {.pts = {application.mX, application.mY}};
 
   tripoint_t *new_cUsed = NULL, *new_cFree = NULL;
@@ -365,7 +346,6 @@ void select_triangle (void)
   chainslider_t *slider = make_chainslider (d20.faces);
   tripoint_t *start = slider_current (slider),
       *cur = start;
-  triangle_t tmp_triangle;
 
   do
   {
@@ -381,28 +361,31 @@ void select_triangle (void)
   }
   while (cur != start);
   free(slider);
-  if (d20.current_used != new_cUsed)
-    d20.current_used = new_cUsed;
+
   if(d20.available != NULL)
   {
-  slider = make_chainslider(d20.available);
-  start = slider_current (slider);
-  cur = start;
-  do
-  {
-    read_triangle_from_tripoint(cur, &tmp_triangle);
-    if (triangle_contains (&tmp_triangle, m))
+    slider = make_chainslider(d20.available);
+    start = slider_current (slider);
+    cur = start;
+    do
     {
-      new_cFree = cur;
-      break;
+      read_triangle_from_tripoint(cur, &tmp_triangle);
+      if (triangle_contains (&tmp_triangle, m))
+      {
+        new_cFree = cur;
+        break;
+      }
+      slider_procede (slider);
+      cur = slider_current (slider);
     }
-    slider_procede (slider);
-    cur = slider_current (slider);
-  }
-  while (cur != start);
+    while (cur != start);
 
-  free(slider);
-    }
+    free(slider);
+  }
+
+  if (d20.current_used != new_cUsed)
+    d20.current_used = new_cUsed;
+
   if (d20.current_free != new_cFree)
     d20.current_free = new_cFree;
   printf("\tdone\n");
@@ -777,7 +760,7 @@ void create_neighbor_triangles_for (tripoint_t *p)
   slot_t *new = NULL;
   tripoint_t *t = NULL;
   vtx2d_t *tmp_pos = NULL;
- chainslider_t *slider = make_chainslider(d20.available);
+  chainslider_t *slider = make_chainslider(d20.available);
   //  A, B as anchor points
   {
     t = malloc (sizeof(tripoint_t));
@@ -788,7 +771,6 @@ void create_neighbor_triangles_for (tripoint_t *p)
     if (already_pinned(t))
     {
       free(t);
-      printf("already exists\t\t%d\n",__LINE__);
     }
     else
     {
@@ -796,18 +778,13 @@ void create_neighbor_triangles_for (tripoint_t *p)
       if (SDLRect_contains(tmp_pos, &draw_area))
       {
         vtx2d_t *pos = position_exists(tmp_pos);
-printf("line %d\n",__LINE__);
         if (pos != NULL)
         {
           free(tmp_pos);
-          printf("line %d\n",__LINE__);
           tmp_pos = pos;
-          printf("line %d\n",__LINE__);
         }
         slider_insert_after (slider, (void *) t);
-printf("line %d\n",__LINE__);
         t->pC = tmp_pos;
-        printf("line %d\n",__LINE__);
       }
       else
       {
@@ -826,26 +803,20 @@ printf("line %d\n",__LINE__);
     if (already_pinned(t))
     {
       free(t);
-      printf("already exists\t\t%d\n",__LINE__);
     }
     else
     {
       tmp_pos = find_vector_opposing (p->pB, p->pC, p->pA);
       if (SDLRect_contains(tmp_pos, &draw_area))
       {
-      vtx2d_t *pos = position_exists(tmp_pos);
-      printf("line %d\n",__LINE__);
+        vtx2d_t *pos = position_exists(tmp_pos);
         if (pos != NULL)
         {
           free(tmp_pos);
-          printf("line %d\n",__LINE__);
           tmp_pos = pos;
-          printf("line %d\n",__LINE__);
         }
         slider_insert_after (slider, (void *) t);
-printf("line %d\n",__LINE__);
         t->pA = tmp_pos;
-        printf("line %d\n",__LINE__);
       }
       else
       {
@@ -864,7 +835,6 @@ printf("line %d\n",__LINE__);
     if (already_pinned(t))
     {
       free(t);
-      printf("already exists\t\t%d\n",__LINE__);
     }
     else
     {
@@ -872,19 +842,14 @@ printf("line %d\n",__LINE__);
       if (SDLRect_contains(tmp_pos, &draw_area))
       {
         vtx2d_t *pos = position_exists(tmp_pos);
-        printf("line %d\n",__LINE__);
         if (pos != NULL)
         {
           free(tmp_pos);
-        printf("line %d\n",__LINE__);
           tmp_pos = pos;
-        printf("line %d\n",__LINE__);
         }
         slider_insert_after (slider, (void *) t);
-        printf("line %d\n",__LINE__);
 
         t->pB = tmp_pos;
-        printf("line %d\n",__LINE__);
       }
       else
       {
@@ -905,18 +870,16 @@ void pin (void)
   d20.current_free = NULL;
 
   chainslider_t *slider = make_chainslider(d20.faces);
-slider_insert_after (slider, anchor);
-  printf("line %d\n", __LINE__);
+  slider_insert_after (slider, anchor);
   free(slider);
-  printf("line %d\n", __LINE__);
 
-slider = make_chainslider(d20.available);
+  slider = make_chainslider(d20.available);
 
-tripoint_t *start, *cur;
+  tripoint_t *start, *cur;
 
-start = slider_current(slider);
-cur = start;
-do
+  start = slider_current(slider);
+  cur = start;
+  do
   {
     if (cur == anchor)
     {
@@ -931,15 +894,11 @@ do
   while (cur != start);
 
   create_neighbor_triangles_for (anchor);
-  printf("neighbors created\n");
-
-
 
   //  remove duplicates + anchor
   cur = slider_current (slider);
-      printf("started looking for duplicate unpinned");
-      fflush(stdout);
-      int k = chain_size (d20.available);
+
+  int k = chain_size (d20.available);
   do
   {
     if (chain_size(d20.available) == 1)
@@ -971,9 +930,6 @@ do
   }
 
   free(slider);
-
-printf("\tdone\n");
-//  if (chain_size(d20.faces) == 20)
 }
 
 
@@ -983,7 +939,6 @@ printf("\tdone\n");
 
 void app_usage ()
 {
-printf("line %d\n", __LINE__);
   if (mouse_moves ())
   {
     mouse_position (&application.mX, &application.mY);
@@ -1036,8 +991,6 @@ printf("line %d\n", __LINE__);
   }
   else
   {
-printf("line %d\n", __LINE__);
-
     //  root triangle has been pinned
     int relocate = relocate_mode();
     if (mouse_left() == -1)

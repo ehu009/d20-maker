@@ -80,17 +80,17 @@ void free_chain (chain_t *chain)
     return;
   if (!SDL_LockMutex(chain->lock))
   {
-  struct chain_link *ptr, *link = chain->head;
-  int n = chain->links;
-  while (n)
-  {
-    ptr = link->next;
-    free (link);
-    link = ptr;
-    -- n;
-  }
-  SDL_UnlockMutex(chain->lock);
-  SDL_DestroyMutex(chain->lock);
+    struct chain_link *ptr, *link = chain->head;
+    int n = chain->links;
+    while (n)
+    {
+      ptr = link->next;
+      free (link);
+      link = ptr;
+      -- n;
+    }
+    SDL_UnlockMutex(chain->lock);
+    SDL_DestroyMutex(chain->lock);
   }
   free (chain);
 }
@@ -200,26 +200,26 @@ int slider_insert_before (chainslider_t *slider, void *item)
     return -1;
   if (!SDL_LockMutex(slider->linked_chain->lock))
   {
-  LOOP *c = slider->current, *p = c->prev;
+    LOOP *c = slider->current, *p = c->prev;
 
-  link->next = c;
+    link->next = c;
 
-  if (p != c)
-  {
-    c->prev->next = link;
-    link->prev = c->prev;
-  }
-  else
-  {
-    c->next = link;
+    if (p != c)
+    {
+      c->prev->next = link;
+      link->prev = c->prev;
+    }
+    else
+    {
+      c->next = link;
 
-    link->prev = c;
-  }
-  c->prev = link;
+      link->prev = c;
+    }
+    c->prev = link;
 
-  slider->linked_chain->links ++;
+    slider->linked_chain->links ++;
 
-  SDL_UnlockMutex(slider->linked_chain->lock);
+    SDL_UnlockMutex(slider->linked_chain->lock);
   }
   return 0;
 }
@@ -230,47 +230,47 @@ int slider_insert_after (chainslider_t *slider, void *item)
   LOOP *link = new_link (item);
   if (link == NULL)
     return -1;
-if (!SDL_LockMutex(slider->linked_chain->lock))
+  if (!SDL_LockMutex(slider->linked_chain->lock))
   {
-  LOOP *c = slider->current, *n = c->next;
+    LOOP *c = slider->current, *n = c->next;
 
-  link->prev = c;
+    link->prev = c;
 
-  if (n != c)
-  {
-    c->next->prev = link;
-    link->next = c->next;
-    c->next = link;
-  }
-  else
-  {
-    c->next = link;
-    link->next = c;
-    c->prev = link;
-  }
-  slider->linked_chain->links ++;
-  SDL_UnlockMutex(slider->linked_chain->lock);
+    if (n != c)
+    {
+      c->next->prev = link;
+      link->next = c->next;
+      c->next = link;
+    }
+    else
+    {
+      c->next = link;
+      link->next = c;
+      c->prev = link;
+    }
+    slider->linked_chain->links ++;
+    SDL_UnlockMutex(slider->linked_chain->lock);
   }
   return 0;
 }
 
 void slider_remove_prev (chainslider_t *slider)
 {
-if (!SDL_LockMutex(slider->linked_chain->lock))
+  if (!SDL_LockMutex(slider->linked_chain->lock))
   {
-  LOOP *c = slider->current, *p = c->prev;
+    LOOP *c = slider->current, *p = c->prev;
 
-  if (p == c)
-    return;
-  if (p == slider->linked_chain->head)
-    slider->linked_chain->head = p->prev;
-  c->prev = p->prev;
-  c->prev->next = c;
+    if (p == c)
+      return;
+    if (p == slider->linked_chain->head)
+      slider->linked_chain->head = p->prev;
+    c->prev = p->prev;
+    c->prev->next = c;
 
 
-  free (p);
-  slider->linked_chain->links --;
-  SDL_UnlockMutex(slider->linked_chain->lock);
+    free (p);
+    slider->linked_chain->links --;
+    SDL_UnlockMutex(slider->linked_chain->lock);
   }
   return;
 
@@ -278,19 +278,19 @@ if (!SDL_LockMutex(slider->linked_chain->lock))
 
 void slider_remove_next (chainslider_t *slider)
 {
-if (!SDL_LockMutex(slider->linked_chain->lock))
+  if (!SDL_LockMutex(slider->linked_chain->lock))
   {
-  LOOP *c = slider->current, *n = c->next;
+    LOOP *c = slider->current, *n = c->next;
 
-  if (n == c)
-    return;
-  if (n == slider->linked_chain->head)
-    slider->linked_chain->head = c;
-  n->next->prev = c;
-  c->next = n->next;
-  free (n);
-  slider->linked_chain->links --;
-  SDL_UnlockMutex(slider->linked_chain->lock);
+    if (n == c)
+      return;
+    if (n == slider->linked_chain->head)
+      slider->linked_chain->head = c;
+    n->next->prev = c;
+    c->next = n->next;
+    free (n);
+    slider->linked_chain->links --;
+    SDL_UnlockMutex(slider->linked_chain->lock);
   }
   return;
 
