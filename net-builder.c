@@ -71,18 +71,18 @@ int relocate_mode (void)
 
 vtx5i_t d20_model[NUM_D20_VTX] =
 {
- {.pts = {1,2,3,4,5}},
- {.pts = {0,2,5,6,7}},
- {.pts = {0,1,7,8,3}},
- {.pts = {0,2,4,8,9}},
- {.pts = {0,3,5,9,10}},
- {.pts = {0,1,4,6,10}},
- {.pts = {1,5,7,10,11}},
- {.pts = {1,2,6,8,11}},
- {.pts = {2,3,7,9,11}},
- {.pts = {3,4,8,10,11}},
- {.pts = {4,5,6,10,11}},
- {.pts = {7,8,3,10,11}}
+ {.pts = {1,2,3,5,6}},
+ {.pts = {0,2,3,4,7}},
+ {.pts = {0,1,4,5,8}},
+ {.pts = {0,1,6,7,9}},
+ {.pts = {1,2,7,8,10}},
+ {.pts = {0,2,6,8,11}},
+ {.pts = {0,3,5,9,11}},
+ {.pts = {1,3,4,9,10}},
+ {.pts = {2,4,5,10,11}},
+ {.pts = {3,6,7,10,11}},
+ {.pts = {4,7,8,9,11}},
+ {.pts = {5,6,8,9,10}}
 };
 
 #define NUM_VTX_POS   5
@@ -243,7 +243,7 @@ void app_free (void)
   if (d20.positions != NULL)
   {
     slider = make_chainslider(d20.positions);
-    while (chain_size (d20.faces) > 1)
+    while (chain_size (d20.positions) > 1)
     {
       free(slider_current(slider));
       slider_recede(slider);
@@ -317,8 +317,6 @@ void app_draw (void)
       slider = make_chainslider(d20.faces);
       start = slider_current (slider);
       cur = start;
-      printf("line %d\n", __LINE__);
-      fflush(stdout);
       do
       {
         if (cur != d20.current_used)
@@ -326,18 +324,11 @@ void app_draw (void)
           draw_triangle_coloured (cur, CLR_SELECTED_PINNED);
         else
           draw_triangle_transparent (cur);
-printf("line %d\n", __LINE__);
-      fflush(stdout);
         slider_procede (slider);
-        printf("line %d\n", __LINE__);
-      fflush(stdout);
         cur = slider_current (slider);
-        printf("line %d\n", __LINE__);
-      fflush(stdout);
       }
       while (cur != start);
-      printf("line %d\n", __LINE__);
-      fflush(stdout);
+
       free (slider);
     }
     //  draw free tirangles
@@ -346,8 +337,6 @@ printf("line %d\n", __LINE__);
       slider = make_chainslider(d20.available);
       start = slider_current (slider);
       cur = start;
-      printf("line %d\n", __LINE__);
-      fflush(stdout);
       do
       {
         if (cur != d20.current_free)
@@ -359,8 +348,6 @@ printf("line %d\n", __LINE__);
         cur = slider_current (slider);
       }
       while (cur != start);
-      printf("line %d\n", __LINE__);
-      fflush(stdout);
       free(slider);
     }
   }
@@ -370,6 +357,7 @@ printf("line %d\n", __LINE__);
 void select_triangle (void)
 {
   printf("selecting...");
+  fflush(stdout);
   vtx2i_t m = {.pts = {application.mX, application.mY}};
 
   tripoint_t *new_cUsed = NULL, *new_cFree = NULL;
@@ -395,7 +383,8 @@ void select_triangle (void)
   free(slider);
   if (d20.current_used != new_cUsed)
     d20.current_used = new_cUsed;
-
+  if(d20.available != NULL)
+  {
   slider = make_chainslider(d20.available);
   start = slider_current (slider);
   cur = start;
@@ -411,7 +400,9 @@ void select_triangle (void)
     cur = slider_current (slider);
   }
   while (cur != start);
+
   free(slider);
+    }
   if (d20.current_free != new_cFree)
     d20.current_free = new_cFree;
   printf("\tdone\n");
@@ -721,25 +712,6 @@ int equal_faces (tripoint_t *A, tripoint_t *B)
 
   return (eq == 3);
 }
-/*
-int equal_triangles (tripoint_t *A, tripoint_t *B)
-{
-  int eq = 0;
-  eq += ((A->A == B->A) && (A->pos_A == B->pos_A));
-  eq += ((A->A == B->B) && (A->pos_A == B->pos_B));
-  eq += ((A->A == B->C) && (A->pos_A == B->pos_C));
-
-  eq += ((A->B == B->A) && (A->pos_B == B->pos_A));
-  eq += ((A->B == B->B) && (A->pos_B == B->pos_B));
-  eq += ((A->B == B->C) && (A->pos_B == B->pos_C));
-
-  eq += ((A->C == B->A) && (A->pos_C == B->pos_A));
-  eq += ((A->C == B->B) && (A->pos_C == B->pos_B));
-  eq += ((A->C == B->C) && (A->pos_C == B->pos_C));
-
-  return (eq == 3);
-}
-*/
 
 int equal_vertices (vtx2d_t *A, vtx2d_t *B, double acc)
 {
@@ -970,6 +942,8 @@ do
       int k = chain_size (d20.available);
   do
   {
+    if (chain_size(d20.available) == 1)
+      break;
     if (equal_faces(cur, anchor))
     {
       slider_procede(slider);
@@ -982,10 +956,24 @@ do
     --k;
   }
   while (k);
-printf("\tdone\n");
-  free(slider);
-  if (chain_size(d20.faces) == 20)
+
+
+  if (chain_size(d20.available) == 1)
+  {
+    cur = slider_current (slider);
+    if (already_pinned(cur))
+    {
     application.status = APP_END;
+    free_chain(d20.available);
+    d20.available = NULL;
+    free(cur);
+    }
+  }
+
+  free(slider);
+
+printf("\tdone\n");
+//  if (chain_size(d20.faces) == 20)
 }
 
 
