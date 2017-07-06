@@ -187,6 +187,7 @@ void app_start (void)
 
   d20.faces = NULL;
   d20.available = NULL;
+  application.status = APP_MAIN;
 }
 
 void app_free (void)
@@ -283,6 +284,9 @@ void app_draw (void)
 
   SDL_FillRect (canvas, NULL, 0x0ff);
   SDL_BlitSurface (src_image, NULL, canvas, &draw_area);
+
+  if (application.status == APP_MAIN)
+  {
   if (d20.faces == NULL)
   {
     draw_triangle_transparent (d20.current_free);
@@ -330,6 +334,31 @@ void app_draw (void)
       free(slider);
     }
   }
+  }
+  if (application.status == APP_END)
+  {
+    tripoint_t *start, *cur;
+    chainslider_t *slider;
+    //  draw pinned triangles
+    if (d20.faces != NULL)
+    {
+      slider = make_chainslider(d20.faces);
+      start = slider_current (slider);
+      cur = start;
+      do
+      {
+        draw_triangle_outline (cur);
+        slider_procede (slider);
+        cur = slider_current (slider);
+      }
+      while (cur != start);
+
+      free (slider);
+    }
+
+
+  }
+
   printf("\tdone\n");
 }
 
@@ -933,16 +962,8 @@ void pin (void)
 }
 
 
-
-
-
-
-void app_usage ()
+void app_main (void)
 {
-  if (mouse_moves ())
-  {
-    mouse_position (&application.mX, &application.mY);
-  }
   if (d20.faces == NULL)
   { //  root triangle is not pinned
     if (mouse_moves())
@@ -1010,9 +1031,7 @@ void app_usage ()
       {
         if (d20.current_free != NULL)
         {
-          if (application.status != APP_END)
             pin();
-          printf("PINNED\n");
         }
         else if (d20.current_used != NULL)
         { //  undo
@@ -1049,6 +1068,26 @@ void app_usage ()
       }
     }
   }
+}
+
+
+
+void app_usage ()
+{
+  if (mouse_moves ())
+  {
+    mouse_position (&application.mX, &application.mY);
+  }
+  if (application.status == APP_MAIN)
+    app_main();
+  else if (application.status == APP_END)
+  {
+
+
+
+
+  }
+
 }
 
 
