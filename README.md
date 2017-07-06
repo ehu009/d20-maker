@@ -7,7 +7,7 @@ You'll need to have `gcc`, `SDL2`, `SDL2_image`, `SDL2_ttf` installed on your sy
 From that point onwards, just run `make` from the main directory.
 #### Running
 First argument to the program specifies an input image:
-e.g. `d20-maker *my-image.png*`
+e.g. `d20-maker *my-image.png`*
 If no image is specified, `default.jpg` will be used.
 ##### For Windows users
 There's a `start.bat` provided, allowing you to use a file browser to select your input image.
