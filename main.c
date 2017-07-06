@@ -20,8 +20,13 @@ static uint32_t update_callback (uint32_t interval, void *param);
 
 #define BORDER_SIZE 7
 
+
+#define SIDE_BAR_W  0 + BORDER_SIZE
+#define SIDE_BAR_H  0 + 2*BORDER_SIZE
+/*
 #define SIDE_BAR_W  400 + BORDER_SIZE
 #define SIDE_BAR_H  400 + 2*BORDER_SIZE
+*/
 
 SDL_Window *myWindow = NULL;
 #define WINDOW_TITLE  "Icosahedron maker\0"
