@@ -6,6 +6,8 @@
 
 #include "net-builder.h"
 
+char *default_path = "default.jpg\0";
+char *image_path = NULL;
 
 int init (void);
 void unload (void);
@@ -31,8 +33,13 @@ SDL_Rect draw_area;
 static int exit_condition (SDL_Event *event);
 
 
-int main (int argc, char *arg[])
+int main (int argc, char *argv[])
 {
+  if (argc > 1)
+    image_path = argv[1];
+  else
+    image_path = default_path;
+
   if (!(init ()))
   {
     printf ("Something went wrong- exiting.\n");
@@ -110,7 +117,7 @@ int init (void)
     return 0;
   }
 
-  src_image = IMG_Load ("image.jpg");
+  src_image = IMG_Load (image_path);
   if (src_image == NULL)
   {
     print_error ("IMG_Load\0", IMG_GetError);
