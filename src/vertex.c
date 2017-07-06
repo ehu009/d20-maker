@@ -11,7 +11,7 @@ void get_vtx2i_from_vtx2d (vtx2d_t *src, vtx2i_t *dst)
 
 vtx2i_t *make_vtx2i_from_vtx2d (vtx2d_t *src)
 { //  Create two-point integer vertex from existing two-point FP vertex
-  vtx2i_t *ptr = calloc (1, sizeof (vtx2i_t));
+  vtx2i_t *ptr = (vtx2i_t *) calloc (1, sizeof (vtx2i_t));
   if (ptr != NULL)
   {
     get_vtx2i_from_vtx2d (src, ptr);

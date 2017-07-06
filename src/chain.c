@@ -17,7 +17,7 @@ struct chain_link
 
 struct chain_link *new_link (void *item)
 { //  Create a link that can compose part of a ring-linked list
-  struct chain_link *ptr = calloc (1, sizeof (struct chain_link));
+  struct chain_link *ptr = (struct chain_link *) calloc (1, sizeof (struct chain_link));
   if (ptr != NULL)
   {
     ptr->item = item;
@@ -46,13 +46,13 @@ typedef struct linked_chain chain_t;
 
 chain_t *make_chain (void *start_item)
 { //  Create a ring-linked list having one starting item
-  chain_t *chain = calloc (1, sizeof (chain_t));
+  chain_t *chain = (chain_t *) calloc (1, sizeof (chain_t));
   if (chain != NULL)
   {
     struct chain_link *link = new_link (start_item);
     if (link == NULL)
     {
-      free (chain);
+      free ((void *) chain);
       chain = NULL;
     }
     else
@@ -60,8 +60,8 @@ chain_t *make_chain (void *start_item)
       chain->lock = SDL_CreateMutex();
       if (!chain->lock)
       {
-        free(link);
-        free(chain);
+        free ((void *) link);
+        free ((void *) chain);
         chain = NULL;
       }
       chain->head = link;
@@ -85,14 +85,14 @@ void free_chain (chain_t *chain)
     while (n)
     {
       ptr = link->next;
-      free (link);
+      free ((void *) link);
       link = ptr;
       -- n;
     }
     SDL_UnlockMutex(chain->lock);
     SDL_DestroyMutex(chain->lock);
   }
-  free (chain);
+  free ((void *) chain);
 }
 
 int chain_size (chain_t *chain)
@@ -144,7 +144,7 @@ chainslider_t *make_chainslider (chain_t *linked_chain)
 
 void free_chainslider (chainslider_t *slider)
 { //  Destroy ring-linked list manipulator
-  free (slider);
+  free ((chainslider_t *) slider);
 }
 
 
@@ -268,7 +268,7 @@ void slider_remove_prev (chainslider_t *slider)
     c->prev->next = c;
 
 
-    free (p);
+    free ((void *) p);
     slider->linked_chain->links --;
     SDL_UnlockMutex(slider->linked_chain->lock);
   }
@@ -288,7 +288,7 @@ void slider_remove_next (chainslider_t *slider)
       slider->linked_chain->head = c;
     n->next->prev = c;
     c->next = n->next;
-    free (n);
+    free ((void *) n);
     slider->linked_chain->links --;
     SDL_UnlockMutex(slider->linked_chain->lock);
   }

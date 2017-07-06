@@ -3,6 +3,7 @@
 #include "chain.h"
 #include "screen-triangles.h"
 #include    <math.h>
+#include <string.h>
 
 
 extern SDL_Rect draw_area;
@@ -167,20 +168,20 @@ void app_start (void)
   d20.x = 50;
   d20.y = 50;
 
-  tripoint_t *t = malloc(sizeof(tripoint_t));
+  tripoint_t *t = (tripoint_t *) malloc(sizeof(tripoint_t));
   t->sA = &d20.vertex[0];
   t->sB = &d20.vertex[1];
   t->sC = &d20.vertex[2];
 
-  t->pA = calloc (1, sizeof(vtx2d_t));
-  t->pB = calloc (1, sizeof(vtx2d_t));
-  t->pC = calloc (1, sizeof(vtx2d_t));
+  t->pA = (vtx2d_t *) calloc (1, sizeof(vtx2d_t));
+  t->pB = (vtx2d_t *) calloc (1, sizeof(vtx2d_t));
+  t->pC = (vtx2d_t *) calloc (1, sizeof(vtx2d_t));
 
   d20.positions = make_chain(t->pA);
   chainslider_t *slider = make_chainslider (d20.positions);
   slider_insert_after(slider, t->pB);
   slider_insert_after(slider, t->pC);
-  free(slider);
+  free_chainslider(slider);
 
   d20.current_free = t;
   d20.current_used = NULL;
@@ -199,11 +200,11 @@ void app_free (void)
     slider = make_chainslider (d20.available);
     while (chain_size (d20.available) > 1)
     {
-      free(slider_current(slider));
+      free((void *)slider_current(slider));
       slider_recede(slider);
       slider_remove_next (slider);
     }
-    free(slider_current(slider));
+    free((void *) slider_current(slider));
     free_chainslider (slider);
     free_chain (d20.available);
   }
@@ -212,11 +213,11 @@ void app_free (void)
     slider = make_chainslider (d20.faces);
     while (chain_size (d20.faces) > 1)
     {
-      free(slider_current(slider));
+      free((void *) slider_current(slider));
       slider_recede(slider);
       slider_remove_next (slider);
     }
-    free(slider_current(slider));
+    free((void *) slider_current(slider));
     free_chainslider (slider);
     free_chain (d20.faces);
   }
@@ -225,11 +226,11 @@ void app_free (void)
     slider = make_chainslider(d20.positions);
     while (chain_size (d20.positions) > 1)
     {
-      free(slider_current(slider));
+      free((void *) slider_current(slider));
       slider_recede(slider);
       slider_remove_next (slider);
     }
-    free(slider_current(slider));
+    free((void *) slider_current(slider));
     free_chainslider (slider);
     free_chain (d20.positions);
   }
@@ -279,6 +280,7 @@ void draw_triangle_coloured (tripoint_t *t, COLOR colour)
 
 void app_draw (void)
 {
+
   printf("drawing...");
   fflush(stdout);
 
@@ -312,7 +314,7 @@ void app_draw (void)
       }
       while (cur != start);
 
-      free (slider);
+      free_chainslider (slider);
     }
     //  draw free tirangles
     if (d20.available != NULL)
@@ -331,7 +333,7 @@ void app_draw (void)
         cur = slider_current (slider);
       }
       while (cur != start);
-      free(slider);
+      free_chainslider(slider);
     }
   }
   }
@@ -353,7 +355,7 @@ void app_draw (void)
       }
       while (cur != start);
 
-      free (slider);
+      free_chainslider (slider);
     }
 
 
@@ -382,14 +384,13 @@ void select_triangle (void)
     if (triangle_contains (&tmp_triangle, m))
     {
       new_cUsed = cur;
-
       break;
     }
     slider_procede (slider);
     cur = slider_current (slider);
   }
   while (cur != start);
-  free(slider);
+  free_chainslider(slider);
 
   if(d20.available != NULL)
   {
@@ -409,7 +410,7 @@ void select_triangle (void)
     }
     while (cur != start);
 
-    free(slider);
+    free_chainslider(slider);
   }
 
   if (d20.current_used != new_cUsed)
@@ -611,7 +612,7 @@ vtx2d_t *find_vector_opposing (vtx2d_t *anchor1, vtx2d_t *anchor2, vtx2d_t *oppo
   middle.pts[0] += anchor1->pts[0];
   middle.pts[1] += anchor1->pts[1];
 
-  vtx2d_t *vector = malloc (sizeof(vtx2d_t));
+  vtx2d_t *vector = (vtx2d_t *) malloc (sizeof(vtx2d_t));
   *vector = (vtx2d_t) {.pts = {opposer->pts[0] - middle.pts[0], opposer->pts[1] - middle.pts[1]}};
   vector->pts[0] *= -1;
   vector->pts[1] *= -1;
@@ -636,7 +637,7 @@ void create_root_neighbor (char k)
     {
       chainslider_t *slider = make_chainslider(d20.available);
       slider_insert_after (slider, (void *) ptr);
-      free(slider);
+      free_chainslider(slider);
     }
   }
 
@@ -665,9 +666,9 @@ void create_root_neighbor (char k)
   {
     chainslider_t *slider = make_chainslider(d20.positions);
     slider_insert_after(slider, tmp_pos);
-    free(slider);
+    free_chainslider(slider);
 
-    t = malloc (sizeof(tripoint_t));
+    t = (tripoint_t *) malloc (sizeof(tripoint_t));
     insert(t);
     bcopy(anchor, t, sizeof(tripoint_t));
     switch (k)
@@ -688,8 +689,8 @@ void create_root_neighbor (char k)
   }
   else
   {
-    free(tmp_pos);
-    free(t);
+    free((void *) tmp_pos);
+    free((void *) t);
   }
 }
 
@@ -755,7 +756,7 @@ vtx2d_t *position_exists (vtx2d_t *p)
   if (ptr == NULL)
     slider_insert_after(slider, p);
 
-  free(slider);
+  free_chainslider(slider);
 
   return ptr;
 }
@@ -792,14 +793,14 @@ void create_neighbor_triangles_for (tripoint_t *p)
   chainslider_t *slider = make_chainslider(d20.available);
   //  A, B as anchor points
   {
-    t = malloc (sizeof(tripoint_t));
+    t = (tripoint_t *) malloc (sizeof(tripoint_t));
     new = find_slot_opposing (p->sA, p->sB, p->sC);
-    bcopy(p, t, sizeof(tripoint_t));
+    bcopy((const void *) p, (void *) t, sizeof(tripoint_t));
     t->sC = new;
 
     if (already_pinned(t))
     {
-      free(t);
+      free((void *) t);
     }
     else
     {
@@ -809,7 +810,7 @@ void create_neighbor_triangles_for (tripoint_t *p)
         vtx2d_t *pos = position_exists(tmp_pos);
         if (pos != NULL)
         {
-          free(tmp_pos);
+          free ((void *) tmp_pos);
           tmp_pos = pos;
         }
         slider_insert_after (slider, (void *) t);
@@ -817,21 +818,21 @@ void create_neighbor_triangles_for (tripoint_t *p)
       }
       else
       {
-        free(tmp_pos);
-        free(t);
+        free ((void *) tmp_pos);
+        free ((void *) t);
       }
     }
   }
   //  B, C as anchor points
   {
-    t = malloc (sizeof(tripoint_t));
+    t = (tripoint_t *) malloc (sizeof(tripoint_t));
     new = find_slot_opposing (p->sB, p->sC, p->sA);
-    bcopy(p, t, sizeof(tripoint_t));
+    bcopy((const void *) p, (void *) t, sizeof(tripoint_t));
     t->sA = new;
 
     if (already_pinned(t))
     {
-      free(t);
+      free ((void *) t);
     }
     else
     {
@@ -841,7 +842,7 @@ void create_neighbor_triangles_for (tripoint_t *p)
         vtx2d_t *pos = position_exists(tmp_pos);
         if (pos != NULL)
         {
-          free(tmp_pos);
+          free ((void *) tmp_pos);
           tmp_pos = pos;
         }
         slider_insert_after (slider, (void *) t);
@@ -849,21 +850,21 @@ void create_neighbor_triangles_for (tripoint_t *p)
       }
       else
       {
-        free(tmp_pos);
-        free(t);
+        free ((void *) tmp_pos);
+        free ((void *) t);
       }
     }
   }
   //  C, A as anchor
   {
-    t = malloc (sizeof(tripoint_t));
+    t = (tripoint_t *) malloc (sizeof(tripoint_t));
     new = find_slot_opposing (p->sC, p->sA, p->sB);
-    bcopy(p, t, sizeof(tripoint_t));
+    bcopy((const void *) p, (void *) t, sizeof(tripoint_t));
     t->sB = new;
 
     if (already_pinned(t))
     {
-      free(t);
+      free ((void *) t);
     }
     else
     {
@@ -873,7 +874,7 @@ void create_neighbor_triangles_for (tripoint_t *p)
         vtx2d_t *pos = position_exists(tmp_pos);
         if (pos != NULL)
         {
-          free(tmp_pos);
+          free ((void *) tmp_pos);
           tmp_pos = pos;
         }
         slider_insert_after (slider, (void *) t);
@@ -882,12 +883,12 @@ void create_neighbor_triangles_for (tripoint_t *p)
       }
       else
       {
-        free(tmp_pos);
-        free(t);
+        free ((void *) tmp_pos);
+        free ((void *) t);
       }
     }
   }
-  free(slider);
+  free_chainslider(slider);
 }
 
 void pin (void)
@@ -900,7 +901,7 @@ void pin (void)
 
   chainslider_t *slider = make_chainslider(d20.faces);
   slider_insert_after (slider, anchor);
-  free(slider);
+  free_chainslider(slider);
 
   slider = make_chainslider(d20.available);
 
@@ -936,7 +937,7 @@ void pin (void)
     {
       slider_procede(slider);
       slider_remove_prev(slider);
-      free(cur);
+      free((void *) cur);
     }
 
     slider_procede (slider);
@@ -954,11 +955,11 @@ void pin (void)
     application.status = APP_END;
     free_chain(d20.available);
     d20.available = NULL;
-    free(cur);
+    free((void *)cur);
     }
   }
 
-  free(slider);
+  free_chainslider(slider);
 }
 
 

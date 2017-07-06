@@ -2,7 +2,7 @@
 
 SDL_Rect *get_bounds_of_triangle (vtx2d_t *a, vtx2d_t *b, vtx2d_t *c)
 {
-  SDL_Rect *ptr = malloc (sizeof (SDL_Rect));
+  SDL_Rect *ptr = (SDL_Rect *) malloc (sizeof (SDL_Rect));
   if (ptr != NULL)
   {
     vtx2d_t lowest = *a, highest = *a;
@@ -136,7 +136,7 @@ void fill_triangle (triangle_t *t, plot_func plot, COLOR color)
   SDL_BlitSurface (surf, NULL, canvas, rect);
 
   SDL_FreeSurface (surf);
-  free(rect);
+  free ((void *) rect);
 }
 
 int triangle_contains (triangle_t *t, vtx2i_t point)
@@ -212,7 +212,7 @@ int triangle_contains (triangle_t *t, vtx2i_t point)
     }
   }
   SDL_FreeSurface (surf);
-  free(rect);
+  free ((void *) rect);
 
   return ((point.pts[1] > lower) && (point.pts[1] < upper));
 }
