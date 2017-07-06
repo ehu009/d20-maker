@@ -4,6 +4,7 @@
 #include    "SDL2/SDL_image.h"
 #include    "SDL2/SDL_ttf.h"
 
+
 #include "net-builder.h"
 
 char *default_path = "default.jpg\0";
@@ -11,9 +12,11 @@ char *image_path = NULL;
 
 int init (void);
 void unload (void);
+const uint32_t draw_interval = 1000/24;
 const uint32_t update_interval = 1000/64;
 
 static uint32_t draw_callback (uint32_t interval, void *param);
+static uint32_t update_callback (uint32_t interval, void *param);
 
 #define BORDER_SIZE 7
 
@@ -49,34 +52,35 @@ int main (int argc, char *argv[])
 
   app_start ();
 
-  SDL_TimerID drawingTimer = SDL_AddTimer (update_interval, draw_callback, NULL);
+  SDL_TimerID drawingTimer = SDL_AddTimer (draw_interval, draw_callback, NULL);
+  SDL_TimerID updateTimer = SDL_AddTimer (update_interval, update_callback, NULL);
 
   SDL_Event event;
   do
   {
+
     if (!SDL_PollEvent (&event))
     {
-      SDL_Delay (update_interval);
+    //  SDL_Delay (draw_interval);
     }
     else
     {
+
       if (event.type == SDL_USEREVENT)
       {
           void (*p) (void*) = event.user.data1;
           p (NULL);
       }
 
-      if (mouse_update (&event))
-      {
-        app_usage ();
-        mouse_reset();
-      }
+      mouse_update (&event);
+
 
     }
   }
   while (!exit_condition(&event));
 
 
+  SDL_RemoveTimer (updateTimer);
   SDL_RemoveTimer (drawingTimer);
 
   app_free ();
@@ -167,6 +171,31 @@ static uint32_t draw_callback (uint32_t interval, void *param)
   SDL_Event event = {
     .type = SDL_USEREVENT,
     .user = _drawEvent
+  };
+  SDL_PushEvent (&event);
+
+  return (interval);
+}
+
+void updatefunc (void *param)
+{
+  app_usage ();
+  mouse_reset();
+
+
+}
+
+static uint32_t update_callback (uint32_t interval, void *param)
+{
+  SDL_UserEvent _updateEvent = {
+    .type = SDL_USEREVENT,
+    .code = 0,
+    .data1 = &updatefunc
+  };
+
+  SDL_Event event = {
+    .type = SDL_USEREVENT,
+    .user = _updateEvent
   };
   SDL_PushEvent (&event);
 
