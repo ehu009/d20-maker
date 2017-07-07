@@ -1,8 +1,11 @@
 #include <stdlib.h>
 
-#include "chain.h"
+#ifdef _WIN32
+#include <malloc.h>
+#endif
 
 #include "SDL2/SDL.h"
+#include "chain.h"
 
 
 /*

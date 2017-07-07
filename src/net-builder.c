@@ -4,7 +4,9 @@
 #include "screen-triangles.h"
 #include    <math.h>
 #include <string.h>
-
+#ifdef _WIN32
+#include <malloc.h>
+#endif
 
 extern SDL_Rect draw_area;
 
@@ -670,7 +672,7 @@ void create_root_neighbor (char k)
 
     t = (tripoint_t *) malloc (sizeof(tripoint_t));
     insert(t);
-    bcopy(anchor, t, sizeof(tripoint_t));
+    memcpy(t, anchor, sizeof(tripoint_t));
     switch (k)
     {
       case 'A':
@@ -795,7 +797,7 @@ void create_neighbor_triangles_for (tripoint_t *p)
   {
     t = (tripoint_t *) malloc (sizeof(tripoint_t));
     new = find_slot_opposing (p->sA, p->sB, p->sC);
-    bcopy((const void *) p, (void *) t, sizeof(tripoint_t));
+    memcpy(t,p, sizeof(tripoint_t));
     t->sC = new;
 
     if (already_pinned(t))
@@ -827,7 +829,7 @@ void create_neighbor_triangles_for (tripoint_t *p)
   {
     t = (tripoint_t *) malloc (sizeof(tripoint_t));
     new = find_slot_opposing (p->sB, p->sC, p->sA);
-    bcopy((const void *) p, (void *) t, sizeof(tripoint_t));
+    memcpy(t, p, sizeof(tripoint_t));
     t->sA = new;
 
     if (already_pinned(t))
@@ -859,7 +861,7 @@ void create_neighbor_triangles_for (tripoint_t *p)
   {
     t = (tripoint_t *) malloc (sizeof(tripoint_t));
     new = find_slot_opposing (p->sC, p->sA, p->sB);
-    bcopy((const void *) p, (void *) t, sizeof(tripoint_t));
+    memcpy(t,p, sizeof(tripoint_t));
     t->sB = new;
 
     if (already_pinned(t))
