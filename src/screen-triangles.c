@@ -1,4 +1,7 @@
 #include    "screen-triangles.h"
+#ifdef _WIN32
+#include <malloc.h>
+#endif
 
 SDL_Rect *get_bounds_of_triangle (vtx2d_t *a, vtx2d_t *b, vtx2d_t *c)
 {
