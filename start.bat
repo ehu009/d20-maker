@@ -51,16 +51,17 @@ if %compatible% neq 0 goto :success
 
 :: incompatible file extension
 setlocal disabledelayedexpansion
-echo "nope"
+echo "File extension '%ftype%' is not supported"
 pause
 exit
 
 :: compatible file extension
 :success
 setlocal disabledelayedexpansion
-echo "selected  file is : %file%"
-echo "its extension is : %ftype%"
-pause 
+::echo "selected  file is : %file%"
+::echo "its extension is : %ftype%"
+::pause 
+call d20-maker.exe %file%
 exit /b 0
 
 
