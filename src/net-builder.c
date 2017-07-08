@@ -1,16 +1,16 @@
-#include "net-builder.h"
-
-#include "chain.h"
-#include "screen-triangles.h"
-#include    <math.h>
+#include <math.h>
 #include <string.h>
 #ifdef _WIN32
-#include <malloc.h>
+  #include <malloc.h>
 #endif
 
+#include "net-builder.h"
+#include "chain.h"
+#include "screen-triangles.h"
+
+
 extern SDL_Rect draw_area;
-
-
+/*
 //  distance between two points
 double distance (double x1, double y1, double x2, double y2)
 { //  pythagorean root of squared sides summed
@@ -19,7 +19,7 @@ double distance (double x1, double y1, double x2, double y2)
   dy *= dy;
   return sqrt (dx + dy);
 }
-
+*/
 
 int approximates (double test, double source, double accuracy)
 {
@@ -170,7 +170,7 @@ void app_start (void)
   d20.x = 50;
   d20.y = 50;
 
-  tripoint_t *t = (tripoint_t *) malloc(sizeof(tripoint_t));
+  tripoint_t *t = malloc(sizeof(tripoint_t));
   t->sA = &d20.vertex[0];
   t->sB = &d20.vertex[1];
   t->sC = &d20.vertex[2];
@@ -291,53 +291,53 @@ void app_draw (void)
 
   if (application.status == APP_MAIN)
   {
-  if (d20.faces == NULL)
-  {
-    draw_triangle_transparent (d20.current_free);
-  }
-  else
-  {
-    tripoint_t *start, *cur;
-    chainslider_t *slider;
-    //  draw pinned triangles
-    if (d20.faces != NULL)
+    if (d20.faces == NULL)
     {
-      slider = make_chainslider(d20.faces);
-      start = slider_current (slider);
-      cur = start;
-      do
-      {
-        if (cur != d20.current_used)
-          draw_triangle_coloured (cur, CLR_SELECTED_PINNED);
-        else
-          draw_triangle_transparent (cur);
-        slider_procede (slider);
-        cur = slider_current (slider);
-      }
-      while (cur != start);
-
-      free_chainslider (slider);
+      draw_triangle_transparent (d20.current_free);
     }
-    //  draw free tirangles
-    if (d20.available != NULL)
+    else
     {
-      slider = make_chainslider(d20.available);
-      start = slider_current (slider);
-      cur = start;
-      do
+      tripoint_t *start, *cur;
+      chainslider_t *slider;
+      //  draw pinned triangles
+      if (d20.faces != NULL)
       {
-        if (cur != d20.current_free)
-          draw_triangle_transparent (cur);
-        else
-          draw_triangle_coloured (cur, CLR_SELECTED_UNPINNED);
+        slider = make_chainslider(d20.faces);
+        start = slider_current (slider);
+        cur = start;
+        do
+        {
+          if (cur != d20.current_used)
+            draw_triangle_coloured (cur, CLR_SELECTED_PINNED);
+          else
+            draw_triangle_transparent (cur);
+          slider_procede (slider);
+          cur = slider_current (slider);
+        }
+        while (cur != start);
 
-        slider_procede (slider);
-        cur = slider_current (slider);
+        free_chainslider (slider);
       }
-      while (cur != start);
-      free_chainslider(slider);
+      //  draw free tirangles
+      if (d20.available != NULL)
+      {
+        slider = make_chainslider(d20.available);
+        start = slider_current (slider);
+        cur = start;
+        do
+        {
+          if (cur != d20.current_free)
+            draw_triangle_transparent (cur);
+          else
+            draw_triangle_coloured (cur, CLR_SELECTED_UNPINNED);
+
+          slider_procede (slider);
+          cur = slider_current (slider);
+        }
+        while (cur != start);
+        free_chainslider(slider);
+      }
     }
-  }
   }
   if (application.status == APP_END)
   {
@@ -550,17 +550,17 @@ int reposition_root_vertices (void)
   if (adjust_root_singleton (&root, &draw_area))
   {
 
-  vtx2d_t *ptr;
-  ptr = d20.current_free->pA;
-  ptr->pts[0] = a.pts[0];
-  ptr->pts[1] = a.pts[1];
-  ptr = d20.current_free->pB;
-  ptr->pts[0] = b.pts[0];
-  ptr->pts[1] = b.pts[1];
-  ptr = d20.current_free->pC;
-  ptr->pts[0] = c.pts[0];
-  ptr->pts[1] = c.pts[1];
-  return 1;
+    vtx2d_t *ptr;
+    ptr = d20.current_free->pA;
+    ptr->pts[0] = a.pts[0];
+    ptr->pts[1] = a.pts[1];
+    ptr = d20.current_free->pB;
+    ptr->pts[0] = b.pts[0];
+    ptr->pts[1] = b.pts[1];
+    ptr = d20.current_free->pC;
+    ptr->pts[0] = c.pts[0];
+    ptr->pts[1] = c.pts[1];
+    return 1;
   }
   else
     return 0;
@@ -614,7 +614,7 @@ vtx2d_t *find_vector_opposing (vtx2d_t *anchor1, vtx2d_t *anchor2, vtx2d_t *oppo
   middle.pts[0] += anchor1->pts[0];
   middle.pts[1] += anchor1->pts[1];
 
-  vtx2d_t *vector = (vtx2d_t *) malloc (sizeof(vtx2d_t));
+  vtx2d_t *vector = malloc (sizeof(vtx2d_t));
   *vector = (vtx2d_t) {.pts = {opposer->pts[0] - middle.pts[0], opposer->pts[1] - middle.pts[1]}};
   vector->pts[0] *= -1;
   vector->pts[1] *= -1;
@@ -670,7 +670,7 @@ void create_root_neighbor (char k)
     slider_insert_after(slider, tmp_pos);
     free_chainslider(slider);
 
-    t = (tripoint_t *) malloc (sizeof(tripoint_t));
+    t = malloc (sizeof(tripoint_t));
     insert(t);
     memcpy(t, anchor, sizeof(tripoint_t));
     switch (k)
@@ -795,7 +795,7 @@ void create_neighbor_triangles_for (tripoint_t *p)
   chainslider_t *slider = make_chainslider(d20.available);
   //  A, B as anchor points
   {
-    t = (tripoint_t *) malloc (sizeof(tripoint_t));
+    t = malloc (sizeof(tripoint_t));
     new = find_slot_opposing (p->sA, p->sB, p->sC);
     memcpy(t,p, sizeof(tripoint_t));
     t->sC = new;
@@ -827,7 +827,7 @@ void create_neighbor_triangles_for (tripoint_t *p)
   }
   //  B, C as anchor points
   {
-    t = (tripoint_t *) malloc (sizeof(tripoint_t));
+    t = malloc (sizeof(tripoint_t));
     new = find_slot_opposing (p->sB, p->sC, p->sA);
     memcpy(t, p, sizeof(tripoint_t));
     t->sA = new;
@@ -859,7 +859,7 @@ void create_neighbor_triangles_for (tripoint_t *p)
   }
   //  C, A as anchor
   {
-    t = (tripoint_t *) malloc (sizeof(tripoint_t));
+    t = malloc (sizeof(tripoint_t));
     new = find_slot_opposing (p->sC, p->sA, p->sB);
     memcpy(t,p, sizeof(tripoint_t));
     t->sB = new;
@@ -954,10 +954,10 @@ void pin (void)
     cur = slider_current (slider);
     if (already_pinned(cur))
     {
-    application.status = APP_END;
-    free_chain(d20.available);
-    d20.available = NULL;
-    free((void *)cur);
+      application.status = APP_END;
+      free_chain(d20.available);
+      d20.available = NULL;
+      free((void *)cur);
     }
   }
 

@@ -1,7 +1,6 @@
 #include <stdlib.h>
-
 #ifdef _WIN32
-#include <malloc.h>
+  #include <malloc.h>
 #endif
 
 #include "SDL2/SDL.h"
