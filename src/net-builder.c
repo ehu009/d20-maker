@@ -8,6 +8,9 @@
 #include "chain.h"
 #include "screen-triangles.h"
 
+//  #define DEBUG
+
+#define LINE printf("line: %d", __LINE__);fflush(stdout);
 
 extern SDL_Rect draw_area;
 /*
@@ -282,9 +285,10 @@ void draw_triangle_coloured (tripoint_t *t, COLOR colour)
 
 void app_draw (void)
 {
-
+  #ifdef DEBUG
   printf("drawing...");
   fflush(stdout);
+  #endif
 
   SDL_FillRect (canvas, NULL, 0x0ff);
   SDL_BlitSurface (src_image, NULL, canvas, &draw_area);
@@ -363,13 +367,17 @@ void app_draw (void)
 
   }
 
+  #ifdef DEBUG
   printf("\tdone\n");
+  #endif
 }
 
 void select_triangle (void)
 {
+  #ifdef DEBUG
   printf("selecting...");
   fflush(stdout);
+  #endif
 
   triangle_t tmp_triangle;
   vtx2i_t m = {.pts = {application.mX, application.mY}};
@@ -420,7 +428,10 @@ void select_triangle (void)
 
   if (d20.current_free != new_cFree)
     d20.current_free = new_cFree;
+
+  #ifdef DEBUG
   printf("\tdone\n");
+  #endif
 }
 
 
@@ -740,12 +751,12 @@ vtx2d_t *position_exists (vtx2d_t *p)
   chainslider_t *slider = make_chainslider(d20.positions);
   vtx2d_t *start = slider_current(slider),
       *cur = start;
-  printf("started looking for preexcisting coordinate..");
+ // printf("started looking for preexcisting coordinate..");
   do
   {
     if (equal_vertices(cur, p, 2.5))
     {
-      printf("found duplicate coordinate vertex\n");
+   //   printf("found duplicate coordinate vertex\n");
       ptr = cur;
       break;
     }
@@ -753,7 +764,7 @@ vtx2d_t *position_exists (vtx2d_t *p)
     cur = slider_current (slider);
   }
   while (cur != start);
-  printf("\tdone\n");
+ // printf("\tdone\n");
 
   if (ptr == NULL)
     slider_insert_after(slider, p);
