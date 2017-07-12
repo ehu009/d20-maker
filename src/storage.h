@@ -1,14 +1,14 @@
 #ifndef   STORAGE_H_
   #define   STORAGE_H_
 
-  #include <dirent.h>
+  #include "SDL2/SDL_rect.h"
+  #include "SDL2/SDL_surface.h"
+
 
   /*
-   *  Manages names for output files
+   *  Stores a subsurface to a unique path
    */
 
-  #define OUTPUT_DIR_PATH "src/\0"
-
-  void new_output_path (char *buf);
+   void store_subsurface (SDL_Surface *surface, SDL_Rect *rect);
 
 #endif
