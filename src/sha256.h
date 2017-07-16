@@ -11,7 +11,13 @@
    *
    */
 
-  struct sha256_object;
+  struct sha256_object
+  {
+    unsigned char data[64];
+    unsigned int datalen;
+    unsigned int bitlen[2];
+    unsigned int state[8];
+  };
 
   typedef struct sha256_object SHA256_CTX;
 
