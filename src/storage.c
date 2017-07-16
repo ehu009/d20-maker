@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include <dirent.h>
 #include <string.h>
 #ifdef _WIN32
@@ -9,17 +10,12 @@
 
 #define OUTPUT_DIR_PATH "output/"
 
-#include <stdlib.h>
 
 int name_exists (char *name)
 {
   int found = 0;
   struct dirent *e = NULL;
-  printf("line:%d\n",__LINE__);
-  fflush(stdout);
   DIR *d = opendir(OUTPUT_DIR_PATH);
-  printf("line:%d\n",__LINE__);
-  fflush(stdout);
   do
   {
     e = readdir(d);
@@ -27,13 +23,8 @@ int name_exists (char *name)
       break;
     int s = strcmp(e->d_name, name);
     found |= (s == 0);
-    printf("comparing: %s, %s -> %d\n", e->d_name, name, s);
-    printf("line:%d\n",__LINE__);
-  fflush(stdout);
   }
   while (!found);
-  printf("line:%d\n",__LINE__);
-  fflush(stdout);
   return found;
 }
 
@@ -53,34 +44,9 @@ short hex_from_byte (char c)
   A = c / 0x010;
   B = c % 0x010;
 
-
-  /*
-  #if SDL_BYTEORDER == SDL_BIG_ENDIAN
-    A = 0b11110000;
-    B = 0b00001111;
-  #else
-    A = 0b00001111;
-    B = 0b11110000;
-  #endif
-
-  A &= c;
-  B &= c;
-
-  #if SDL_BYTEORDER == SDL_BIG_ENDIAN
-    A >>= 4;
-  #else
-    B >>= 4;
-  #endif
-*/
   A = hex_from_halfbyte(A);
   B = hex_from_halfbyte(B);
-/*
-  #if SDL_BYTEORDER == SDL_BIG_ENDIAN
-    A <<= 4;
-  #else
-    B <<= 4;
-  #endif
-*/
+
   #if SDL_BYTEORDER == SDL_BIG_ENDIAN
     A <<= 8;
   #else
@@ -101,60 +67,23 @@ char *generate_name (SDL_Surface *surface)
   sha256_final(&h, (unsigned char *) &tmp);
   memcpy(&hash, tmp, 4);
 
-  printf("line:%d\n",__LINE__);
-  fflush(stdout);
   char *name = calloc(1, 4 + 3 + 3 + 4 + 1);
 
   sprintf(name, "%X.bmp", hash);
 
-printf("line:%d\n",__LINE__);
-  fflush(stdout);
   char c = 0;
   while (name_exists(name))
   {
-  /*  if (!c)
-    { */
-
-      /*
-      buf[ext +0] = ' ';
-      buf[ext +1] = '(';
-      buf[ext +2] = c;
-      buf[ext +3] = ')';
-      ext += 4;
-      */
-/*    }
-    else
+    if (c == 999)
     {
-      ++ c;*/
-
-      printf("line:%d\n",__LINE__);
-  fflush(stdout);
-      if (c == 999)
-      {
-        free(name);
-        name = NULL;
-        break;
-        }
-      /*
-      buf[l + p +2] = c;
-      */
-  //  }
-      ++ c;
-      sprintf(name, "%X (%d).bmp", hash, c);
+      free(name);
+      name = NULL;
+      break;
+    }
+    ++ c;
+    sprintf(name, "%X (%d).bmp", hash, c);
   }
-  /*
-  printf("line: %d\n",__LINE__);
-  buf[ext +0] = '.';
-  buf[ext +1] = 'b';
-  buf[ext +2] = 'm';
-  buf[ext +3] = 'p';
 
-  printf("line:%d\n",__LINE__);
-  fflush(stdout);
-  */
-//  memcpy(buf, name, strlen(name));
-  printf("line:%d\n",__LINE__);
-  fflush(stdout);
   return name;
 }
 
@@ -170,30 +99,16 @@ void store_subsurface (SDL_Surface *surface, SDL_Rect *rect)
 
   SDL_BlitSurface(surface, rect, surf, NULL);
 
-printf("line:%d\n",__LINE__);
-  fflush(stdout);
   char path[FILENAME_MAX + strlen(OUTPUT_DIR_PATH)];
   memset (path, '\0', FILENAME_MAX + strlen(OUTPUT_DIR_PATH));
-  printf("line:%d\n",__LINE__);
-  fflush(stdout);
-
 
   char *buf = generate_name(surf);
-
-  printf("line:%d\n",__LINE__);
-  fflush(stdout);
 
   strcat (path, OUTPUT_DIR_PATH);
   strcat (path, buf);
 
-  printf("line:%d\n",__LINE__);
-  fflush(stdout);
-
-  printf("generated path: %s\n", path);
   SDL_SaveBMP(surf, path);
-
 
   SDL_FreeSurface(surf);
   free(buf);
-  printf("line: %d\n",__LINE__);
 }
