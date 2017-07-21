@@ -1,14 +1,4 @@
-#include <SDL2/SDL_color.h>
-
-
-extern double colour_invert_factor;
-
-
-struct hsv_colour
-{
-  double h, s, v;
-};
-typedef struct hsv_colour hsv_t;
+#include "colour.h"
 
 
 void hsv_fromHex(uint32_t src, hsv_t *dst)
@@ -111,22 +101,22 @@ void hsv_getHex(hsv_t *src, uint32_t *dst)
 
 
 
-void colour_diverge (uint32_t *src, uint32_t *dst)
+void colour_divert (uint32_t *src, uint32_t *dst)
 {
   hsv_t clr;
   double diff;
   hsv_fromHex(*src, &clr);
 
   diff = 180.0;
-  diff *= colour_invert_factor;
+  diff *= colour_divert_factor;
   clr.h += diff;
 
   diff = clr.v - clr.s;
-  diff *= colour_invert_factor;
+  diff *= colour_divert_factor;
   clr.s += diff;
 
   diff = clr.s - clr.v;
-  diff *= colour_invert_factor;
+  diff *= colour_divert_factor;
   clr.v += diff;
 
   while (clr.h > 360.0)
