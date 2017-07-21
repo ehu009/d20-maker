@@ -113,5 +113,34 @@ void hsv_getHex(hsv_t *src, uint32_t *dst)
 
 void colour_diverge (uint32_t *src, uint32_t *dst)
 {
+  hsv_t clr;
+  double diff;
+  hsv_fromHex(*src, &clr);
 
+  diff = 180.0;
+  diff *= colour_invert_factor;
+  clr.h += diff;
+
+  diff = clr.v - clr.s;
+  diff *= colour_invert_factor;
+  clr.s += diff;
+
+  diff = clr.s - clr.v;
+  diff *= colour_invert_factor;
+  clr.v += diff;
+
+  while (clr.h > 360.0)
+    clr.h -= 360.0;
+
+  while (clr.s < 0)
+    clr.s += 1;
+  while (clr.s > 1)
+    clr.s -= 1;
+
+  while (clr.v < 0)
+    clr.v += 1;
+  while (clr.v > 1)
+    clr.v -= 1;
+
+  hsv_getHex(&clr, dst);
 }
