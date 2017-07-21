@@ -1,25 +1,25 @@
-#ifndef			UI_TOGGLE_H_
-#define			UI_TOGGLE_H_
+#ifndef     TOGGLE_H_
+#define     TOGGLE_H_
 
-#include	<stdlib.h>
-// #include 	<stdio.h>
-#include	<string.h>
+#include  <stdlib.h>
+// #include   <stdio.h>
+#include  <string.h>
 
-#include	"SDL2/SDL.h"
-#include	"SDL2/SDL_ttf.h"
-
-
-struct UI_toggle_switch;
-
-typedef struct UI_toggle_switch UI_toggler;
+#include  "SDL2/SDL.h"
+#include  "SDL2/SDL_ttf.h"
 
 
-UI_toggler *UI_toggler_create (const char *txt1, const char *txt2, unsigned start);
+struct toggle_switch;
 
-void UI_toggler_free (UI_toggler *toggler);
+typedef struct toggle_switch toggler_t;
 
-void UI_toggler_setPosition (UI_toggler *button, unsigned _x, unsigned _y);
 
-unsigned UI_toggler_update (UI_toggler *button, SDL_Surface *screen, unsigned mouseX, unsigned mouseY, unsigned mouseIsDown);
+toggler_t *toggler_create (const char *txt1, const char *txt2, unsigned start);
 
-#endif		/*	UI_TOGGLE_H_	*/
+void toggler_free (toggler_t *toggler);
+
+void toggler_setPosition (toggler_t *button, unsigned _x, unsigned _y);
+
+unsigned toggler_update (toggler_t *button, SDL_Surface *screen, unsigned mouseX, unsigned mouseY, unsigned mouseIsDown);
+
+#endif    /*  TOGGLE_H_ */

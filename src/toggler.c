@@ -2,17 +2,17 @@
 
 enum {TOGGLE_OVER = 1, TOGGLE_DOWN = 2, TOGGLE_SWITCH = 4};
 
-struct UI_toggle_switch
+struct toggle_switch
 {
   SDL_Rect rect;
   SDL_Surface *text1, *text2;
   unsigned status;
 };
 
-UI_toggler *UI_toggler_create (const char *txt1, const char *txt2, unsigned start)
+toggler_t *toggler_create (const char *txt1, const char *txt2, unsigned start)
 {
 
-  UI_toggler *toggle = NULL;
+  toggler_t *toggle = NULL;
 
   TTF_Font *font = TTF_OpenFont ("cour.ttf", 12);
   if (font == NULL)
@@ -30,7 +30,7 @@ UI_toggler *UI_toggler_create (const char *txt1, const char *txt2, unsigned star
     return toggle;
   }
 
-  toggle = (UI_toggler *) malloc (sizeof (UI_toggler));
+  toggle = (toggler_t *) malloc (sizeof (toggler_t));
   if (toggle != NULL)
   {
     toggle->status = 0;
@@ -61,14 +61,14 @@ UI_toggler *UI_toggler_create (const char *txt1, const char *txt2, unsigned star
   return toggle;
 }
 
-void UI_toggler_free (UI_toggler *toggler)
+void toggler_free (toggler_t *toggler)
 {
   SDL_FreeSurface (toggler->text1);
   SDL_FreeSurface (toggler->text2);
   free(toggler);
 }
 
-void UI_toggler_setPosition (UI_toggler *button, unsigned _x, unsigned _y)
+void toggler_setPosition (toggler_t *button, unsigned _x, unsigned _y)
 {
   if (button == NULL)
     return;
@@ -76,7 +76,7 @@ void UI_toggler_setPosition (UI_toggler *button, unsigned _x, unsigned _y)
   button->rect.y = _y;
 }
 
-unsigned UI_toggler_update (UI_toggler *button, SDL_Surface *screen, unsigned mouseX, unsigned mouseY, unsigned mouseIsDown)
+unsigned toggler_update (toggler_t *button, SDL_Surface *screen, unsigned mouseX, unsigned mouseY, unsigned mouseIsDown)
 {
   if (((mouseX >= button->rect.x) &&  (mouseX <= button->rect.x + button->rect.w))
       && ((mouseY >= button->rect.y)  &&  (mouseY <= button->rect.y + button->rect.h)))
