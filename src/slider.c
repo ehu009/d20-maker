@@ -9,7 +9,7 @@ struct mouseTrack
   int dragx, dragy;
 };
 
-struct UI_slide_bar
+struct slide_bar
 {
   SDL_Surface *surface;
   SDL_Rect  bar;
@@ -23,12 +23,12 @@ struct UI_slide_bar
 
 
 
-UI_slider *UI_slider_create (double start, int width, int height)
+slider_t *slider_create (double start, int width, int height)
 {
   SDL_Surface *surf = SDL_CreateRGBSurface (0, width, height, 32, 0,0,0,0);
   if (surf == NULL)
     return NULL;
-  UI_slider *slide  = (UI_slider *) malloc (sizeof(UI_slider));
+  slider_t *slide  = (slider_t *) malloc (sizeof(slider_t));
   if (slide != NULL)
   {
     slide->posx = 0;
@@ -43,7 +43,7 @@ UI_slider *UI_slider_create (double start, int width, int height)
   return slide;
 }
 
-void UI_slider_setPos (UI_slider *slide, int _x, int _y)
+void slider_setPos (slider_t *slide, int _x, int _y)
 {
   if (_x >= 0)
     slide->posx = _x;
@@ -51,7 +51,7 @@ void UI_slider_setPos (UI_slider *slide, int _x, int _y)
     slide->posy = _y;
 }
 
-int UI_slider_setFont (UI_slider *slide, const char *font, unsigned font_size, SDL_Color font_color)
+int slider_setFont (slider_t *slide, const char *font, unsigned font_size, SDL_Color font_color)
 {
   if (slide->font != NULL)
   {
@@ -64,7 +64,7 @@ int UI_slider_setFont (UI_slider *slide, const char *font, unsigned font_size, S
   return 0;
 }
 
-void _UI_slider_draw (UI_slider *slide, SDL_Surface *screen, unsigned bar_color, unsigned btn_color)
+void _slider_draw (slider_t *slide, SDL_Surface *screen, unsigned bar_color, unsigned btn_color)
 {
 
   SDL_Rect temp_rect;
@@ -132,7 +132,7 @@ void _UI_slider_draw (UI_slider *slide, SDL_Surface *screen, unsigned bar_color,
   slide->bar.y -= slide->posy;
 }
 
-double UI_slider_update (UI_slider *slide, unsigned mouseX, unsigned mouseY, unsigned mouseIsDown, SDL_Surface *screen)
+double slider_update (slider_t *slide, unsigned mouseX, unsigned mouseY, unsigned mouseIsDown, SDL_Surface *screen)
 {
   SDL_Rect temp_rect;
   if (slide->bar.w > slide->bar.h)
@@ -233,18 +233,18 @@ double UI_slider_update (UI_slider *slide, unsigned mouseX, unsigned mouseY, uns
       }
       slide->mouse.msX = mouseX;
       slide->mouse.msY = mouseY;
-      _UI_slider_draw (slide, screen, 0xff0000, 0x00ffff);
+      _slider_draw (slide, screen, 0xff0000, 0x00ffff);
     }
     else
-      _UI_slider_draw (slide, screen, 0xff0000, 0xffffff);
+      _slider_draw (slide, screen, 0xff0000, 0xffffff);
   }
   else
-    _UI_slider_draw (slide, screen, 0xff0000, 0xff);
+    _slider_draw (slide, screen, 0xff0000, 0xff);
   return slide->position;
 }
 
 
-void  UI_slider_free (UI_slider *slide)
+void  slider_free (slider_t *slide)
 {
   if (slide != NULL)
   {
