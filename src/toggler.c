@@ -1,3 +1,8 @@
+#include  <stdlib.h>
+#include  <string.h>
+
+#include  "SDL2/SDL_ttf.h"
+
 #include  "toggler.h"
 
 enum {TOGGLE_OVER = 1, TOGGLE_DOWN = 2, TOGGLE_SWITCH = 4};
@@ -6,10 +11,13 @@ struct toggle_switch
 {
   SDL_Rect rect;
   SDL_Surface *text1, *text2;
-  unsigned status;
+  char status;
+  unsigned *dst;
 };
 
-toggler_t *toggler_create (const char *txt1, const char *txt2, unsigned start)
+
+
+toggler_t *toggler_create (const char *txt1, const char *txt2, unsigned *value)
 {
 
   toggler_t *toggle = NULL;
@@ -33,9 +41,8 @@ toggler_t *toggler_create (const char *txt1, const char *txt2, unsigned start)
   toggle = (toggler_t *) malloc (sizeof (toggler_t));
   if (toggle != NULL)
   {
-    toggle->status = 0;
-    if (start)
-      toggle->status |= TOGGLE_SWITCH;
+    toggle->dst = value;
+    toggle->status = *value;
     toggle->text1 = t1;
     toggle->text2 = t2;
 
@@ -76,8 +83,18 @@ void toggler_setPosition (toggler_t *button, unsigned _x, unsigned _y)
   button->rect.y = _y;
 }
 
-unsigned toggler_update (toggler_t *button, SDL_Surface *screen, unsigned mouseX, unsigned mouseY, unsigned mouseIsDown)
+
+
+
+
+void toggler_update (toggler_t *button)
 {
+  int mouseX, mouseY;
+  mouse_position(&mouseX, &mouseY);
+  int mouseUp = (mouse_left() == 1),
+      mouseDown = (mouse_left() == -1);
+
+
   if (((mouseX >= button->rect.x) &&  (mouseX <= button->rect.x + button->rect.w))
       && ((mouseY >= button->rect.y)  &&  (mouseY <= button->rect.y + button->rect.h)))
   {
@@ -87,15 +104,15 @@ unsigned toggler_update (toggler_t *button, SDL_Surface *screen, unsigned mouseX
     {
       if (!(button->status & TOGGLE_DOWN))
       {
-        if (mouseIsDown)
+        if (mouseDown)
         {
           button->status |= TOGGLE_DOWN;
-          button->status ^= TOGGLE_SWITCH;
+          *button->dst ^= TOGGLE_SWITCH;
         }
       }
       else
       {
-        if (!mouseIsDown)
+        if (!mouseDown)
           button->status ^= TOGGLE_DOWN;
       }
     }
@@ -109,36 +126,40 @@ unsigned toggler_update (toggler_t *button, SDL_Surface *screen, unsigned mouseX
     }
     else
     {
-      if (!mouseIsDown)
+      if (!mouseDown)
         button->status ^= TOGGLE_DOWN;
     }
   }
+  /*
+  return ((button->status & TOGGLE_SWITCH) != 0);
+  */
+}
 
-  //  background color
+void toggler_draw (toggler_t *button)
+{
   if (button->status & TOGGLE_OVER)
   {
     if (button->status & TOGGLE_DOWN)
-      SDL_FillRect (screen, &button->rect, 0x00ffff);
+      SDL_FillRect (canvas, &button->rect, 0x00ffff);
     else
-      SDL_FillRect (screen, &button->rect, 0xffffff);
+      SDL_FillRect (canvas, &button->rect, 0xffffff);
   }
   else
-    SDL_FillRect (screen, &button->rect, 0xff0000);
+    SDL_FillRect (canvas, &button->rect, 0xff0000);
 
   SDL_Rect tmp_rect = {
     .x = button->rect.x+5,.y = button->rect.y+5
   };
-  if (button->status & TOGGLE_SWITCH)
+  if (*button->dst & TOGGLE_SWITCH)
   {
     tmp_rect.w = button->text2->w;
     tmp_rect.h = button->text2->h;
-    SDL_BlitSurface (button->text2, NULL, screen, &tmp_rect);
+    SDL_BlitSurface (button->text2, NULL, canvas, &tmp_rect);
   }
   else
   {
     tmp_rect.w = button->text1->w;
     tmp_rect.h = button->text1->h;
-    SDL_BlitSurface (button->text1, NULL, screen, &tmp_rect);
+    SDL_BlitSurface (button->text1, NULL, canvas, &tmp_rect);
   }
-  return ((button->status & TOGGLE_SWITCH) != 0);
 }
