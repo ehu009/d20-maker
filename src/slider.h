@@ -1,5 +1,5 @@
-#ifndef     SLIDER_H_
-#define     SLIDER_H_
+#ifndef     FADER_H_
+#define     FADER_H_
 
 
 #include  "SDL2/SDL_surface.h"
@@ -8,22 +8,22 @@
 extern SDL_Surface *canvas;
 
 
-struct slide_bar;
+struct fader_bar;
 
-typedef struct slide_bar  slider_t;
-
-
-slider_t *slider_create (double start, int width, int height, double *value);
-
-void  slider_free (slider_t *slide);
+typedef struct fader_bar  fader_t;
 
 
-void slider_setPos (slider_t *slide, int _x, int _y);
+fader_t *fader_create (double start, int width, int height, double *value);
 
-void slider_draw (slider_t *slide);
-
-void slider_update (slider_t *slide);
+void fader_free (fader_t *slide);
 
 
+void fader_setPos (fader_t *slide, int _x, int _y);
 
-#endif    /*  SLIDER_H_  */
+void fader_draw (fader_t *slide);
+
+void fader_update (fader_t *slide);
+
+
+
+#endif    /*  FADER_H_  */
