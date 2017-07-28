@@ -2,7 +2,7 @@
 #include <stdio.h>
 
 #include  "SDL2/SDL_ttf.h"
-#include  "slider.h"
+#include  "fader.h"
 #include  "mouse_app.h"
 
 
