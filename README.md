@@ -1,5 +1,5 @@
 # The d20 Maker
-###### A tool for creating the net of an icosahedron
+###### A tool for plotting the net of an icosahedron
 
 ### How-to
 #### Compiling on Linux
@@ -7,15 +7,23 @@ You'll need to have `gcc`, `SDL2`, `SDL2_image`, `SDL2_ttf` installed on your sy
 From that point onwards, just run `make` from the main directory.
 #### Running
 First argument to the program specifies an input image:
-e.g. `d20-maker *my-image.png`*
+e.g. `d20-maker my-image.png`
 If no image is specified, `default.jpg` will be used.
 ##### For Windows users
 There's a `start.bat` provided, allowing you to use a file browser to select your input image.
 #### Controlling
-All you need is a mouse with a scroll-wheel.
+All you need is a mouse / touchpad device featuring scroll functionality.
+A triangle is placed by using left mouse button.
+##### The first triangle
+Move the triangle around with your mouse. When placing your first triangle, you may use the scroll-wheel to resize or rotate the triangle. Pressing the scroll-wheel or right mouse button will let you switch between resizing and rotating.
+##### All other triangles
+After having placed the first triangle, a 'reset' button will be provided - allowing for clearing all triangles and starting over, without restarting the program.
 Select between possible triangles by hovering over them with the mouse.
-A selected triangle is placed by using left mouse button.
-When placing your first triangle, you may use the scroll-wheel to resize or rotate the triangle. Pressing the scroll-wheel or right mouse button will let you switch between resizing and rotating.
+##### No more triangles available
+When all 20 triangles have been placed, there will be provided a button for saving the generated image, as well as a fader for choosing folding line visibility.
+The interface of these will be located to the right of the image.
+#### Output
+All saved images will be stored in `.bmp` format, with a unique file name. They will be placed in the folder named `output`.
 
 
 ### To-do list
@@ -26,6 +34,8 @@ When placing your first triangle, you may use the scroll-wheel to resize or rota
  - [ ] Implement "Save" button
  - [ ] Implement "Undo" feature
  - [ ] Implement "Move" feature
+ - [ ] Implement folding line controls
+ - [ ] Make it look prettier
 
 ### Supported file extensions
  + `.bmp`, `.dib`
