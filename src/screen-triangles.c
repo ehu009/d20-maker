@@ -52,6 +52,7 @@ void draw_triangle (triangle_t *t, plot_func plot, COLOR color)
   draw_line2 (canvas, &C, &A, plot, color);
 }
 
+
 void fill_triangle (triangle_t *t, plot_func plot, COLOR color)
 {
   vtx2d_t *a = t->pts[0],
@@ -59,19 +60,15 @@ void fill_triangle (triangle_t *t, plot_func plot, COLOR color)
       *c = t->pts[2];
   SDL_Rect *rect = get_bounds_of_triangle (a, b, c);
 
-  SDL_Surface *surf = NULL;
 
-  #if SDL_BYTEORDER == SDL_BIG_ENDIAN
-    surf = SDL_CreateRGBSurface (0, rect->w, rect->h, 32, 0xFF000000, 0x00FF0000, 0x0000FF00, 0x000000FF);
-  #else
-    surf = SDL_CreateRGBSurface (0, rect->w, rect->h, 32, 0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000);
-  #endif
-
-  SDL_SetSurfaceBlendMode(surf,SDL_BLENDMODE_BLEND);
+  SDL_Surface *surf = SDL_CreateRGBSurface (0, rect->w, rect->h, 32, canvas->format->Rmask, canvas->format->Gmask, canvas->format->Bmask, 0xff000000);
 
   SDL_Rect clip_rect;
+  if (plot == invertPixel)
+  {
   SDL_GetClipRect(canvas, &clip_rect);
   SDL_SetClipRect(canvas, rect);
+  }
 
   vtx2i_t A, B, C;
   get_vtx2i_from_vtx2d (a, &A);
@@ -84,7 +81,9 @@ void fill_triangle (triangle_t *t, plot_func plot, COLOR color)
   B.pts[1] -= rect->y;
   C.pts[1] -= rect->y;
 
-  COLOR pixel, fill = color, markup = SDL_MapRGBA(surf->format, 0xff,0xff,0,0);
+  COLOR pixel, fill = color,
+      markup = SDL_MapRGBA(surf->format, 0xff,0xff,0,0),
+      bg = SDL_MapRGBA(surf->format, 0,0,0,0);
   if (plot != invertPixel)
   {
     unsigned R = (color & 0x00ff0000)>>16,
@@ -95,6 +94,8 @@ void fill_triangle (triangle_t *t, plot_func plot, COLOR color)
     if (markup == fill)
       markup = SDL_MapRGBA(surf->format, 0xff,0xee,0,0);
   }
+
+  SDL_FillRect(surf, NULL, bg);
 
   draw_line2 (surf, &A, &B, colourPixel, markup);
   draw_line2 (surf, &B, &C, colourPixel, markup);
@@ -136,9 +137,10 @@ void fill_triangle (triangle_t *t, plot_func plot, COLOR color)
     }
   }
 
-  SDL_SetClipRect(canvas, &clip_rect);
-  SDL_BlitSurface (surf, NULL, canvas, rect);
+  if (plot == invertPixel)
+    SDL_SetClipRect(canvas, &clip_rect);
 
+  SDL_BlitSurface (surf, NULL, canvas, rect);
   SDL_FreeSurface (surf);
   free ((void *) rect);
 }
@@ -220,4 +222,3 @@ int triangle_contains (triangle_t *t, vtx2i_t point)
 
   return ((point.pts[1] > lower) && (point.pts[1] < upper));
 }
-
