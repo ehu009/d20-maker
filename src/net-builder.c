@@ -44,6 +44,8 @@ static struct
   //  relocation
   char being_relocated;
   int diff_x, diff_y;
+
+  double negate_rate;
   //  other things
   //  ...
   int mX, mY;
@@ -210,6 +212,8 @@ void app_start (void)
   application.relocate_mode = 0;
   application.being_relocated = 0;
 
+  application.negate_rate = 1.0;
+
   application.status = APP_MAIN;
 }
 
@@ -251,13 +255,50 @@ void read_triangle_from_tripoint (tripoint_t *src, triangle_t *dst)
   dst->pts[2] = src->pC;
 }
 
+int negate_byte_at (unsigned byte, unsigned mask, double rate)
+{
+  int pt = ((byte ^ 0xffffff) & mask) - (byte & mask);
+  pt *= rate;
+  pt += (byte & mask);
+  while (mask >0xff)
+  {
+    mask /= 0x100;
+    pt /= 0x100;
+  }
+  return pt;
+}
+
+void divertPixel (SDL_Surface *dst, vtx2i_t *p, unsigned color)
+{
+  vtx2i_t p2 = *p;
+  SDL_Rect clip_rect;
+  SDL_GetClipRect (canvas, &clip_rect);
+  if (clip_rect.x != 0)
+    p2.pts[0] += clip_rect.x;
+  if (clip_rect.y != 0)
+    p2.pts[1] += clip_rect.y;
+
+  unsigned clr = getPixel (canvas, &p2);
+  unsigned R, G, B;
+
+  R = negate_byte_at(clr, canvas->format->Rmask, application.negate_rate);
+  G = negate_byte_at(clr, canvas->format->Gmask, application.negate_rate);
+  B = negate_byte_at(clr, canvas->format->Bmask, application.negate_rate);
+
+  clr = SDL_MapRGBA(dst->format, R,G,B,0xff);
+  setPixel (dst, p, clr);
+}
+
+
+
+
 
 
 void draw_triangle_transparent (tripoint_t *t)
 {
   triangle_t tmp;
   read_triangle_from_tripoint(t, &tmp);
-  fill_triangle (&tmp, invertPixel, 0);
+  fill_triangle (&tmp, divertPixel, 0);
 }
 
 void draw_triangle_outline (tripoint_t *t)
@@ -370,6 +411,7 @@ char line_exists (struct line *ptr)
 }
 
 
+
 void end_draw (void)
 {
   SDL_Surface *surf = NULL;
@@ -464,7 +506,7 @@ void end_draw (void)
       vtx2i_t A, B;
       get_vtx2i_from_vtx2d(cur->A, &A);
       get_vtx2i_from_vtx2d(cur->B, &B);
-      draw_line2(canvas, &A, &B, invertPixel, 0);
+      draw_line2(canvas, &A, &B, divertPixel, 0);
 
       slider_procede (line_slider);
       cur = slider_current (line_slider);
