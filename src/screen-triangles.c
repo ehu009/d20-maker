@@ -64,11 +64,12 @@ void fill_triangle (triangle_t *t, plot_func plot, COLOR color)
   SDL_Surface *surf = SDL_CreateRGBSurface (0, rect->w, rect->h, 32, canvas->format->Rmask, canvas->format->Gmask, canvas->format->Bmask, 0xff000000);
 
   SDL_Rect clip_rect;
-  if (plot == invertPixel)
-  {
+  /*
+  if ((plot == invertPixel) || (plot == divertPixel))
+  {*/
   SDL_GetClipRect(canvas, &clip_rect);
   SDL_SetClipRect(canvas, rect);
-  }
+  //}
 
   vtx2i_t A, B, C;
   get_vtx2i_from_vtx2d (a, &A);
@@ -137,7 +138,7 @@ void fill_triangle (triangle_t *t, plot_func plot, COLOR color)
     }
   }
 
-  if (plot == invertPixel)
+//  if ((plot == invertPixel) || (plot == divertPixel))
     SDL_SetClipRect(canvas, &clip_rect);
 
   SDL_BlitSurface (surf, NULL, canvas, rect);
