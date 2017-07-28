@@ -9,6 +9,8 @@
 #include "screen-triangles.h"
 #include "sha256.h"
 
+#include "fader.h"
+
 //  #define DEBUG
 
 #define LINE printf("line: %d", __LINE__);fflush(stdout);
@@ -46,6 +48,7 @@ static struct
   int diff_x, diff_y;
 
   double negate_rate;
+  fader_t *colour_select;
   //  other things
   //  ...
   int mX, mY;
@@ -201,6 +204,7 @@ void init_net_builder (void)
 
   d20.faces = NULL;
   d20.available = NULL;
+  d20.lines = NULL;
 }
 
 void app_start (void)
@@ -212,7 +216,7 @@ void app_start (void)
   application.relocate_mode = 0;
   application.being_relocated = 0;
 
-  application.negate_rate = 1.0;
+  application.colour_select = NULL;
 
   application.status = APP_MAIN;
 }
@@ -244,6 +248,16 @@ void app_free (void)
     free_list(d20.positions);
   if (d20.lines != NULL)
     free_list(d20.lines);
+  if (application.colour_select != NULL)
+    fader_free(application.colour_select);
+
+
+  d20.available = NULL;
+  d20.faces = NULL;
+  d20.positions = NULL;
+  d20.lines = NULL;
+  application.colour_select = NULL;
+
 }
 
 
@@ -298,7 +312,7 @@ void draw_triangle_transparent (tripoint_t *t)
 {
   triangle_t tmp;
   read_triangle_from_tripoint(t, &tmp);
-  fill_triangle (&tmp, divertPixel, 0);
+  fill_triangle (&tmp, invertPixel, 0);
 }
 
 void draw_triangle_outline (tripoint_t *t)
@@ -544,6 +558,12 @@ void app_draw (void)
   if (application.status == APP_END)
   {
     end_draw();
+    if (application.colour_select != NULL)
+    {
+
+      fader_draw(application.colour_select);
+
+    }
   }
 
   #ifdef DEBUG
@@ -1139,6 +1159,9 @@ void pin (void)
       d20.available = NULL;
       free((void *)cur);
     }
+    application.colour_select = fader_create(80.0, FADER_WIDTH, canvas->h - 2*BORDER_SIZE, &application.negate_rate);
+    fader_setPos(application.colour_select, canvas->w - (BORDER_SIZE + FADER_WIDTH), BORDER_SIZE);
+
   }
 
   free_chainslider(slider);
@@ -1262,14 +1285,24 @@ void app_usage ()
     mouse_position (&application.mX, &application.mY);
   }
   if (application.status == APP_MAIN)
-    app_main();
-  else if (application.status == APP_END)
   {
-
-
-
+    app_main();
 
   }
+  else if (application.status == APP_END)
+  {
+    if (application.colour_select != NULL)
+    {
+
+      fader_update(application.colour_select);
+      application.negate_rate /= 100;
+
+    }
+
+  }
+
+
+
 
 }
 

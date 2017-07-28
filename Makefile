@@ -3,8 +3,8 @@ SRC_PATH=./src
 
 CC   = gcc
 
-HEAD = vertex pixels lines mouse chain screen-triangles net-builder sha256 storage mouse_app
-SRCS = vertex pixels lines mouse chain screen-triangles net-builder sha256 storage main
+HEAD = vertex pixels lines mouse chain screen-triangles net-builder sha256 storage fader mouse_app
+SRCS = vertex pixels lines mouse chain screen-triangles net-builder sha256 storage fader main
 #HEAD = vertex.h pixels.h lines.h mouse.h chain.h screen-triangles.h net-builder.h mouse_app.h
 #SRCS = vertex.c pixels.c lines.c mouse.c chain.c screen-triangles.c net-builder.c
 FLAGS= -Wall

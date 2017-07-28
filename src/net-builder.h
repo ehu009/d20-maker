@@ -10,7 +10,7 @@
 
 extern SDL_Surface *canvas, *src_image;
 
-#define FADER_WIDTH 40
+#define FADER_WIDTH 30
 
 #define BORDER_SIZE 7
 
