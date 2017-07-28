@@ -127,8 +127,9 @@ void invertPixel (SDL_Surface *dst, vtx2i_t *p, unsigned color)
     p2.pts[1] += clip_rect.y;
 
   unsigned clr = getPixel (canvas, &p2);
-  clr ^= 0x00ffffff;
-  clr &= 0x00ffffff;
-  setPixel (dst, p, clr | 0xff000000);
+  clr ^= 0xffffffff;
+  clr |= dst->format->Amask;
+
+  setPixel (dst, p, clr);
 }
 
