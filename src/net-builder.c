@@ -15,7 +15,7 @@
 
 extern SDL_Rect draw_area;
 
-/*
+
 //  distance between two points
 double distance (double x1, double y1, double x2, double y2)
 { //  pythagorean root of squared sides summed
@@ -24,7 +24,7 @@ double distance (double x1, double y1, double x2, double y2)
   dy *= dy;
   return sqrt (dx + dy);
 }
-*/
+
 
 int approximates (double test, double source, double accuracy)
 {
@@ -121,7 +121,7 @@ static struct
   double radius;
   int rotation;
 
-  chain_t *available, *faces, *positions;
+  chain_t *available, *faces, *positions, *lines;
   tripoint_t *current_used, *current_free;
 
   slot_t vertex[NUM_D20_VTX];
@@ -238,6 +238,8 @@ void app_free (void)
     free_list(d20.faces);
   if (d20.positions != NULL)
     free_list(d20.positions);
+  if (d20.lines != NULL)
+    free_list(d20.lines);
 }
 
 
@@ -330,6 +332,149 @@ void draw_list (chain_t *list, tripoint_draw_func draw_func)
 }
 
 
+int adjacent_positions (vtx2d_t *A, vtx2d_t *B, double adjacency, double acc)
+{
+  double dist;
+  dist = distance(A->pts[0], A->pts[1], B->pts[0], B->pts[1]);
+  return approximates(dist, adjacency, acc);
+}
+
+
+struct line
+{
+  vtx2d_t *A, *B;
+};
+
+char lines_drawn = 0;
+
+char line_exists (struct line *ptr)
+{
+  chainslider_t *s = make_chainslider(d20.lines);
+  struct line *start, *cur;
+  start = slider_current (s);
+  cur = start;
+  char exists = 0;
+  do
+  {
+    if ((cur->A == ptr->A && cur->B == ptr->B)
+        ||  (cur->A == ptr->B && cur->B == ptr->A))
+    {
+      exists ++;
+      break;
+    }
+    slider_procede (s);
+    cur = slider_current (s);
+  }
+  while (cur != start);
+  return exists;
+}
+
+
+void end_draw (void)
+{
+  SDL_Surface *surf = NULL;
+
+  #if SDL_BYTEORDER == SDL_BIG_ENDIAN
+    surf = SDL_CreateRGBSurface (0, draw_area.w, draw_area.h, 32, 0xFF000000, 0x00FF0000, 0x0000FF00, 0x000000FF);
+  #else
+    surf = SDL_CreateRGBSurface (0, draw_area.w, draw_area.h, 32, 0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000);
+  #endif
+
+  uint32_t filler = SDL_MapRGBA(surf->format, 0,0,0,0xff);
+  SDL_FillRect(surf, NULL, filler);
+  chainslider_t *slider, *line_slider = NULL;
+
+
+  {
+    slider = make_chainslider (d20.faces);
+    tripoint_t *start, *cur;
+    start = slider_current (slider);
+    cur = start;
+    do
+    {
+      triangle_t t;
+      read_triangle_from_tripoint(cur, &t);
+      transfer_triangle(&t, surf, &draw_area);
+      if (!lines_drawn)
+      {
+        struct line *a, *b, *c;
+        a = malloc (sizeof (struct line));
+        b = malloc (sizeof (struct line));
+        c = malloc (sizeof (struct line));
+        a->A = cur->pA;
+        a->B = cur->pB;
+        b->A = cur->pB;
+        b->B = cur->pC;
+        c->A = cur->pA;
+        c->B = cur->pC;
+        if (d20.lines == NULL)
+        {
+          d20.lines = make_chain(a);
+          line_slider = make_chainslider(d20.lines);
+          slider_insert_after(line_slider, b);
+          slider_insert_after(line_slider, c);
+        }
+        else
+        {
+          if (line_exists(a))
+          {
+            free(a);
+          }
+          else
+          {
+            slider_insert_after(line_slider, a);
+          }
+          if (line_exists(b))
+          {
+            free(b);
+          }
+          else
+          {
+            slider_insert_after(line_slider, b);
+          }
+          if (line_exists(c))
+          {
+            free(c);
+          }
+          else
+          {
+            slider_insert_after(line_slider, c);
+          }
+        }
+      }
+      slider_procede (slider);
+      cur = slider_current (slider);
+    }
+    while (cur != start);
+
+    free_chainslider(slider);
+  }
+
+  SDL_BlitSurface (surf, NULL, canvas, &draw_area);
+  SDL_FreeSurface (surf);
+
+  {
+    if (line_slider == NULL)
+      line_slider = make_chainslider(d20.lines);
+    struct line *start, *cur;
+    start = slider_current (line_slider);
+    cur = start;
+    do
+    {
+      vtx2i_t A, B;
+      get_vtx2i_from_vtx2d(cur->A, &A);
+      get_vtx2i_from_vtx2d(cur->B, &B);
+      draw_line2(canvas, &A, &B, invertPixel, 0);
+
+      slider_procede (line_slider);
+      cur = slider_current (line_slider);
+    }
+    while (cur != start);
+    lines_drawn = 1;
+    free_chainslider(line_slider);
+  }
+}
+
 void app_draw (void)
 {
   #ifdef DEBUG
@@ -356,7 +501,7 @@ void app_draw (void)
   }
   if (application.status == APP_END)
   {
-    draw_list (d20.faces, finished_list_drawing);
+    end_draw();
   }
 
   #ifdef DEBUG

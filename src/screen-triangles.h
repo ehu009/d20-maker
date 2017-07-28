@@ -18,5 +18,6 @@
 
   int triangle_contains (triangle_t *t, vtx2i_t point);
 
+void transfer_triangle (triangle_t *t, SDL_Surface *dst, SDL_Rect *dst_rect);
 
 #endif  /*  SCREEN_TRIANGLE_H_  */

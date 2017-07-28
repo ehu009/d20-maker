@@ -222,3 +222,89 @@ int triangle_contains (triangle_t *t, vtx2i_t point)
 
   return ((point.pts[1] > lower) && (point.pts[1] < upper));
 }
+
+void transfer_triangle (triangle_t *t, SDL_Surface *dst, SDL_Rect *dst_rect)
+{
+  vtx2d_t *a = t->pts[0],
+      *b = t->pts[1],
+      *c = t->pts[2];
+  SDL_Rect *rect = get_bounds_of_triangle (a, b, c);
+
+  SDL_Surface *surf = SDL_CreateRGBSurface (0, rect->w, rect->h, 32, canvas->format->Rmask, canvas->format->Gmask, canvas->format->Bmask, 0xff000000);
+
+
+  vtx2i_t A, B, C;
+  get_vtx2i_from_vtx2d (a, &A);
+  get_vtx2i_from_vtx2d (b, &B);
+  get_vtx2i_from_vtx2d (c, &C);
+  A.pts[0] -= rect->x;
+  B.pts[0] -= rect->x;
+  C.pts[0] -= rect->x;
+  A.pts[1] -= rect->y;
+  B.pts[1] -= rect->y;
+  C.pts[1] -= rect->y;
+
+  COLOR pixel,
+      markup = SDL_MapRGBA(surf->format, 0xff,0xff,0,0),
+      bg = SDL_MapRGBA(surf->format, 0,0,0,0);
+  SDL_FillRect(surf, NULL,bg);
+
+  draw_line2 (surf, &A, &B, colourPixel, markup);
+  draw_line2 (surf, &B, &C, colourPixel, markup);
+  draw_line2 (surf, &C, &A, colourPixel, markup);
+
+  vtx2i_t p;
+  int i = 0, j = 0;
+
+  for (i=0; i <= rect->w; i++)
+  {
+    p.pts[0] = i;
+    int upper = -1, lower = -1;
+
+    for (j = 0; j <= rect->h; j++)
+    {
+      p.pts[1] = j;
+      pixel = getPixel (surf, &p);
+      if (pixel != markup)
+        continue;
+      upper = j;
+      break;
+
+    }
+    if (upper != -1)
+    {
+      lower = upper;
+      for (j = rect->h; j >=upper; j --)
+      {
+        p.pts[1] = j;
+        pixel = getPixel (surf, &p);
+        if (pixel != markup)
+          continue;
+        lower = j;
+        break;
+      }
+
+      for (j = upper; j <= lower; j++)
+      {
+        p.pts[1] = j;
+        vtx2i_t p2 = {.pts = {i + rect->x, j + rect->y}};
+        uint32_t clr = getPixel(canvas, &p2);
+        #if SDL_BYTEORDER == SDL_BIG_ENDIAN
+          clr |= 0xff;
+        #else
+          clr |= 0xff000000;
+        #endif
+        setPixel(surf, &p, clr);
+      }
+    }
+  }
+  rect->x -= dst_rect->x;
+  rect->y -= dst_rect->y;
+
+  SDL_BlitSurface (surf, NULL, dst, rect);
+
+  SDL_FreeSurface (surf);
+  free ((void *) rect);
+
+}
+
