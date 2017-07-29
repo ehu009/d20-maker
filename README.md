@@ -30,11 +30,11 @@ All saved images will be stored in `.bmp` format, with a unique file name. They 
  - [ ] Write a good README
  - [x] Basic functionality implemented
  - [ ] Write a longer to-do list
- - [ ] Implement "Reset" button
- - [ ] Implement "Save" button
+ - [x] Implement "Reset" button
+ - [x] Implement "Save" button
  - [ ] Implement "Undo" feature
  - [ ] Implement "Move" feature
- - [ ] Implement folding line controls
+ - [x] Implement folding line controls
  - [ ] Make it look prettier
 
 ### Supported file extensions
