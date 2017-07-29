@@ -9,7 +9,9 @@
 #include "screen-triangles.h"
 #include "sha256.h"
 
+#include "storage.h"
 #include "fader.h"
+#include "button.h"
 
 //  #define DEBUG
 
@@ -49,6 +51,9 @@ static struct
 
   double negate_rate;
   fader_t *colour_select;
+
+  button_t *reset_btn, *save_btn;
+  unsigned save, reset;
   //  other things
   //  ...
   int mX, mY;
@@ -217,6 +222,12 @@ void app_start (void)
   application.being_relocated = 0;
 
   application.colour_select = NULL;
+  application.reset_btn = NULL;
+  application.save_btn = NULL;
+
+  application.reset = 0;
+  application.save = 0;
+
 
   application.status = APP_MAIN;
 }
@@ -250,6 +261,10 @@ void app_free (void)
     free_list(d20.lines);
   if (application.colour_select != NULL)
     fader_free(application.colour_select);
+  if (application.reset_btn != NULL)
+    button_free(application.reset_btn);
+  if (application.save_btn != NULL)
+    button_free(application.save_btn);
 
 
   d20.available = NULL;
@@ -257,7 +272,8 @@ void app_free (void)
   d20.positions = NULL;
   d20.lines = NULL;
   application.colour_select = NULL;
-
+  application.reset_btn = NULL;
+  application.save_btn = NULL;
 }
 
 
@@ -564,7 +580,11 @@ void app_draw (void)
       fader_draw(application.colour_select);
 
     }
+    if ((application.save_btn != NULL) && (chain_size(d20.faces) == 20))
+      button_draw(application.save_btn);
   }
+  if (application.reset_btn != NULL)
+    button_draw(application.reset_btn);
 
   #ifdef DEBUG
   printf("\tdone\n");
@@ -1159,8 +1179,6 @@ void pin (void)
       d20.available = NULL;
       free((void *)cur);
     }
-    application.colour_select = fader_create(80.0, FADER_WIDTH, canvas->h - 2*BORDER_SIZE, &application.negate_rate);
-    fader_setPos(application.colour_select, canvas->w - (BORDER_SIZE + FADER_WIDTH), BORDER_SIZE);
 
   }
 
@@ -1213,11 +1231,22 @@ void app_main (void)
     {
       // pin root triangle
       pin_root();
+      if (application.reset_btn == NULL)
+      {
+        application.reset_btn = button_create ("reset\0", &application.reset);
+        button_setPosition(application.reset_btn, canvas->w-(BORDER_SIZE+BUTTON_WIDTH), BORDER_SIZE);
+      }
+
     }
 
   }
   else
   {
+    if (application.reset_btn != NULL)
+    {
+      button_update(application.reset_btn);
+    }
+
     //  root triangle has been pinned
     int relocate = relocate_mode();
     if (mouse_left() == -1)
@@ -1237,7 +1266,21 @@ void app_main (void)
       {
         if (d20.current_free != NULL)
         {
-            pin();
+          pin();
+          if (chain_size(d20.faces) == 20)
+          {
+            if (application.save_btn == NULL)
+            {
+              application.save_btn = button_create ("save \0", &application.save);
+              button_setPosition(application.save_btn, canvas->w-(BORDER_SIZE+BUTTON_WIDTH), 2*BORDER_SIZE + BUTTON_HEIGHT);
+            }
+            if (application.colour_select == NULL)
+            {
+              unsigned fader_yPos = 3*BORDER_SIZE + 2*BUTTON_HEIGHT;
+              application.colour_select = fader_create(80.0, FADER_WIDTH, canvas->h - (BORDER_SIZE + fader_yPos), &application.negate_rate);
+              fader_setPos(application.colour_select, canvas->w - (BORDER_SIZE + BUTTON_WIDTH), fader_yPos);
+            }
+          }
         }
         else if (d20.current_used != NULL)
         { //  undo
@@ -1293,17 +1336,30 @@ void app_usage ()
   {
     if (application.colour_select != NULL)
     {
-
       fader_update(application.colour_select);
       application.negate_rate /= 100;
-
     }
 
+    if (application.reset_btn != NULL)
+      button_update(application.reset_btn);
+
+    if (application.save_btn != NULL)
+      button_update(application.save_btn);
   }
 
+  if (application.reset)
+  {
+    app_free();
+    app_start();
 
-
-
+  }
+  if (application.save)
+  {
+    d20.current_free = NULL;
+    d20.current_used = NULL;
+    app_draw();
+    store_subsurface(canvas, &draw_area);
+  }
 }
 
 
