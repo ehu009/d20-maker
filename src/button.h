@@ -14,7 +14,7 @@ struct button_switch;
 typedef struct button_switch button_t;
 
 
-button_t *button_create (const char *txt1, const char *txt2, unsigned *value);
+button_t *button_create (const char *txt, unsigned *value);
 
 void button_free (button_t *button);
 
