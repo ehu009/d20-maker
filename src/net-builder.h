@@ -10,13 +10,15 @@
 
 extern SDL_Surface *canvas, *src_image;
 
-#define FADER_WIDTH 30
-
 #define BORDER_SIZE 7
 
+#define FADER_WIDTH 30
 
-#define SIDE_BAR_W  FADER_WIDTH + 3*BORDER_SIZE
-#define SIDE_BAR_H  0 + 2*BORDER_SIZE
+#define BUTTON_HEIGHT 24
+#define BUTTON_WIDTH 45
+
+#define SIDE_BAR_W  (BUTTON_WIDTH + 3*BORDER_SIZE)
+#define SIDE_BAR_H  2*BORDER_SIZE
 
 void app_start (void);
 void app_free (void);
