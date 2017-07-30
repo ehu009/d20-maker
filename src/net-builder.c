@@ -1172,11 +1172,13 @@ void pin (void)
     cur = slider_current (slider);
     if (already_pinned(cur))
     {
-      application.status = APP_END;
       free_chain(d20.available);
       d20.available = NULL;
       free((void *)cur);
+
     }
+    if (chain_size(d20.faces) == 20)
+      application.status = APP_END;
 
   }
 
