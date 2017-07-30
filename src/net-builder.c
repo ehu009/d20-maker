@@ -1183,6 +1183,13 @@ void pin (void)
   free_chainslider(slider);
 }
 
+int mouse_on_draw_area (void)
+{
+  int x, y;
+  mouse_position(&x, &y);
+  return ((x >= draw_area.x) && (x <= draw_area.x + draw_area.w)
+      &&  (y >= draw_area.y) && (y <= draw_area.y + draw_area.h));
+}
 
 void app_main (void)
 {
@@ -1228,13 +1235,15 @@ void app_main (void)
     if (mouse_left() == -1)
     {
       // pin root triangle
-      pin_root();
-      if (application.reset_btn == NULL)
+      if (mouse_on_draw_area())
       {
-        application.reset_btn = button_create ("reset\0", &application.reset);
-        button_setPosition(application.reset_btn, canvas->w-(BORDER_SIZE+BUTTON_WIDTH), BORDER_SIZE);
+        pin_root();
+        if (application.reset_btn == NULL)
+        {
+          application.reset_btn = button_create ("reset\0", &application.reset);
+          button_setPosition(application.reset_btn, canvas->w-(BORDER_SIZE+BUTTON_WIDTH), BORDER_SIZE);
+        }
       }
-
     }
 
   }
@@ -1264,19 +1273,22 @@ void app_main (void)
       {
         if (d20.current_free != NULL)
         {
-          pin();
-          if (chain_size(d20.faces) == 20)
+          if (mouse_on_draw_area())
           {
-            if (application.save_btn == NULL)
+            pin();
+            if (chain_size(d20.faces) == 20)
             {
-              application.save_btn = button_create ("save \0", &application.save);
-              button_setPosition(application.save_btn, canvas->w-(BORDER_SIZE+BUTTON_WIDTH), 2*BORDER_SIZE + BUTTON_HEIGHT);
-            }
-            if (application.colour_select == NULL)
-            {
-              unsigned fader_yPos = 3*BORDER_SIZE + 2*BUTTON_HEIGHT;
-              application.colour_select = fader_create(80.0, FADER_WIDTH, canvas->h - (BORDER_SIZE + fader_yPos), &application.negate_rate);
-              fader_setPos(application.colour_select, canvas->w - (BORDER_SIZE + BUTTON_WIDTH), fader_yPos);
+              if (application.save_btn == NULL)
+              {
+                application.save_btn = button_create ("save \0", &application.save);
+                button_setPosition(application.save_btn, canvas->w-(BORDER_SIZE+BUTTON_WIDTH), 2*BORDER_SIZE + BUTTON_HEIGHT);
+              }
+              if (application.colour_select == NULL)
+              {
+                unsigned fader_yPos = 3*BORDER_SIZE + 2*BUTTON_HEIGHT;
+                application.colour_select = fader_create(80.0, FADER_WIDTH, canvas->h - (BORDER_SIZE + fader_yPos), &application.negate_rate);
+                fader_setPos(application.colour_select, canvas->w - (BORDER_SIZE + BUTTON_WIDTH), fader_yPos);
+              }
             }
           }
         }
