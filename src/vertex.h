@@ -25,6 +25,8 @@
 
   vtx2i_t *make_vtx2i_from_vtx2d (vtx2d_t *src);
 
+  int equal_vertices (vtx2d_t *A, vtx2d_t *B, double acc);
+  vtx2d_t *find_vector_opposing (vtx2d_t *anchor1, vtx2d_t *anchor2, vtx2d_t *point);
 
   /*
    *  Five-point vertex types

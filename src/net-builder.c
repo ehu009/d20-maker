@@ -20,15 +20,6 @@
 extern SDL_Rect draw_area;
 
 
-//  distance between two points
-double distance (double x1, double y1, double x2, double y2)
-{ //  pythagorean root of squared sides summed
-  double dx = x2 - x1, dy = y2 - y1;
-  dx *= dx;
-  dy *= dy;
-  return sqrt (dx + dy);
-}
-
 
 int approximates (double test, double source, double accuracy)
 {
@@ -403,12 +394,6 @@ void draw_list (chain_t *list, tripoint_draw_func draw_func)
 }
 
 
-int adjacent_positions (vtx2d_t *A, vtx2d_t *B, double adjacency, double acc)
-{
-  double dist;
-  dist = distance(A->pts[0], A->pts[1], B->pts[0], B->pts[1]);
-  return approximates(dist, adjacency, acc);
-}
 
 
 struct line
@@ -416,7 +401,11 @@ struct line
   vtx2d_t *A, *B;
 };
 
-
+int equal_lines (struct line *A, struct line *B)
+{
+  return ((A->A == B->A && A->B == B->B)
+      ||  (A->A == B->B && A->B == B->A));
+}
 
 char line_exists (struct line *ptr)
 {
@@ -427,8 +416,7 @@ char line_exists (struct line *ptr)
   char exists = 0;
   do
   {
-    if ((cur->A == ptr->A && cur->B == ptr->B)
-        ||  (cur->A == ptr->B && cur->B == ptr->A))
+    if (equal_lines(cur, ptr))
     {
       exists ++;
       break;
@@ -440,6 +428,45 @@ char line_exists (struct line *ptr)
   return exists;
 }
 
+void copy_triangles (SDL_Surface *dst)
+{
+  chainslider_t *s = make_chainslider (d20.faces);
+  tripoint_t *start, *cur;
+  start = slider_current (s);
+  cur = start;
+  do
+  {
+    triangle_t t;
+    read_triangle_from_tripoint(cur, &t);
+    transfer_triangle(&t, dst, &draw_area);
+
+    slider_procede (s);
+    cur = slider_current (s);
+  }
+  while (cur != start);
+  free_chainslider(s);
+}
+
+void draw_lines (void)
+{
+  chainslider_t *s = make_chainslider(d20.lines);
+
+  struct line *start, *cur;
+  start = slider_current (s);
+  cur = start;
+  do
+  {
+    vtx2i_t A, B;
+    get_vtx2i_from_vtx2d(cur->A, &A);
+    get_vtx2i_from_vtx2d(cur->B, &B);
+    draw_line2(canvas, &A, &B, divertPixel, 0);
+
+    slider_procede (s);
+    cur = slider_current (s);
+  }
+  while (cur != start);
+  free_chainslider(s);
+}
 
 
 void end_draw (void)
@@ -452,52 +479,16 @@ void end_draw (void)
     surf = SDL_CreateRGBSurface (0, draw_area.w, draw_area.h, 32, 0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000);
   #endif
 
-  uint32_t filler = SDL_MapRGBA(surf->format, 0,0,0,0xff);
+  COLOR filler = SDL_MapRGBA(surf->format, 0,0,0,0xff);
   SDL_FillRect(surf, NULL, filler);
-  chainslider_t *slider, *line_slider = NULL;
 
 
-  {
-    slider = make_chainslider (d20.faces);
-    tripoint_t *start, *cur;
-    start = slider_current (slider);
-    cur = start;
-    do
-    {
-      triangle_t t;
-      read_triangle_from_tripoint(cur, &t);
-      transfer_triangle(&t, surf, &draw_area);
-
-      slider_procede (slider);
-      cur = slider_current (slider);
-    }
-    while (cur != start);
-
-    free_chainslider(slider);
-  }
+  copy_triangles(surf);
 
   SDL_BlitSurface (surf, NULL, canvas, &draw_area);
   SDL_FreeSurface (surf);
 
-  {
-    if (line_slider == NULL)
-      line_slider = make_chainslider(d20.lines);
-    struct line *start, *cur;
-    start = slider_current (line_slider);
-    cur = start;
-    do
-    {
-      vtx2i_t A, B;
-      get_vtx2i_from_vtx2d(cur->A, &A);
-      get_vtx2i_from_vtx2d(cur->B, &B);
-      draw_line2(canvas, &A, &B, divertPixel, 0);
-
-      slider_procede (line_slider);
-      cur = slider_current (line_slider);
-    }
-    while (cur != start);
-    free_chainslider(line_slider);
-  }
+  draw_lines();
 }
 
 void app_draw (void)
@@ -779,23 +770,6 @@ slot_t *find_slot_opposing (slot_t *anchor1, slot_t *anchor2, slot_t *opposer)
   return r;
 }
 
-vtx2d_t *find_vector_opposing (vtx2d_t *anchor1, vtx2d_t *anchor2, vtx2d_t *opposer)
-{
-  vtx2d_t middle = {.pts = {anchor2->pts[0] - anchor1->pts[0], anchor2->pts[1] - anchor1->pts[1]}};
-  middle.pts[0] /= 2;
-  middle.pts[1] /= 2;
-  middle.pts[0] += anchor1->pts[0];
-  middle.pts[1] += anchor1->pts[1];
-
-  vtx2d_t *vector = malloc (sizeof(vtx2d_t));
-  *vector = (vtx2d_t) {.pts = {opposer->pts[0] - middle.pts[0], opposer->pts[1] - middle.pts[1]}};
-  vector->pts[0] *= -1;
-  vector->pts[1] *= -1;
-  vector->pts[0] += middle.pts[0];
-  vector->pts[1] += middle.pts[1];
-  return vector;
-}
-
 
 
 
@@ -901,10 +875,6 @@ int equal_faces (tripoint_t *A, tripoint_t *B)
   return (eq == 3);
 }
 
-int equal_vertices (vtx2d_t *A, vtx2d_t *B, double acc)
-{
-  return (approximates(A->pts[0], B->pts[0], acc) && approximates(A->pts[1], B->pts[1], acc));
-}
 
 vtx2d_t *position_exists (vtx2d_t *p)
 {
