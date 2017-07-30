@@ -416,7 +416,7 @@ struct line
   vtx2d_t *A, *B;
 };
 
-char lines_drawn = 0;
+
 
 char line_exists (struct line *ptr)
 {
@@ -467,53 +467,7 @@ void end_draw (void)
       triangle_t t;
       read_triangle_from_tripoint(cur, &t);
       transfer_triangle(&t, surf, &draw_area);
-      if (!lines_drawn)
-      {
-        struct line *a, *b, *c;
-        a = malloc (sizeof (struct line));
-        b = malloc (sizeof (struct line));
-        c = malloc (sizeof (struct line));
-        a->A = cur->pA;
-        a->B = cur->pB;
-        b->A = cur->pB;
-        b->B = cur->pC;
-        c->A = cur->pA;
-        c->B = cur->pC;
-        if (d20.lines == NULL)
-        {
-          d20.lines = make_chain(a);
-          line_slider = make_chainslider(d20.lines);
-          slider_insert_after(line_slider, b);
-          slider_insert_after(line_slider, c);
-        }
-        else
-        {
-          if (line_exists(a))
-          {
-            free(a);
-          }
-          else
-          {
-            slider_insert_after(line_slider, a);
-          }
-          if (line_exists(b))
-          {
-            free(b);
-          }
-          else
-          {
-            slider_insert_after(line_slider, b);
-          }
-          if (line_exists(c))
-          {
-            free(c);
-          }
-          else
-          {
-            slider_insert_after(line_slider, c);
-          }
-        }
-      }
+
       slider_procede (slider);
       cur = slider_current (slider);
     }
@@ -542,7 +496,6 @@ void end_draw (void)
       cur = slider_current (line_slider);
     }
     while (cur != start);
-    lines_drawn = 1;
     free_chainslider(line_slider);
   }
 }
@@ -1113,6 +1066,48 @@ void create_neighbor_triangles_for (tripoint_t *p)
   free_chainslider(slider);
 }
 
+void add_lines_for (tripoint_t *t)
+{
+  struct line *a, *b, *c;
+  a = malloc (sizeof (struct line));
+  b = malloc (sizeof (struct line));
+  c = malloc (sizeof (struct line));
+  a->A = t->pA;
+  a->B = t->pB;
+  b->A = t->pB;
+  b->B = t->pC;
+  c->A = t->pA;
+  c->B = t->pC;
+  chainslider_t *s;
+
+  if (d20.lines == NULL)
+  {
+    d20.lines = make_chain(a);
+    s = make_chainslider(d20.lines);
+    slider_insert_after(s, b);
+    slider_insert_after(s, c);
+  }
+  else
+  {
+    s = make_chainslider(d20.lines);
+    void add_or_free_line (struct line *ptr)
+    {
+      if (line_exists(ptr))
+      {
+        free(ptr);
+      }
+      else
+      {
+        slider_insert_after(s, ptr);
+      }
+    }
+    add_or_free_line (a);
+    add_or_free_line (b);
+    add_or_free_line (c);
+  }
+  free(s);
+}
+
 void pin (void)
 {
   tripoint_t *anchor = d20.current_free;
@@ -1146,6 +1141,9 @@ void pin (void)
   while (cur != start);
 
   create_neighbor_triangles_for (anchor);
+
+  add_lines_for (anchor);
+
 
   //  remove duplicates + anchor
   cur = slider_current (slider);
