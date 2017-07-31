@@ -1,6 +1,8 @@
 #include  <stdlib.h>
 #include  <string.h>
-
+#ifdef _WIN32
+  #include <malloc.h>
+#endif
 
 #include  "button.h"
 #include  "font.h"

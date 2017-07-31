@@ -1,5 +1,8 @@
 #include  <stdlib.h>
 #include <stdio.h>
+#ifdef _WIN32
+  #include <malloc.h>
+#endif
 
 #include  "fader.h"
 #include  "colours.h"
