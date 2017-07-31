@@ -29,7 +29,7 @@ button_t *button_create (const char *txt1, unsigned *value)
     return button;
 
   SDL_Surface *t1;
-  t1 = TTF_RenderText_Solid (font, txt1, FONT_COLOUR);
+  t1 = TTF_RenderText_Solid (font, txt1, FONT_COLOUR_WHITE);
   TTF_CloseFont (font);
 
   if (t1 == NULL)

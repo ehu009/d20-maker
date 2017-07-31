@@ -102,7 +102,7 @@ void fader_draw (fader_t *slide)
     else
       sprintf (text, "%.1f", slide->position);
 
-    SDL_Surface *tmp_surf = TTF_RenderText_Solid (slide->font, text, FONT_COLOUR);
+    SDL_Surface *tmp_surf = TTF_RenderText_Solid (slide->font, text, FONT_COLOUR_WHITE);
     if (tmp_surf == NULL)
       printf ("TTF_RenderText_Solid: \"%s\"\n", TTF_GetError ());
     else
