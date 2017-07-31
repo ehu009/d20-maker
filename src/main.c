@@ -4,7 +4,7 @@
 #include    "SDL2/SDL_image.h"
 #include    "SDL2/SDL_ttf.h"
 
-
+#include "colours.h"
 #include "net-builder.h"
 
 char *default_path = "default.jpg\0";
@@ -18,7 +18,7 @@ const uint32_t update_interval = 1000/64;
 static uint32_t draw_callback (uint32_t interval, void *param);
 static uint32_t update_callback (uint32_t interval, void *param);
 
-
+unsigned alpha_mask;
 
 SDL_Window *myWindow = NULL;
 #define WINDOW_TITLE  "Icosahedron maker\0"
@@ -147,6 +147,9 @@ int init (void)
   canvas = SDL_GetWindowSurface (myWindow);
   if (canvas == NULL)
     SDL_ERROR ("SDL_GetWindowSurface\0")
+
+  alpha_mask = canvas->format->Rmask | canvas->format->Gmask | canvas->format->Bmask;
+  alpha_mask ^= 0xffffffff;
 
   return 1;
 }
