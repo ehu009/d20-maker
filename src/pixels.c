@@ -8,13 +8,13 @@
         ||  (y < 0)
 //  Knowing how pixels are represented in memory
 #define   PIXEL_AT(x, y, surface)       \
-    (COLOR *) surface->pixels + y*surface->pitch/4 + x
+    (COLOUR *) surface->pixels + y*surface->pitch/4 + x
 
 
-COLOR getPixel (SDL_Surface *src,
+COLOUR getPixel (SDL_Surface *src,
     vtx2i_t *p)
 { //  Read pixel value from surface
-  COLOR *bufp;
+  COLOUR *bufp;
   int x = p->pts[0], y = p->pts[1];
   if (OUT_OF_BOUNDS(x, y, src))
     return 0;
@@ -24,12 +24,12 @@ COLOR getPixel (SDL_Surface *src,
 
 void setPixel (SDL_Surface *dst,
     vtx2i_t *p,
-    COLOR color)
+    COLOUR color)
 { //  Change pixel value for surface
-  COLOR *bufp;
+  COLOUR *bufp;
   int x = p->pts[0], y = p->pts[1];
   if (OUT_OF_BOUNDS(x, y, dst))
     return;
-  bufp = (COLOR *) dst->pixels + y*dst->pitch/4 + x;
+  bufp = (COLOUR *) dst->pixels + y*dst->pitch/4 + x;
   *bufp = color;
 }

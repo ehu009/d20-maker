@@ -1,11 +1,13 @@
 #include  <stdlib.h>
 #include  <string.h>
 
-#include  "SDL2/SDL_ttf.h"
 
 #include  "button.h"
+#include  "font.h"
+#include  "colours.h"
 
 enum {BUTTON_OVER = 1, BUTTON_DOWN = 2, BUTTON_SWITCH = 4};
+
 
 struct button_switch
 {
@@ -22,12 +24,12 @@ button_t *button_create (const char *txt1, unsigned *value)
 
   button_t *button = NULL;
 
-  TTF_Font *font = TTF_OpenFont ("cour.ttf", 12);
+  TTF_Font *font = FONT_DEFAULT;
   if (font == NULL)
     return button;
 
   SDL_Surface *t1;
-  t1 = TTF_RenderText_Solid (font, txt1, (SDL_Color) {0,0,0});
+  t1 = TTF_RenderText_Solid (font, txt1, FONT_COLOUR);
   TTF_CloseFont (font);
 
   if (t1 == NULL)
@@ -112,22 +114,20 @@ void button_update (button_t *button)
   {
     button->status = 0;
   }
-  /*
-  return ((button->status & BUTTON_SWITCH) != 0);
-  */
 }
+
 
 void button_draw (button_t *button)
 {
   if (button->status & BUTTON_OVER)
   {
     if (button->status & BUTTON_DOWN)
-      SDL_FillRect (canvas, &button->rect, 0x00ffff);
+      SDL_FillRect (canvas, &button->rect, BUTTON_COLOUR_DOWN);
     else
-      SDL_FillRect (canvas, &button->rect, 0xffffff);
+      SDL_FillRect (canvas, &button->rect, BUTTON_COLOUR_OVER);
   }
   else
-    SDL_FillRect (canvas, &button->rect, 0xff0000);
+    SDL_FillRect (canvas, &button->rect, BUTTON_COLOUR_DEFAULT);
 
   SDL_Rect tmp_rect = {
     .x = button->rect.x+5,.y = button->rect.y+5

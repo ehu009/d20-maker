@@ -31,7 +31,7 @@ void draw_line (SDL_Surface *surface,
     int x1, int y1,
     int x2, int y2,
     plot_func plot,
-    COLOR color)
+    COLOUR color)
 { //  Bresenham algorithm
   int frac;
   int x = x1, dx = x2 - x1, stepx = 1,
@@ -69,7 +69,7 @@ void draw_line (SDL_Surface *surface,
 void draw_line2 (SDL_Surface *surface,
     vtx2i_t *A, vtx2i_t *B,
     plot_func plot,
-    COLOR color)
+    COLOUR color)
 { //  Bresenham algorithm
   int frac;
   vtx2i_t p1 = *A, p2 = *B;

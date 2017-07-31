@@ -329,7 +329,7 @@ void draw_triangle_outline (tripoint_t *t)
   draw_triangle (&tmp, invertPixel, 0);
 }
 
-void draw_triangle_coloured (tripoint_t *t, COLOR colour)
+void draw_triangle_coloured (tripoint_t *t, COLOUR colour)
 {
   triangle_t tmp;
   read_triangle_from_tripoint(t, &tmp);
@@ -342,21 +342,12 @@ void draw_triangle_coloured (tripoint_t *t, COLOR colour)
 
 
 
-#define   CLR_SELECTED_PINNED   0xff000000
-#define   CLR_SELECTED_UNPINNED 0xffff0000
-
-
 void pinned_list_drawing (tripoint_t *t)
 {
-  if (application.status == APP_END)
-    draw_triangle_outline (t);
+  if (t != d20.current_used)
+    draw_triangle_coloured (t, TRIANGLE_COLOUR_PINNED);
   else
-  {
-    if (t != d20.current_used)
-      draw_triangle_coloured (t, CLR_SELECTED_PINNED);
-    else
-      draw_triangle_transparent (t);
-  }
+    draw_triangle_transparent (t);
 }
 
 void unpinned_list_drawing (tripoint_t *t)
@@ -364,7 +355,7 @@ void unpinned_list_drawing (tripoint_t *t)
   if (t != d20.current_free)
     draw_triangle_transparent (t);
   else
-    draw_triangle_coloured (t, CLR_SELECTED_UNPINNED);
+    draw_triangle_coloured (t, TRIANGLE_COLOUR_UNPINNED);
 }
 
 void finished_list_drawing (tripoint_t *t)
@@ -479,7 +470,7 @@ void end_draw (void)
     surf = SDL_CreateRGBSurface (0, draw_area.w, draw_area.h, 32, 0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000);
   #endif
 
-  COLOR filler = SDL_MapRGBA(surf->format, 0,0,0,0xff);
+  COLOUR filler = SDL_MapRGBA(surf->format, 0,0,0,0xff);
   SDL_FillRect(surf, NULL, filler);
 
 
@@ -498,7 +489,7 @@ void app_draw (void)
   fflush(stdout);
   #endif
 
-  SDL_FillRect (canvas, NULL, 0x0ff);
+  SDL_FillRect (canvas, NULL, COLOUR_BACKGROUND);
   SDL_BlitSurface (src_image, NULL, canvas, &draw_area);
 
   if (application.status == APP_MAIN)

@@ -1,8 +1,9 @@
 #include  <stdlib.h>
 #include <stdio.h>
 
-#include  "SDL2/SDL_ttf.h"
 #include  "fader.h"
+#include  "colours.h"
+#include  "font.h"
 #include  "mouse_app.h"
 
 
@@ -14,30 +15,13 @@ struct fader_bar
   SDL_Surface *surface;
   SDL_Rect  bar;
   TTF_Font  *font;
-  SDL_Color font_color;
   unsigned  posx, posy;
   double    position;
   double    *value;
   unsigned  status;
-  unsigned clr1, clr2;
+
   unsigned diff;
 };
-
-
-
-int fader_setFont (fader_t *slide, const char *font, unsigned font_size, SDL_Color font_color)
-{
-  if (slide->font != NULL)
-  {
-    TTF_CloseFont(slide->font);
-  }
-  slide->font = TTF_OpenFont (font, font_size);
-  slide->font_color = font_color;
-  if (slide->font == NULL)
-    return -1;
-  return 0;
-}
-
 
 
 fader_t *fader_create (double start, int width, int height, double *value)
@@ -50,16 +34,15 @@ fader_t *fader_create (double start, int width, int height, double *value)
   {
     slide->posx = 0;
     slide->posy = 0;
-    slide->font_color = (SDL_Color) {0,0,0};
+
     slide->position = start;
     slide->font = NULL;
     slide->bar    = (SDL_Rect) {.x=0, .y=0, .w=width, .h=height};
     slide->surface  = surf;
     slide->status = 0;
-    slide->clr1 = 0xff0000;
-    slide->clr2 = 0x0ff;
+
     slide->value = value;
-    fader_setFont(slide, "cour.ttf\0", 12, (SDL_Color) {0,0,0});
+    slide->font = FONT_DEFAULT;
   }
   return slide;
 }
@@ -92,14 +75,23 @@ void get_button_rect (fader_t *slide, SDL_Rect *buf)
 }
 
 
-void _fader_draw (fader_t *slide, SDL_Surface *screen, unsigned bar_color, unsigned btn_color)
+
+void fader_draw (fader_t *slide)
 {
   int horizontal = (slide->bar.w > slide->bar.h);
-  SDL_FillRect (slide->surface, NULL, bar_color);
+  SDL_FillRect (slide->surface, NULL, FADER_COLOUR_BAR);
 
   SDL_Rect button_rect;
   get_button_rect(slide, &button_rect);
-  SDL_FillRect (slide->surface, &button_rect, btn_color);
+  COLOUR btn_clr;
+  if (SLIDESTATUS_OVER & slide->status)
+    btn_clr = FADER_COLOUR_OVER;
+  else
+    btn_clr = FADER_COLOUR_DEFAULT;
+  if (SLIDESTATUS_DOWN & slide->status)
+    btn_clr = FADER_COLOUR_DOWN;
+
+  SDL_FillRect (slide->surface, &button_rect, btn_clr);
 
   if (slide->font != NULL)
   {
@@ -110,7 +102,7 @@ void _fader_draw (fader_t *slide, SDL_Surface *screen, unsigned bar_color, unsig
     else
       sprintf (text, "%.1f", slide->position);
 
-    SDL_Surface *tmp_surf = TTF_RenderText_Solid (slide->font, text, slide->font_color);
+    SDL_Surface *tmp_surf = TTF_RenderText_Solid (slide->font, text, FONT_COLOUR);
     if (tmp_surf == NULL)
       printf ("TTF_RenderText_Solid: \"%s\"\n", TTF_GetError ());
     else
@@ -143,7 +135,7 @@ void _fader_draw (fader_t *slide, SDL_Surface *screen, unsigned bar_color, unsig
   slide->bar.x += slide->posx;
   slide->bar.y += slide->posy;
 
-  SDL_BlitSurface (slide->surface, NULL, screen, &slide->bar);
+  SDL_BlitSurface (slide->surface, NULL, canvas, &slide->bar);
 
   slide->bar.x -= slide->posx;
   slide->bar.y -= slide->posy;
@@ -202,21 +194,8 @@ void fader_update (fader_t *slide)
 
   }
 
-
-  if (SLIDESTATUS_OVER & slide->status)
-  {
-    slide->clr1 = 0x0ff0000;
-    slide->clr2 = 0x0ffffff;
-  }
-  else
-  {
-    slide->clr1 = 0x0ff0000;
-    slide->clr2 = 0x0ff;
-  }
   if (SLIDESTATUS_DOWN & slide->status)
   {
-    slide->clr1 = 0x0ff0000;
-    slide->clr2 = 0x0ffff;
 
     int *tester = &mouseY;
     unsigned bMin, bMax;
@@ -256,10 +235,6 @@ void fader_update (fader_t *slide)
   *slide->value = slide->position;
 }
 
-void fader_draw (fader_t *slide)
-{
-  _fader_draw (slide, canvas, slide->clr1, slide->clr2);
-}
 
 void  fader_free (fader_t *slide)
 {
