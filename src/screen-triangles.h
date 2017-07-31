@@ -12,9 +12,9 @@
   } triangle_t;
 
 
-  void draw_triangle (triangle_t *t, plot_func plot, COLOR color);
+  void draw_triangle (triangle_t *t, plot_func plot, COLOUR color);
 
-  void fill_triangle (triangle_t *t, plot_func plot, COLOR color);
+  void fill_triangle (triangle_t *t, plot_func plot, COLOUR color);
 
   int triangle_contains (triangle_t *t, vtx2i_t point);
 

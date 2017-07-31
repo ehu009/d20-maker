@@ -40,7 +40,7 @@ SDL_Rect *get_bounds_of_triangle (vtx2d_t *a, vtx2d_t *b, vtx2d_t *c)
   return ptr;
 }
 
-void draw_triangle (triangle_t *t, plot_func plot, COLOR color)
+void draw_triangle (triangle_t *t, plot_func plot, COLOUR color)
 {
   vtx2i_t A, B, C;
   get_vtx2i_from_vtx2d (t->pts[0], &A);
@@ -53,7 +53,7 @@ void draw_triangle (triangle_t *t, plot_func plot, COLOR color)
 }
 
 
-void fill_triangle (triangle_t *t, plot_func plot, COLOR color)
+void fill_triangle (triangle_t *t, plot_func plot, COLOUR color)
 {
   vtx2d_t *a = t->pts[0],
       *b = t->pts[1],
@@ -82,7 +82,7 @@ void fill_triangle (triangle_t *t, plot_func plot, COLOR color)
   B.pts[1] -= rect->y;
   C.pts[1] -= rect->y;
 
-  COLOR pixel, fill = color,
+  COLOUR pixel, fill = color,
       markup = SDL_MapRGBA(surf->format, 0xff,0xff,0,0),
       bg = SDL_MapRGBA(surf->format, 0,0,0,0);
   if (plot != invertPixel)
@@ -183,7 +183,7 @@ int triangle_contains (triangle_t *t, vtx2i_t point)
   point.pts[0] -= rect->x;
   point.pts[1] -= rect->y;
 
-  COLOR pixel, markup = SDL_MapRGBA(surf->format, 0xff, 0x00, 0xff, 0x00);
+  COLOUR pixel, markup = SDL_MapRGBA(surf->format, 0xff, 0x00, 0xff, 0x00);
   draw_line2 (surf, &A, &B, colourPixel, markup);
   draw_line2 (surf, &B, &C, colourPixel, markup);
   draw_line2 (surf, &C, &A, colourPixel, markup);
@@ -245,7 +245,7 @@ void transfer_triangle (triangle_t *t, SDL_Surface *dst, SDL_Rect *dst_rect)
   B.pts[1] -= rect->y;
   C.pts[1] -= rect->y;
 
-  COLOR pixel,
+  COLOUR pixel,
       markup = SDL_MapRGBA(surf->format, 0xff,0xff,0,0),
       bg = SDL_MapRGBA(surf->format, 0,0,0,0);
   SDL_FillRect(surf, NULL,bg);
