@@ -3,6 +3,7 @@
 
   #define   COLOUR   uint32_t
 
+  extern unsigned alpha_mask;
 
   #define   FONT_COLOUR   (SDL_Color) {0,0,0}
 
