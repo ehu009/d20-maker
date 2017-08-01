@@ -8,13 +8,20 @@
 #include  "font.h"
 #include  "colours.h"
 
-enum {BUTTON_OVER = 1, BUTTON_DOWN = 2, BUTTON_SWITCH = 4};
+
+#define   TEXT_MARGIN 5
+
+enum {BUTTON_OVER=1, BUTTON_DOWN=2};
 
 
 struct button_switch
 {
+  //  drawing
   SDL_Rect rect;
-  SDL_Surface *text1;
+  TTF_Font *font;
+  SDL_Surface *surf;
+
+  //  function
   char status;
   unsigned *dst;
 };
@@ -24,47 +31,37 @@ struct button_switch
 button_t *button_create (const char *txt1, unsigned *value)
 {
 
-  button_t *button = NULL;
+  button_t *button = (button_t *) malloc (sizeof (button_t));
+  if (button == NULL)
+    return button;
 
   TTF_Font *font = FONT_DEFAULT;
   if (font == NULL)
     return button;
+  button->font = font;
 
-  SDL_Surface *t1;
-  t1 = TTF_RenderText_Solid (font, txt1, FONT_COLOUR_WHITE);
-  TTF_CloseFont (font);
-
-  if (t1 == NULL)
+  SDL_Surface *surface = TTF_RenderText_Solid (font, txt1, FONT_COLOUR_WHITE);
+  if (surface == NULL)
   {
-    SDL_FreeSurface (t1);
+    TTF_CloseFont (font);
     return button;
   }
+  button->surf = surface;
 
-  button = (button_t *) malloc (sizeof (button_t));
-  if (button != NULL)
-  {
-    button->dst = value;
-    button->status = *value;
-    button->text1 = t1;
-
-    button->rect = (SDL_Rect) {
-      .x = 0, .y = 0,
-      .w = t1->w, .h = t1->h
-    };
-    button->rect.w += 10;
-    button->rect.h += 10;
-  }
-  else
-  {
-    SDL_FreeSurface (t1);
-  }
-
+  button->dst = value;
+  button->status = 0;
+  button->rect = (SDL_Rect) {
+    .x = 0, .y = 0,
+    .w = surface->w + TEXT_MARGIN*2,
+    .h = surface->h + TEXT_MARGIN*2
+  };
   return button;
 }
 
 void button_free (button_t *button)
 {
-  SDL_FreeSurface (button->text1);
+  TTF_CloseFont (button->font);
+  SDL_FreeSurface (button->surf);
   free(button);
 }
 
@@ -78,64 +75,64 @@ void button_setPosition (button_t *button, unsigned _x, unsigned _y)
 
 
 
-
-
 void button_update (button_t *button)
 {
   int mouseX, mouseY;
   mouse_position(&mouseX, &mouseY);
-  int mouseUp = (mouse_left() == -1),
-      mouseDown = (mouse_left() == 1);
+
   *button->dst = 0;
 
-  if (((mouseX >= button->rect.x) &&  (mouseX <= button->rect.x + button->rect.w))
-      && ((mouseY >= button->rect.y)  &&  (mouseY <= button->rect.y + button->rect.h)))
+  if (!(button->status & BUTTON_OVER))
   {
-    if (!(button->status & BUTTON_OVER))
-      button->status |= BUTTON_OVER;
-    if(button->status & BUTTON_OVER)
+
+    if (((mouseX >= button->rect.x)
+              &&  (mouseX <= button->rect.x + button->rect.w))
+          && ((mouseY >= button->rect.y)
+              &&  (mouseY <= button->rect.y + button->rect.h)))
     {
-      if (!(button->status & BUTTON_DOWN))
+      button->status |= BUTTON_OVER;
+    }
+  }
+
+  int mouseUp = (mouse_left() == -1),
+      mouseDown = (mouse_left() == 1);
+
+  if (button->status & BUTTON_OVER)
+  {
+    if (!(button->status & BUTTON_DOWN))
+    {
+      if (mouseDown)
       {
-        if (mouseDown)
-        {
-          button->status |= BUTTON_DOWN;
-        }
-      }
-      else
-      {
-        if (mouseUp)
-        {
-          button->status ^= BUTTON_DOWN;
-          *button->dst = 1;
-        }
+        button->status = BUTTON_DOWN;
       }
     }
   }
-  else
+
+  if (button->status & BUTTON_DOWN)
   {
-    button->status = 0;
+    if (mouseUp)
+    {
+      button->status ^= BUTTON_DOWN;
+      *button->dst = 1;
+    }
   }
 }
 
-
 void button_draw (button_t *button)
 {
-  if (button->status & BUTTON_OVER)
-  {
-    if (button->status & BUTTON_DOWN)
-      SDL_FillRect (canvas, &button->rect, BUTTON_COLOUR_DOWN);
-    else
-      SDL_FillRect (canvas, &button->rect, BUTTON_COLOUR_OVER);
-  }
+  if (button->status == BUTTON_OVER)
+    SDL_FillRect (canvas, &button->rect, BUTTON_COLOUR_OVER);
+  else
+  if (button->status == BUTTON_DOWN)
+    SDL_FillRect (canvas, &button->rect, BUTTON_COLOUR_DOWN);
   else
     SDL_FillRect (canvas, &button->rect, BUTTON_COLOUR_DEFAULT);
 
   SDL_Rect tmp_rect = {
-    .x = button->rect.x+5,.y = button->rect.y+5
+    .x = button->rect.x+TEXT_MARGIN,
+    .y = button->rect.y+TEXT_MARGIN,
+    .w = button->surf->w,
+    .h = button->surf->h
   };
-
-  tmp_rect.w = button->text1->w;
-  tmp_rect.h = button->text1->h;
-  SDL_BlitSurface (button->text1, NULL, canvas, &tmp_rect);
+  SDL_BlitSurface (button->surf, NULL, canvas, &tmp_rect);
 }
