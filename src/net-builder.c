@@ -20,6 +20,15 @@
 extern SDL_Rect draw_area;
 
 
+int mouse_on_draw_area (void)
+{
+  int x, y;
+  mouse_position(&x, &y);
+  return ((x >= draw_area.x) && (x <= draw_area.x + draw_area.w)
+      &&  (y >= draw_area.y) && (y <= draw_area.y + draw_area.h));
+}
+
+
 
 int approximates (double test, double source, double accuracy)
 {
@@ -27,6 +36,38 @@ int approximates (double test, double source, double accuracy)
       && (test >= source - accuracy);
 }
 #define FLOAT_ACC 2
+
+
+vtx2d_t *position_exists (vtx2d_t *p, chain_t *positions)
+{
+  vtx2d_t *ptr = NULL;
+
+  chainslider_t *slider = make_chainslider(positions);
+  vtx2d_t *start = slider_current(slider),
+      *cur = start;
+ // printf("started looking for preexcisting coordinate..");
+  do
+  {
+    if (equal_vertices(cur, p, 2.5))
+    {
+   //   printf("found duplicate coordinate vertex\n");
+      ptr = cur;
+      break;
+    }
+    slider_procede (slider);
+    cur = slider_current (slider);
+  }
+  while (cur != start);
+ // printf("\tdone\n");
+
+  if (ptr == NULL)
+    slider_insert_after(slider, p);
+
+  free_chainslider(slider);
+
+  return ptr;
+}
+
 
 
 typedef enum {APP_START, APP_MAIN, APP_END, APP_FREE} app_status;
@@ -71,6 +112,9 @@ int relocate_mode (void)
   }
   return application.relocate_mode;
 }
+
+
+
 
 
 #define NUM_D20_VTX   12
@@ -143,6 +187,119 @@ struct triangle_face
 
 typedef struct triangle_face face_t;
 
+
+
+void read_triangle_from_tripoint (face_t *src, triangle_t *dst)
+{
+  dst->pts[0] = src->pA;
+  dst->pts[1] = src->pB;
+  dst->pts[2] = src->pC;
+}
+
+
+
+
+void draw_triangle_transparent (face_t *t)
+{
+  triangle_t tmp;
+  read_triangle_from_tripoint(t, &tmp);
+  fill_triangle (&tmp, invertPixel, 0);
+}
+
+void draw_triangle_outline (face_t *t)
+{
+  triangle_t tmp;
+  read_triangle_from_tripoint(t, &tmp);
+  draw_triangle (&tmp, invertPixel, 0);
+}
+
+void draw_triangle_coloured (face_t *t, COLOUR colour)
+{
+  triangle_t tmp;
+  read_triangle_from_tripoint(t, &tmp);
+  fill_triangle (&tmp, colourPixel, colour);
+}
+
+void draw_triangle_on (face_t *t, SDL_Surface *dst, SDL_Rect *at)
+{
+  triangle_t buf;
+  read_triangle_from_tripoint(t, &buf);
+  transfer_triangle(&buf, dst, at);
+}
+
+
+int equal_faces (face_t *A, face_t *B)
+{
+  int eq = 0;
+  eq += (A->sA == B->sA);
+  eq += (A->sA == B->sB);
+  eq += (A->sA == B->sC);
+
+  eq += (A->sB == B->sA);
+  eq += (A->sB == B->sB);
+  eq += (A->sB == B->sC);
+
+  eq += (A->sC == B->sA);
+  eq += (A->sC == B->sB);
+  eq += (A->sC == B->sC);
+
+  return (eq == 3);
+}
+
+
+
+
+int already_pinned (face_t *t, chain_t *faces)
+{
+  int eq = 0;
+   chainslider_t *slider = make_chainslider(faces);
+  face_t *start = slider_current (slider),
+      *cur = start;
+
+  do
+  {
+    if (equal_faces(cur, t))
+    {
+      eq ++;
+      break;
+    }
+    slider_procede (slider);
+    cur = slider_current (slider);
+  }
+  while (cur != start);
+  free_chainslider(slider);
+  return eq;
+}
+
+
+
+face_t *find_current_selected (chain_t *list, vtx2i_t *mouse)
+{
+  chainslider_t *slider = make_chainslider (list);
+  face_t *start = slider_current (slider),
+      *cur = start,
+      *ret = NULL;
+
+  triangle_t tmp_triangle;
+  do
+  {
+    read_triangle_from_tripoint(cur, &tmp_triangle);
+    if (triangle_contains (&tmp_triangle, *mouse))
+    {
+      ret = cur;
+      break;
+    }
+    slider_procede (slider);
+    cur = slider_current (slider);
+  }
+  while (cur != start);
+  free_chainslider(slider);
+  return ret;
+}
+
+
+
+
 static struct
 {
   int x, y;
@@ -156,20 +313,13 @@ static struct
 } d20;
 
 
-struct line
-{
-  vtx2d_t *A, *B;
-};
 
-int equal_lines (struct line *A, struct line *B)
-{
-  return ((A->A == B->A && A->B == B->B)
-      ||  (A->A == B->B && A->B == B->A));
-}
 
-char line_exists (struct line *ptr)
+
+char line_exists (struct line *ptr, chain_t *lines)
 {
-  chainslider_t *s = make_chainslider(d20.lines);
+  chainslider_t *s = make_chainslider(lines);
+
   struct line *start, *cur;
   start = slider_current (s);
   cur = start;
@@ -185,7 +335,51 @@ char line_exists (struct line *ptr)
     cur = slider_current (s);
   }
   while (cur != start);
+  free (s);
   return exists;
+}
+
+
+void add_lines_for (face_t *t)
+{
+  struct line *a, *b, *c;
+  a = malloc (sizeof (struct line));
+  b = malloc (sizeof (struct line));
+  c = malloc (sizeof (struct line));
+  a->A = t->pA;
+  a->B = t->pB;
+  b->A = t->pB;
+  b->B = t->pC;
+  c->A = t->pA;
+  c->B = t->pC;
+  chainslider_t *s;
+
+  if (d20.lines == NULL)
+  {
+    d20.lines = make_chain(a);
+    s = make_chainslider(d20.lines);
+    slider_insert_after(s, b);
+    slider_insert_after(s, c);
+  }
+  else
+  {
+    s = make_chainslider(d20.lines);
+    void add_or_free_line (struct line *ptr)
+    {
+      if (line_exists(ptr, d20.lines))
+      {
+        free(ptr);
+      }
+      else
+      {
+        slider_insert_after(s, ptr);
+      }
+    }
+    add_or_free_line (a);
+    add_or_free_line (b);
+    add_or_free_line (c);
+  }
+  free(s);
 }
 
 
@@ -221,8 +415,57 @@ int resize_root (int diff)
 }
 
 
+int negate_byte_at (unsigned byte, unsigned mask, double rate)
+{
+  int pt = ((byte ^ 0xffffff) & mask) - (byte & mask);
+  pt *= rate;
+  pt += (byte & mask);
+  while (mask >0xff)
+  {
+    mask /= 0x100;
+    pt /= 0x100;
+  }
+  return pt;
+}
+
+void divertPixel (SDL_Surface *dst, vtx2i_t *p, unsigned color)
+{
+  vtx2i_t p2 = *p;
+  SDL_Rect clip_rect;
+  SDL_GetClipRect (canvas, &clip_rect);
+  if (clip_rect.x != 0)
+    p2.pts[0] += clip_rect.x;
+  if (clip_rect.y != 0)
+    p2.pts[1] += clip_rect.y;
+
+  unsigned clr = getPixel (canvas, &p2);
+  unsigned R, G, B;
+
+  R = negate_byte_at(clr, canvas->format->Rmask, application.negate_rate);
+  G = negate_byte_at(clr, canvas->format->Gmask, application.negate_rate);
+  B = negate_byte_at(clr, canvas->format->Bmask, application.negate_rate);
+
+  clr = SDL_MapRGBA(dst->format, R,G,B,0xff);
+  setPixel (dst, p, clr);
+}
 
 
+
+void free_list (chain_t *list)
+{
+  if (list == NULL)
+    return;
+  chainslider_t *slider = make_chainslider (list);
+  while (chain_size (list) > 1)
+  {
+    free((void *) slider_current(slider));
+    slider_procede(slider);
+    slider_remove_prev (slider);
+  }
+  free((void *) slider_current(slider));
+  free_chainslider (slider);
+  free_chain (list);
+}
 
 
 
@@ -294,21 +537,6 @@ void app_start (void)
 }
 
 
-void free_list (chain_t *list)
-{
-  if (list == NULL)
-    return;
-  chainslider_t *slider = make_chainslider (list);
-  while (chain_size (list) > 1)
-  {
-    free((void *) slider_current(slider));
-    slider_procede(slider);
-    slider_remove_prev (slider);
-  }
-  free((void *) slider_current(slider));
-  free_chainslider (slider);
-  free_chain (list);
-}
 
 
 void app_free (void)
@@ -333,80 +561,6 @@ void app_free (void)
 }
 
 
-
-void read_triangle_from_tripoint (face_t *src, triangle_t *dst)
-{
-  dst->pts[0] = src->pA;
-  dst->pts[1] = src->pB;
-  dst->pts[2] = src->pC;
-}
-
-int negate_byte_at (unsigned byte, unsigned mask, double rate)
-{
-  int pt = ((byte ^ 0xffffff) & mask) - (byte & mask);
-  pt *= rate;
-  pt += (byte & mask);
-  while (mask >0xff)
-  {
-    mask /= 0x100;
-    pt /= 0x100;
-  }
-  return pt;
-}
-
-void divertPixel (SDL_Surface *dst, vtx2i_t *p, unsigned color)
-{
-  vtx2i_t p2 = *p;
-  SDL_Rect clip_rect;
-  SDL_GetClipRect (canvas, &clip_rect);
-  if (clip_rect.x != 0)
-    p2.pts[0] += clip_rect.x;
-  if (clip_rect.y != 0)
-    p2.pts[1] += clip_rect.y;
-
-  unsigned clr = getPixel (canvas, &p2);
-  unsigned R, G, B;
-
-  R = negate_byte_at(clr, canvas->format->Rmask, application.negate_rate);
-  G = negate_byte_at(clr, canvas->format->Gmask, application.negate_rate);
-  B = negate_byte_at(clr, canvas->format->Bmask, application.negate_rate);
-
-  clr = SDL_MapRGBA(dst->format, R,G,B,0xff);
-  setPixel (dst, p, clr);
-}
-
-
-
-
-
-
-void draw_triangle_transparent (face_t *t)
-{
-  triangle_t tmp;
-  read_triangle_from_tripoint(t, &tmp);
-  fill_triangle (&tmp, invertPixel, 0);
-}
-
-void draw_triangle_outline (face_t *t)
-{
-  triangle_t tmp;
-  read_triangle_from_tripoint(t, &tmp);
-  draw_triangle (&tmp, invertPixel, 0);
-}
-
-void draw_triangle_coloured (face_t *t, COLOUR colour)
-{
-  triangle_t tmp;
-  read_triangle_from_tripoint(t, &tmp);
-  fill_triangle (&tmp, colourPixel, colour);
-}
-
-void draw_triangle_on (face_t *t, SDL_Surface *dst, SDL_Rect *at)
-{
-  triangle_t buf;
-  read_triangle_from_tripoint(t, &buf);
-  transfer_triangle(&buf, dst, at);
-}
 
 
 
@@ -461,15 +615,16 @@ void draw_list (chain_t *list, tripoint_draw_func draw_func)
 
 
 
-void copy_triangles (SDL_Surface *dst)
+void copy_triangles (chain_t *triangles, SDL_Surface *dst)
 {
-  chainslider_t *s = make_chainslider (d20.faces);
+  chainslider_t *s = make_chainslider (triangles);
   face_t *start, *cur;
   start = slider_current (s);
   cur = start;
   do
   {
-    draw_triangle_on(cur, canvas, &draw_area);
+    draw_triangle_on(cur, dst, &draw_area);
+
     slider_procede (s);
     cur = slider_current (s);
   }
@@ -477,16 +632,15 @@ void copy_triangles (SDL_Surface *dst)
   free_chainslider(s);
 }
 
-void draw_lines (void)
+void draw_lines (chain_t *lines)
 {
-  chainslider_t *s = make_chainslider(d20.lines);
+  chainslider_t *s = make_chainslider(lines);
 
   struct line *start, *cur;
   start = slider_current (s);
   cur = start;
   do
   {
-
     vtx2i_t A, B;
     get_vtx2i_from_vtx2d(cur->A, &A);
     get_vtx2i_from_vtx2d(cur->B, &B);
@@ -500,26 +654,33 @@ void draw_lines (void)
 }
 
 
-void end_draw (void)
+void _draw_end (void)
 {
-  SDL_Surface *surf = NULL;
+  SDL_Surface *surf = SDL_CreateRGBSurface (0, draw_area.w, draw_area.h, 32, canvas->format->Rmask, canvas->format->Gmask, canvas->format->Bmask, alpha_mask);
+  if (surf != NULL)
+  {
+    COLOUR filler = SDL_MapRGBA(surf->format, 0,0,0,0xff);
+    SDL_FillRect(surf, NULL, filler);
 
-  #if SDL_BYTEORDER == SDL_BIG_ENDIAN
-    surf = SDL_CreateRGBSurface (0, draw_area.w, draw_area.h, 32, 0xFF000000, 0x00FF0000, 0x0000FF00, 0x000000FF);
-  #else
-    surf = SDL_CreateRGBSurface (0, draw_area.w, draw_area.h, 32, 0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000);
-  #endif
+    copy_triangles(d20.faces, surf);
 
-  COLOUR filler = SDL_MapRGBA(surf->format, 0,0,0,0xff);
-  SDL_FillRect(surf, NULL, filler);
+    SDL_BlitSurface (surf, NULL, canvas, &draw_area);
+    SDL_FreeSurface (surf);
+  }
 
+}
 
-  copy_triangles(surf);
+void _draw_main(void)
+{
+  if (d20.faces == NULL)
+    draw_triangle_transparent (d20.current_free);
+  else
+  {
+    draw_list (d20.faces, pinned_list_drawing);
 
-  SDL_BlitSurface (surf, NULL, canvas, &draw_area);
-  SDL_FreeSurface (surf);
-
-  draw_lines();
+    if (d20.available != NULL)
+      draw_list (d20.available, unpinned_list_drawing);
+  }
 }
 
 void app_draw (void)
@@ -534,30 +695,21 @@ void app_draw (void)
 
   if (application.status == APP_MAIN)
   {
-    if (d20.faces == NULL)
-      draw_triangle_transparent (d20.current_free);
-    else
-    {
-      draw_list (d20.faces, pinned_list_drawing);
-      if (application.status != APP_END)
-      {
-        if (d20.available != NULL)
-          draw_list (d20.available, unpinned_list_drawing);
-      }
-    }
+    _draw_main();
   }
   if (application.status == APP_END)
   {
-    end_draw();
-    if (application.colour_select != NULL)
-    {
-
-      fader_draw(application.colour_select);
-
-    }
-    if ((application.save_btn != NULL) && (chain_size(d20.faces) == 20))
-      button_draw(application.save_btn);
+    _draw_end();
   }
+
+  if (application.colour_select != NULL)
+  {
+    fader_draw(application.colour_select);
+    draw_lines(d20.lines);
+  }
+  if ((application.save_btn != NULL) && (chain_size(d20.faces) == 20))
+    button_draw(application.save_btn);
+
   if (application.reset_btn != NULL)
     button_draw(application.reset_btn);
 
@@ -566,29 +718,6 @@ void app_draw (void)
   #endif
 }
 
-face_t *find_current_selected (chain_t *list, vtx2i_t *mouse)
-{
-  chainslider_t *slider = make_chainslider (list);
-  face_t *start = slider_current (slider),
-      *cur = start,
-      *ret = NULL;
-
-  triangle_t tmp_triangle;
-  do
-  {
-    read_triangle_from_tripoint(cur, &tmp_triangle);
-    if (triangle_contains (&tmp_triangle, *mouse))
-    {
-      ret = cur;
-      break;
-    }
-    slider_procede (slider);
-    cur = slider_current (slider);
-  }
-  while (cur != start);
-  free_chainslider(slider);
-  return ret;
-}
 
 void select_triangle (void)
 {
@@ -602,16 +731,13 @@ void select_triangle (void)
   face_t *new_cUsed = NULL, *new_cFree = NULL;
 
   new_cUsed = find_current_selected(d20.faces, &m);
+  if(d20.available != NULL)
+    new_cFree = find_current_selected(d20.available, &m);
 
-  if (new_cUsed == NULL)
-  {
-    if(d20.available != NULL)
-      new_cFree = find_current_selected(d20.available, &m);
-    if (d20.current_free != new_cFree)
-      d20.current_free = new_cFree;
-  }
-  if (d20.current_used != new_cUsed)
-    d20.current_used = new_cUsed;
+
+
+  d20.current_free = new_cFree;
+  d20.current_used = new_cUsed;
 
   #ifdef DEBUG
   printf("\tdone\n");
@@ -627,7 +753,7 @@ void adjust_root_coordinate (double *coordinate, double *error, int reference, i
     *coordinate = limit + ((reference - *error) + (*coordinate - reference));
 }
 
-int adjust_root_singleton (triangle_t *r, SDL_Rect *R)
+int limit_root_triangle (triangle_t *r, SDL_Rect *R)
 {
   double *lX = &r->pts[0]->pts[0], *lY = &r->pts[0]->pts[1],
       *hX = &r->pts[0]->pts[0], *hY = &r->pts[0]->pts[1];
@@ -736,13 +862,13 @@ void standard_root (triangle_t *dst)
   ptr->pts[1] = cY + d20.y;
 }
 
-int reposition_root_vertices (void)
+int reposition_root(void)
 {
   vtx2d_t a, b, c;
   triangle_t root = {.pts = {&a, &b, &c}};
 
   standard_root (&root);
-  if (adjust_root_singleton (&root, &draw_area))
+  if (limit_root_triangle (&root, &draw_area))
   {
 
     vtx2d_t *ptr;
@@ -858,172 +984,130 @@ void pin_root (void)
   create_root_neighbor('A');
   create_root_neighbor('B');
   create_root_neighbor('C');
+  add_lines_for(d20.current_free);
 
   d20.current_used = NULL;
   d20.current_free = NULL;
 }
 
 
-int equal_faces (face_t *A, face_t *B)
-{
-  int eq = 0;
-  eq += (A->sA == B->sA);
-  eq += (A->sA == B->sB);
-  eq += (A->sA == B->sC);
-
-  eq += (A->sB == B->sA);
-  eq += (A->sB == B->sB);
-  eq += (A->sB == B->sC);
-
-  eq += (A->sC == B->sA);
-  eq += (A->sC == B->sB);
-  eq += (A->sC == B->sC);
-
-  return (eq == 3);
-}
-
-
-vtx2d_t *position_exists (vtx2d_t *p)
-{
-  vtx2d_t *ptr = NULL;
-
-  chainslider_t *slider = make_chainslider(d20.positions);
-  vtx2d_t *start = slider_current(slider),
-      *cur = start;
- // printf("started looking for preexcisting coordinate..");
-  do
-  {
-    if (equal_vertices(cur, p, 2.5))
-    {
-   //   printf("found duplicate coordinate vertex\n");
-      ptr = cur;
-      break;
-    }
-    slider_procede (slider);
-    cur = slider_current (slider);
-  }
-  while (cur != start);
- // printf("\tdone\n");
-
-  if (ptr == NULL)
-    slider_insert_after(slider, p);
-
-  free_chainslider(slider);
-
-  return ptr;
-}
-
-
-int already_pinned (face_t *t)
-{
-  int eq = 0;
-   chainslider_t *slider = make_chainslider(d20.faces);
-  face_t *start = slider_current (slider),
-      *cur = start;
-
-  do
-  {
-    if (equal_faces(cur, t))
-    {
-      eq ++;
-      break;
-    }
-    slider_procede (slider);
-    cur = slider_current (slider);
-  }
-  while (cur != start);
-  free_chainslider(slider);
-  return eq;
-}
-
 
 void create_neighbor_triangles_for (face_t *p)
 {
-  slot_t *new = NULL;
+
   face_t *t = NULL;
   vtx2d_t *tmp_pos = NULL;
   chainslider_t *slider = make_chainslider(d20.available);
+
+  void _free(void)
+  {
+    if (tmp_pos != NULL)
+      free (tmp_pos);
+    if (t != NULL)
+      free (t);
+  }
+
+  face_t *copy_face (face_t *ptr)
+  {
+    face_t *f = malloc (sizeof(face_t));
+    if (f == NULL)
+      return f;
+    char l = sizeof(face_t);
+    memcpy(f, ptr, l);
+    return f;
+  }
+
+
   //  A, B as anchor points
   {
-    t = malloc (sizeof(face_t));
-    new = find_slot_opposing (p->sA, p->sB, p->sC);
-    memcpy(t,p, sizeof(face_t));
-    t->sC = new;
+    char err = 0;
+    t = copy_face(p);
+    err |= (t == NULL);
 
-    if (already_pinned(t))
+    if (!err)
     {
-      free((void *) t);
+      t->sC = find_slot_opposing (p->sA, p->sB, p->sC);
+      err |= (already_pinned(t, d20.faces));
+    }
+    if (!err)
+    {
+      tmp_pos = find_vector_opposing (p->pA, p->pB, p->pC);
+      err |= (!SDLRect_contains(tmp_pos, &draw_area));
+    }
+    if (err)
+    {
+      _free();
     }
     else
     {
-      tmp_pos = find_vector_opposing (p->pA, p->pB, p->pC);
-      if (SDLRect_contains(tmp_pos, &draw_area))
-      {
-        vtx2d_t *pos = position_exists(tmp_pos);
-        if (pos != NULL)
-        {
-          free ((void *) tmp_pos);
-          tmp_pos = pos;
-        }
-        slider_insert_after (slider, (void *) t);
-        t->pC = tmp_pos;
-      }
-      else
+
+      vtx2d_t *pos = position_exists(tmp_pos, d20.positions);
+      if (pos != NULL)
       {
         free ((void *) tmp_pos);
-        free ((void *) t);
+        tmp_pos = pos;
       }
+
+      slider_insert_after (slider, (void *) t);
+      t->pC = tmp_pos;
     }
+
   }
   //  B, C as anchor points
   {
-    t = malloc (sizeof(face_t));
-    new = find_slot_opposing (p->sB, p->sC, p->sA);
-    memcpy(t, p, sizeof(face_t));
-    t->sA = new;
+    char err = 0;
+    t = copy_face(p);
+    err |= (t == NULL);
 
-    if (already_pinned(t))
+    if (!err)
     {
-      free ((void *) t);
+      t->sA = find_slot_opposing (p->sB, p->sC, p->sA);
+      err |= (already_pinned(t, d20.faces));
     }
-    else
+    if (!err)
     {
       tmp_pos = find_vector_opposing (p->pB, p->pC, p->pA);
+
       if (SDLRect_contains(tmp_pos, &draw_area))
       {
-        vtx2d_t *pos = position_exists(tmp_pos);
+
+        vtx2d_t *pos = position_exists(tmp_pos, d20.positions);
         if (pos != NULL)
         {
           free ((void *) tmp_pos);
           tmp_pos = pos;
         }
         slider_insert_after (slider, (void *) t);
+
+
+
         t->pA = tmp_pos;
       }
       else
       {
-        free ((void *) tmp_pos);
-        free ((void *) t);
+        _free();
       }
     }
   }
   //  C, A as anchor
   {
-    t = malloc (sizeof(face_t));
-    new = find_slot_opposing (p->sC, p->sA, p->sB);
-    memcpy(t,p, sizeof(face_t));
-    t->sB = new;
+    char err = 0;
+    t = copy_face(p);
+    err |= (t == NULL);
 
-    if (already_pinned(t))
+    if (!err)
     {
-      free ((void *) t);
+      t->sB = find_slot_opposing (p->sC, p->sA, p->sB);
+      err |= already_pinned(t, d20.faces);
     }
-    else
+
+    if (!err)
     {
       tmp_pos = find_vector_opposing (p->pC, p->pA, p->pB);
+
       if (SDLRect_contains(tmp_pos, &draw_area))
       {
-        vtx2d_t *pos = position_exists(tmp_pos);
+        vtx2d_t *pos = position_exists(tmp_pos, d20.positions);
         if (pos != NULL)
         {
           free ((void *) tmp_pos);
@@ -1035,55 +1119,13 @@ void create_neighbor_triangles_for (face_t *p)
       }
       else
       {
-        free ((void *) tmp_pos);
-        free ((void *) t);
+        _free();
       }
     }
   }
   free_chainslider(slider);
 }
 
-void add_lines_for (face_t *t)
-{
-  struct line *a, *b, *c;
-  a = malloc (sizeof (struct line));
-  b = malloc (sizeof (struct line));
-  c = malloc (sizeof (struct line));
-  a->A = t->pA;
-  a->B = t->pB;
-  b->A = t->pB;
-  b->B = t->pC;
-  c->A = t->pA;
-  c->B = t->pC;
-  chainslider_t *s;
-
-  if (d20.lines == NULL)
-  {
-    d20.lines = make_chain(a);
-    s = make_chainslider(d20.lines);
-    slider_insert_after(s, b);
-    slider_insert_after(s, c);
-  }
-  else
-  {
-    s = make_chainslider(d20.lines);
-    void add_or_free_line (struct line *ptr)
-    {
-      if (line_exists(ptr))
-      {
-        free(ptr);
-      }
-      else
-      {
-        slider_insert_after(s, ptr);
-      }
-    }
-    add_or_free_line (a);
-    add_or_free_line (b);
-    add_or_free_line (c);
-  }
-  free(s);
-}
 
 void pin (void)
 {
@@ -1093,14 +1135,15 @@ void pin (void)
   d20.current_used = NULL;
   d20.current_free = NULL;
 
+  //  insert into list of placed triangles
   chainslider_t *slider = make_chainslider(d20.faces);
   slider_insert_after (slider, anchor);
   free_chainslider(slider);
 
   slider = make_chainslider(d20.available);
 
+  //  remove from available
   face_t *start, *cur;
-
   start = slider_current(slider);
   cur = start;
   do
@@ -1122,18 +1165,18 @@ void pin (void)
   add_lines_for (anchor);
 
 
-  //  remove duplicates + anchor
+  //  remove duplicates
   cur = slider_current (slider);
 
   int k = chain_size (d20.available);
   do
   {
-    if (chain_size(d20.available) == 1)
+    if (k == 1)
       break;
     if (equal_faces(cur, anchor))
     {
-      slider_procede(slider);
-      slider_remove_prev(slider);
+      slider_recede(slider);
+      slider_remove_next(slider);
       free((void *) cur);
     }
 
@@ -1143,32 +1186,25 @@ void pin (void)
   }
   while (k);
 
-
+  //  no more triangles possible
   if (chain_size(d20.available) == 1)
   {
     cur = slider_current (slider);
-    if (already_pinned(cur))
+    if (already_pinned(cur, d20.faces))
     {
       free_chain(d20.available);
       d20.available = NULL;
       free((void *)cur);
-
     }
-    if (chain_size(d20.faces) == 20)
-      application.status = APP_END;
+
+
 
   }
-
   free_chainslider(slider);
 }
 
-int mouse_on_draw_area (void)
-{
-  int x, y;
-  mouse_position(&x, &y);
-  return ((x >= draw_area.x) && (x <= draw_area.x + draw_area.w)
-      &&  (y >= draw_area.y) && (y <= draw_area.y + draw_area.h));
-}
+
+
 
 void app_main (void)
 {
@@ -1178,7 +1214,7 @@ void app_main (void)
     {
       d20.x = application.mX;
       d20.y = application.mY;
-      reposition_root_vertices();
+      reposition_root();
     }
     else
     {
@@ -1191,12 +1227,12 @@ void app_main (void)
           if (scroll < 0)
           {
             resize_root(scroll);
-            reposition_root_vertices();
+            reposition_root();
           }
           else
           {
             resize_root(scroll);
-            if ((scroll > 0) && !reposition_root_vertices())
+            if ((scroll > 0) && !reposition_root())
             {
               resize_root(-scroll);
             }
@@ -1205,7 +1241,7 @@ void app_main (void)
         else
         {
           rotate_root(scroll);
-          if (!reposition_root_vertices())
+          if (!reposition_root())
             rotate_root(-scroll);
         }
       }
@@ -1228,12 +1264,12 @@ void app_main (void)
   }
   else
   {
+    //  root triangle has been pinned
     if (application.reset_btn != NULL)
     {
       button_update(application.reset_btn);
     }
 
-    //  root triangle has been pinned
     int relocate = relocate_mode();
     if (mouse_left() == -1)
     {
@@ -1257,6 +1293,7 @@ void app_main (void)
             pin();
             if (chain_size(d20.faces) == 20)
             {
+              application.status = APP_END;
               if (application.save_btn == NULL)
               {
                 application.save_btn = button_create ("save \0", &application.save);
@@ -1305,7 +1342,8 @@ void app_main (void)
         select_triangle();
       }
     }
-  }
+}
+
 }
 
 
@@ -1319,6 +1357,9 @@ void app_usage ()
   if (application.status == APP_MAIN)
   {
     app_main();
+
+    if (application.reset_btn != NULL)
+      button_update(application.reset_btn);
 
   }
   else if (application.status == APP_END)
@@ -1334,6 +1375,14 @@ void app_usage ()
 
     if (application.save_btn != NULL)
       button_update(application.save_btn);
+
+    if (application.save)
+    {
+      d20.current_free = NULL;
+      d20.current_used = NULL;
+      app_draw();
+      store_subsurface(canvas, &draw_area);
+    }
   }
 
   if (application.reset)
@@ -1342,13 +1391,7 @@ void app_usage ()
     app_start();
 
   }
-  if (application.save)
-  {
-    d20.current_free = NULL;
-    d20.current_used = NULL;
-    app_draw();
-    store_subsurface(canvas, &draw_area);
-  }
+
 }
 
 

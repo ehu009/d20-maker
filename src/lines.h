@@ -28,4 +28,11 @@
       plot_func plot, COLOUR color);
 
 
+  struct line
+  {
+    vtx2d_t *A, *B;
+  };
+
+  int equal_lines (struct line *A, struct line *B);
+
 #endif  /*  LINES_H_  */

@@ -231,7 +231,7 @@ void transfer_triangle (triangle_t *t, SDL_Surface *dst, SDL_Rect *dst_rect)
       *c = t->pts[2];
   SDL_Rect *rect = get_bounds_of_triangle (a, b, c);
 
-  SDL_Surface *surf = SDL_CreateRGBSurface (0, rect->w, rect->h, 32, canvas->format->Rmask, canvas->format->Gmask, canvas->format->Bmask, 0xff000000);
+  SDL_Surface *surf = SDL_CreateRGBSurface (0, rect->w, rect->h, 32, canvas->format->Rmask, canvas->format->Gmask, canvas->format->Bmask, alpha_mask);
 
 
   vtx2i_t A, B, C;
@@ -244,7 +244,14 @@ void transfer_triangle (triangle_t *t, SDL_Surface *dst, SDL_Rect *dst_rect)
   A.pts[1] -= rect->y;
   B.pts[1] -= rect->y;
   C.pts[1] -= rect->y;
-
+  /*
+  A.pts[0] -= dst_rect->x;
+  B.pts[0] -= dst_rect->x;
+  C.pts[0] -= dst_rect->x;
+  A.pts[1] -= dst_rect->y;
+  B.pts[1] -= dst_rect->y;
+  C.pts[1] -= dst_rect->y;
+  */
   COLOUR pixel,
       markup = SDL_MapRGBA(surf->format, 0xff,0xff,0,0),
       bg = SDL_MapRGBA(surf->format, 0,0,0,0);
@@ -290,15 +297,12 @@ void transfer_triangle (triangle_t *t, SDL_Surface *dst, SDL_Rect *dst_rect)
         p.pts[1] = j;
         vtx2i_t p2 = {.pts = {i + rect->x, j + rect->y}};
         uint32_t clr = getPixel(canvas, &p2);
-        #if SDL_BYTEORDER == SDL_BIG_ENDIAN
-          clr |= 0xff;
-        #else
-          clr |= 0xff000000;
-        #endif
+        clr |= alpha_mask;
         setPixel(surf, &p, clr);
       }
     }
   }
+
   rect->x -= dst_rect->x;
   rect->y -= dst_rect->y;
 

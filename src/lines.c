@@ -105,6 +105,21 @@ void draw_line2 (SDL_Surface *surface,
 }
 
 
+int equal_lines (struct line *A, struct line *B)
+{
+  return ((A->A == B->A && A->B == B->B)
+      ||  (A->A == B->B && A->B == B->A));
+}
+
+
+
+
+
+
+
+
+
+
 
 /*
  *  plotting functions
