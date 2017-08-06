@@ -60,6 +60,8 @@ button_t *button_create (const char *txt1, unsigned *value)
 
 void button_free (button_t *button)
 {
+  if (button == NULL)
+    return;
   TTF_CloseFont (button->font);
   SDL_FreeSurface (button->surf);
   free(button);
@@ -105,6 +107,13 @@ void button_update (button_t *button)
       {
         button->status = BUTTON_DOWN;
       }
+    }
+    if (!(((mouseX >= button->rect.x)
+              &&  (mouseX <= button->rect.x + button->rect.w))
+          && ((mouseY >= button->rect.y)
+              &&  (mouseY <= button->rect.y + button->rect.h))))
+    {
+      button->status ^= BUTTON_OVER;
     }
   }
 
