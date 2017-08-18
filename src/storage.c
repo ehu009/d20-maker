@@ -5,6 +5,7 @@
   #include <malloc.h>
 #endif
 
+#include "colours.h"
 #include "storage.h"
 #include "sha256.h"
 
@@ -90,12 +91,20 @@ char *generate_name (SDL_Surface *surface)
 
 void store_subsurface (SDL_Surface *surface, SDL_Rect *rect)
 {
+
+  {
+    DIR *d = opendir(OUTPUT_DIR_PATH);
+    if (d == NULL)
+      system("mkdir output\0");
+    closedir(d);
+  }
+
   SDL_Surface *surf = NULL;
-  #if SDL_BYTEORDER == SDL_BIG_ENDIAN
-    surf = SDL_CreateRGBSurface (0, rect->w, rect->h, 32, 0xFF000000, 0x00FF0000, 0x0000FF00, 0x000000FF);
-  #else
-    surf = SDL_CreateRGBSurface (0, rect->w, rect->h, 32, 0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000);
-  #endif
+  {
+    SDL_PixelFormat *f = surface->format;
+
+    surf = SDL_CreateRGBSurface (0, rect->w, rect->h, 32, f->Rmask, f->Gmask, f->Bmask, alpha_mask);
+  }
 
   SDL_BlitSurface(surface, rect, surf, NULL);
 
