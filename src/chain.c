@@ -208,8 +208,8 @@ int slider_insert_before (chainslider_t *slider, void *item)
 
     if (p != c)
     {
-      c->prev->next = link;
-      link->prev = c->prev;
+      p->next = link;
+      link->prev = p;
     }
     else
     {
@@ -240,17 +240,17 @@ int slider_insert_after (chainslider_t *slider, void *item)
 
     if (n != c)
     {
-      c->next->prev = link;
-      link->next = c->next;
-      c->next = link;
+      n->prev = link;
+      link->next = n;
     }
     else
     {
-      c->next = link;
       link->next = c;
       c->prev = link;
     }
+    c->next = link;
     slider->linked_chain->links ++;
+
     SDL_UnlockMutex(slider->linked_chain->lock);
   }
   return 0;
