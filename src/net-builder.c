@@ -117,115 +117,42 @@ int relocate_mode (void)
 
 
 
-
-#define NUM_VTX_POS   5
-
+#include "d20.h"
 
 
-struct vertex_slot
-{
-
-  struct vertex_slot *links[NUM_VTX_POS];
-};
-
-typedef struct vertex_slot slot_t;
-
-void init_d20 (slot_t *root)
-{
-  slot_t *s;
-  int j = 0, k;
-  for (; j < NUM_D20_VTX; j ++)
-  {
-    s = root + j;
-    for (k = 0; k < NUM_VTX_POS; k++)
-    {
-      s->links[k] = root;
-      s->links[k] += d20_model[j].pts[k];
-    }
-  }
-}
-
-
-slot_t *find_slot_opposing (slot_t *anchor1, slot_t *anchor2, slot_t *opposer)
-{
-  slot_t *r = NULL;
-  int link1 = 0, link2;
-  for (;  link1 < NUM_VTX_POS; link1 ++)
-  {
-    if (r != NULL)
-      break;
-    slot_t *cur1 = anchor1->links[link1];
-    if (cur1 == opposer)
-      continue;
-    for (link2 = 0; link2 < NUM_VTX_POS; link2 ++)
-    {
-      if (r != NULL)
-        break;
-      slot_t *cur2 = anchor2->links[link2];
-      if (cur2 == opposer)
-        continue;
-      if (cur1 == cur2)
-        r = cur1;
-    }
-  }
-  return r;
-}
-
-
-
-
-
-
-struct d20_slot
-{
-  slot_t *sA, *sB, *sC;
-  triangle_t *triangle;
-};
-
-typedef struct d20_slot face_t;
-
+/*
 void read_triangle_from_tripoint (face_t *src, triangle_t *dst)
 {
-/*
-  dst->pts[0] = src->pA;
-  dst->pts[1] = src->pB;
-  dst->pts[2] = src->pC;
-  */
+
+ // dst->pts[0] = src->pA;
+ // dst->pts[1] = src->pB;
+ // dst->pts[2] = src->pC;
+
 
   *dst = *src->triangle;
 
 
 }
-
-
-
+*/
 
 void draw_triangle_transparent (face_t *t)
 {
-  triangle_t tmp;
-  read_triangle_from_tripoint(t, &tmp);
-  fill_triangle (&tmp, invertPixel, 0);
+  fill_triangle (t->item, invertPixel, 0);
 }
 
 void draw_triangle_outline (face_t *t)
 {
-  triangle_t tmp;
-  read_triangle_from_tripoint(t, &tmp);
-  draw_triangle (&tmp, invertPixel, 0);
+  draw_triangle (t->item, invertPixel, 0);
 }
 
 void draw_triangle_coloured (face_t *t, COLOUR colour)
 {
-  triangle_t tmp;
-  read_triangle_from_tripoint(t, &tmp);
-  fill_triangle (&tmp, colourPixel, colour);
+  fill_triangle (t->item, colourPixel, colour);
 }
 
 void draw_triangle_on (face_t *t, SDL_Surface *dst, SDL_Rect *at)
 {
-  triangle_t buf;
-  read_triangle_from_tripoint(t, &buf);
-  transfer_triangle(&buf, dst, at);
+  transfer_triangle(t->item, dst, at);
 }
 
 
@@ -245,7 +172,7 @@ static struct
   chain_t *available, *faces, *positions, *lines;
   face_t *current_used, *current_free;
 
-  slot_t vertex[NUM_D20_VTX];
+  slot_t net[NUM_D20_VTX];
 
 } d20;
 
@@ -256,41 +183,11 @@ static struct
 
 void print_face(face_t *f)
 {
-  #define IDX(x) (int)(x - d20.vertex)
+  #define IDX(x) (int)(x - d20.net)
   printf("face %p has slots %d, %d, %d\n", f, IDX(f->sA), IDX(f->sB), IDX(f->sC));
 }
 
 
-int equal_faces (face_t *A, face_t *B)
-{
-  int eq = 0;
-  eq += (A->sA == B->sA);
-  eq += (A->sA == B->sB);
-  eq += (A->sA == B->sC);
-
-  eq += (A->sB == B->sA);
-  eq += (A->sB == B->sB);
-  eq += (A->sB == B->sC);
-
-  eq += (A->sC == B->sA);
-  eq += (A->sC == B->sB);
-  eq += (A->sC == B->sC);
-
-  return (eq > 2);
-}
-
-
-
-
-face_t *copy_face (face_t *ptr)
-{
-  face_t *f = malloc (sizeof(face_t));
-  if (f == NULL)
-    return f;
-  char l = sizeof(face_t);
-  memcpy(f, ptr, l);
-  return f;
-}
 
 
 
@@ -325,11 +222,9 @@ face_t *find_current_selected (chain_t *list, vtx2i_t *mouse)
       *cur = start,
       *ret = NULL;
 
-  triangle_t tmp_triangle;
   do
   {
-    read_triangle_from_tripoint(cur, &tmp_triangle);
-    if (triangle_contains (&tmp_triangle, *mouse))
+    if (triangle_contains (cur->item, *mouse))
     {
       ret = cur;
       break;
@@ -374,12 +269,13 @@ void add_lines_for (chain_t **lines, face_t *t)
   a = malloc (sizeof (struct line));
   b = malloc (sizeof (struct line));
   c = malloc (sizeof (struct line));
-  a->A = t->triangle->pts[0];
-  a->B = t->triangle->pts[1];
-  b->A = t->triangle->pts[1];
-  b->B = t->triangle->pts[2];
-  c->A = t->triangle->pts[2];
-  c->B = t->triangle->pts[0];
+  triangle_t *q = t->item;
+  a->A = q->pts[0];
+  a->B = q->pts[1];
+  b->A = q->pts[1];
+  b->B = q->pts[2];
+  c->A = q->pts[2];
+  c->B = q->pts[0];
   chainslider_t *s;
 
   if (*lines == NULL)
@@ -509,23 +405,28 @@ void init_net_builder (void)
   d20.x = NET_START_X;
   d20.y = NET_START_Y;
 
+
+  // need some safety on this one
+  //d20.model = new_d20();
+  init_d20(d20.net);
+
   face_t *t = malloc(sizeof(face_t));
   {
-    t->sA = &d20.vertex[0];
-    t->sB = &d20.vertex[1];
-    t->sC = &d20.vertex[2];
+    t->sA = &d20.net[0];
+    t->sB = &d20.net[1];
+    t->sC = &d20.net[2];
 
     triangle_t *tr = calloc(1, sizeof(triangle_t));
 
     tr->pts[0] = (vtx2d_t *) calloc (1, sizeof(vtx2d_t));
     tr->pts[1] = (vtx2d_t *) calloc (1, sizeof(vtx2d_t));
     tr->pts[2] = (vtx2d_t *) calloc (1, sizeof(vtx2d_t));
-    t->triangle = tr;
+    t->item = tr;
 
-    d20.positions = make_chain(t->triangle->pts[0]);
+    d20.positions = make_chain(tr->pts[0]);
     chainslider_t *slider = make_chainslider (d20.positions);
-    slider_insert_after(slider, t->triangle->pts[1]);
-    slider_insert_after(slider, t->triangle->pts[2]);
+    slider_insert_after(slider, tr->pts[1]);
+    slider_insert_after(slider, tr->pts[2]);
     free_chainslider(slider);
   }
 
@@ -537,7 +438,7 @@ void init_net_builder (void)
   d20.lines = NULL;
 
 
-  init_d20(d20.vertex);
+
 }
 
 void app_start (void)
@@ -570,7 +471,7 @@ void free_face_list(chain_t *list)
   while (chain_size (list) > 1)
   {
     ptr = slider_current(slider);
-    free(ptr->triangle);
+    free(ptr->item);
     free(ptr);
 
     slider_procede(slider);
@@ -580,7 +481,7 @@ void free_face_list(chain_t *list)
   ptr = slider_current(slider);
   free_chainslider (slider);
 
-  free(ptr->triangle);
+  free(ptr->item);
   free(ptr);
   free_chain (list);
 
@@ -600,6 +501,7 @@ void app_free (void)
   d20.lines = NULL;
   d20.faces = NULL;
   d20.available = NULL;
+ // free(d20.model);
 
   button_free(application.reset_btn);
   application.reset_btn = NULL;
@@ -921,13 +823,14 @@ int reposition_root(void)
   {
 
     vtx2d_t *ptr;
-    ptr = d20.current_free->triangle->pts[0];
+    triangle_t *t = d20.current_free->item;
+    ptr = t->pts[0];
     ptr->pts[0] = a.pts[0];
     ptr->pts[1] = a.pts[1];
-    ptr = d20.current_free->triangle->pts[1];
+    ptr = t->pts[1];
     ptr->pts[0] = b.pts[0];
     ptr->pts[1] = b.pts[1];
-    ptr = d20.current_free->triangle->pts[2];
+    ptr = t->pts[2];
     ptr->pts[0] = c.pts[0];
     ptr->pts[1] = c.pts[1];
 
@@ -979,7 +882,7 @@ int triangle_exists (triangle_t *t, chain_t *list, double acc)
   int q = 0;
   do
   {
-    if (equal_triangles(cur->triangle, t, acc))
+    if (equal_triangles(cur->item, t, acc))
     {
       ++ q;
       break;
@@ -1000,20 +903,20 @@ face_t *create_root_neighbor (char k)
   slot_t *new = NULL;
   face_t *t = NULL, *anchor = d20.current_free;
   vtx2d_t *tmp_pos = NULL;
-
+  triangle_t *q = anchor->item;
   switch (k)
   {
     case 'A':
       new = find_slot_opposing (anchor->sB, anchor->sC, anchor->sA);
-      tmp_pos = find_vector_opposing (anchor->triangle->pts[1], anchor->triangle->pts[2], anchor->triangle->pts[0]);
+      tmp_pos = find_vector_opposing (q->pts[1], q->pts[2], q->pts[0]);
       break;
     case 'B':
       new = find_slot_opposing (anchor->sC, anchor->sA, anchor->sB);
-      tmp_pos = find_vector_opposing (anchor->triangle->pts[2], anchor->triangle->pts[0], anchor->triangle->pts[1]);
+      tmp_pos = find_vector_opposing (q->pts[2], q->pts[0], q->pts[1]);
       break;
     case 'C':
       new = find_slot_opposing (anchor->sA, anchor->sB, anchor->sC);
-      tmp_pos = find_vector_opposing (anchor->triangle->pts[0], anchor->triangle->pts[1], anchor->triangle->pts[2]);
+      tmp_pos = find_vector_opposing (q->pts[0], q->pts[1], q->pts[2]);
       break;
   }
 
@@ -1026,29 +929,29 @@ face_t *create_root_neighbor (char k)
     t = copy_face(anchor);
    // insert(t);
 
-
-    t->triangle = malloc (sizeof(triangle_t));
+    triangle_t *p = malloc (sizeof(triangle_t));
     switch (k)
     {
       case 'A':
         t->sA = new;
-        t->triangle->pts[0] = tmp_pos;
-        t->triangle->pts[1] = anchor->triangle->pts[1];
-        t->triangle->pts[2] = anchor->triangle->pts[2];
+        p->pts[0] = tmp_pos;
+        p->pts[1] = q->pts[1];
+        p->pts[2] = q->pts[2];
         break;
       case 'B':
         t->sB = new;
-        t->triangle->pts[1] = tmp_pos;
-        t->triangle->pts[2] = anchor->triangle->pts[2];
-        t->triangle->pts[0] = anchor->triangle->pts[0];
+        p->pts[1] = tmp_pos;
+        p->pts[2] = q->pts[2];
+        p->pts[0] = q->pts[0];
         break;
       case 'C':
         t->sC = new;
-        t->triangle->pts[2] = tmp_pos;
-        t->triangle->pts[0] = anchor->triangle->pts[0];
-        t->triangle->pts[1] = anchor->triangle->pts[1];
+        p->pts[2] = tmp_pos;
+        p->pts[0] = q->pts[0];
+        p->pts[1] = q->pts[1];
         break;
     }
+    t->item = p;
     print_face(t);
   }
   else
@@ -1116,7 +1019,7 @@ face_t *neighbor_for_slot(char n, face_t *p)
   if (err)
     return t;
 
-  t->triangle = NULL;
+  t->item = NULL;
   switch (n)
   {
     case 'A':
@@ -1142,16 +1045,17 @@ face_t *neighbor_for_slot(char n, face_t *p)
     return NULL;
   }
   vtx2d_t *tmp_pos = NULL;
+  triangle_t *pt = p->item;
   switch (n)
   {
     case 'A':
-      tmp_pos = find_vector_opposing (p->triangle->pts[1], p->triangle->pts[2], p->triangle->pts[0]);
+      tmp_pos = find_vector_opposing (pt->pts[1], pt->pts[2], pt->pts[0]);
       break;
     case 'B':
-      tmp_pos = find_vector_opposing (p->triangle->pts[2], p->triangle->pts[0], p->triangle->pts[1]);
+      tmp_pos = find_vector_opposing (pt->pts[2], pt->pts[0], pt->pts[1]);
       break;
     case 'C':
-      tmp_pos = find_vector_opposing (p->triangle->pts[0], p->triangle->pts[1], p->triangle->pts[2]);
+      tmp_pos = find_vector_opposing (pt->pts[0], pt->pts[1], pt->pts[2]);
       break;
   }
   if (!SDLRect_contains(tmp_pos, &draw_area))
@@ -1174,21 +1078,21 @@ face_t *neighbor_for_slot(char n, face_t *p)
   {
     case 'A':
       tr->pts[0] = tmp_pos;
-      tr->pts[1] = p->triangle->pts[1];
-      tr->pts[2] = p->triangle->pts[2];
+      tr->pts[1] = pt->pts[1];
+      tr->pts[2] = pt->pts[2];
       break;
     case 'B':
       tr->pts[1] = tmp_pos;
-      tr->pts[2] = p->triangle->pts[2];
-      tr->pts[0] = p->triangle->pts[0];
+      tr->pts[2] = pt->pts[2];
+      tr->pts[0] = pt->pts[0];
       break;
     case 'C':
       tr->pts[2] = tmp_pos;
-      tr->pts[0] = p->triangle->pts[0];
-      tr->pts[1] = p->triangle->pts[1];
+      tr->pts[0] = pt->pts[0];
+      tr->pts[1] = pt->pts[1];
       break;
   }
-  t->triangle = tr;
+  t->item = tr;
   return t;
 }
 
@@ -1202,7 +1106,7 @@ void create_neighbor_triangles_for (face_t *p)
     ptr = neighbor_for_slot(c, p);
     if (ptr != NULL)
     {
-      if (!triangle_exists(ptr->triangle, d20.available, FLOAT_ACC))
+      if (!triangle_exists(ptr->item, d20.available, FLOAT_ACC))
       {
         slider_insert_after (s, (void *) ptr);
         printf("added neighbor\n");
@@ -1210,7 +1114,7 @@ void create_neighbor_triangles_for (face_t *p)
       else
       {
         printf("triangle seems to exist on screen\n");
-        free(ptr->triangle);
+        free(ptr->item);
         free(ptr);
       }
     }
@@ -1236,7 +1140,7 @@ void unlink_unpinned (chain_t *unpinned, face_t *ptr)
     *cur = start;
   do
   {
-    if (equal_triangles(cur->triangle, ptr->triangle, FLOAT_ACC))
+    if (equal_triangles(cur->item, ptr->item, FLOAT_ACC))
     {
       slider_procede(s);
       slider_remove_prev(s);
@@ -1262,49 +1166,14 @@ void remove_faces_similar_to (chain_t *unpinned, face_t *cmp)
 
   do
   {
-  /*
-    if (cur == cmp)
-    {
-      printf("removed face from unpinned : ");
-      print_face(cur);
-      slider_recede(s);
-      slider_remove_next(s);
-
-    }
-    else
-    {*/
-      int n = 0;
-
-      {
-        n += (cur->sA == cmp->sA);
-        n += (cur->sA == cmp->sB);
-        n += (cur->sA == cmp->sC);
-
-        n += (cur->sB == cmp->sA);
-        n += (cur->sB == cmp->sB);
-        n += (cur->sB == cmp->sC);
-
-        n += (cur->sC == cmp->sA);
-        n += (cur->sC == cmp->sB);
-        n += (cur->sC == cmp->sC);
-      }
-      if (chain_size(d20.faces) == 4)
-      {
-        print_face(cur);
-  //      print_face(cmp);
-        printf("shares %d vertices\n", n);
-
-      }
-
       slider_procede(s);
-      if (n > 2)
-  //    if (equal_faces(cur, cmp))
+      if (equal_faces(cur, cmp))
       {
 
         slider_remove_prev(s);
         printf("removed a duplicate :  ");
         print_face(cur);
-        free(cur->triangle);
+        free(cur->item);
         free(cur);
       }
 //    }
