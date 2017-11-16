@@ -4,6 +4,17 @@
   #include    <malloc.h>
 #endif
 
+
+triangle_t *copy_triangle(triangle_t *t)
+{
+  triangle_t *tr = malloc(sizeof(triangle_t));
+  if (tr != NULL)
+  {
+    memcpy(tr, t, sizeof(triangle_t));
+  }
+  return tr;
+}
+
 SDL_Rect *get_bounds_of_triangle (vtx2d_t *a, vtx2d_t *b, vtx2d_t *c)
 {
   SDL_Rect *ptr = (SDL_Rect *) malloc (sizeof (SDL_Rect));

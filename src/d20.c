@@ -2,36 +2,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-int equal_faces (face_t *A, face_t *B)
-{
-  int eq = 0;
-  eq += (A->sA == B->sA);
-  eq += (A->sA == B->sB);
-  eq += (A->sA == B->sC);
-
-  eq += (A->sB == B->sA);
-  eq += (A->sB == B->sB);
-  eq += (A->sB == B->sC);
-
-  eq += (A->sC == B->sA);
-  eq += (A->sC == B->sB);
-  eq += (A->sC == B->sC);
-
-  return (eq > 2);
-}
-
-face_t *copy_face (face_t *ptr)
-{
-  face_t *f = malloc (sizeof(face_t));
-  if (f == NULL)
-    return f;
-  char l = sizeof(face_t);
-  memcpy(f, ptr, l);
-  return f;
-}
-
-
-
 
 vtx5i_t d20_model[NUM_D20_VTX] =
 {
@@ -64,7 +34,6 @@ void init_d20 (slot_t *root)
   }
 }
 
-
 slot_t *find_slot_opposing (slot_t *a1, slot_t *a2, slot_t *opposer)
 {
   slot_t *r = NULL;
@@ -88,4 +57,66 @@ slot_t *find_slot_opposing (slot_t *a1, slot_t *a2, slot_t *opposer)
     }
   }
   return r;
+}
+
+
+face_t *new_face (slot_t *a, slot_t *b, slot_t *c)
+{
+  face_t *f = malloc(sizeof(face_t));
+  if (f != NULL)
+  {
+    f->sA = a;
+    f->sB = b;
+    f->sC = c;
+  }
+  return f;
+}
+
+int equal_faces (face_t *A, face_t *B)
+{
+  int eq = 0;
+  eq += (A->sA == B->sA);
+  eq += (A->sA == B->sB);
+  eq += (A->sA == B->sC);
+
+  eq += (A->sB == B->sA);
+  eq += (A->sB == B->sB);
+  eq += (A->sB == B->sC);
+
+  eq += (A->sC == B->sA);
+  eq += (A->sC == B->sB);
+  eq += (A->sC == B->sC);
+
+  return (eq > 2);
+}
+
+face_t *copy_face (face_t *ptr)
+{
+  face_t *f = malloc (sizeof(face_t));
+  if (f == NULL)
+    return f;
+  char l = sizeof(face_t);
+  memcpy(f, ptr, l);
+  return f;
+}
+
+face_t *face_that_neighbors (face_t *f, char k)
+{
+  face_t *n = NULL;
+  n = copy_face(f);
+  if (n == NULL)
+    return n;
+  switch (k)
+  {
+    case 'A':
+      n->sA = find_slot_opposing (f->sB, f->sC, f->sA);
+      break;
+    case 'B':
+      n->sB = find_slot_opposing (f->sC, f->sA, f->sB);
+      break;
+    case 'C':
+      n->sC = find_slot_opposing (f->sA, f->sB, f->sC);
+      break;
+  }
+  return n;
 }

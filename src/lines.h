@@ -13,6 +13,9 @@
   void colourPixel (SDL_Surface *dst, vtx2i_t *p, COLOUR color);
   void invertPixel (SDL_Surface *dst, vtx2i_t *p, COLOUR color);
 
+  double *colour_negate_rate;
+  void divertPixel (SDL_Surface *dst, vtx2i_t *p, unsigned color);
+
 
   /*
    *

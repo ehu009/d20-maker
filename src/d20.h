@@ -30,7 +30,6 @@
 
 
 
-
   struct d20_slot
   {
     slot_t *sA, *sB, *sC;
@@ -39,10 +38,28 @@
 
   typedef struct d20_slot face_t;
 
-
   int equal_faces (face_t *A, face_t *B);
 
+  face_t *new_face (slot_t *a, slot_t *b, slot_t *c);
   face_t *copy_face (face_t *ptr);
+  face_t *face_that_neighbors (face_t *f, char k);
+
+
+  /*
+   * Storage object
+   */
+
+  #include "chain.h"
+
+  struct d20_object
+  {
+    chain_t *available, *faces;
+    face_t *current_used, *current_free;
+
+    slot_t net[NUM_D20_VTX];
+
+  };
+  typedef struct d20_object d20_t;
 
 
 
