@@ -13,7 +13,11 @@
    *  Ring-linked list prototypes
    */
 
+/*
   chain_t *make_chain (void *start_item);
+  */
+  chain_t *make_chain (void);
+
   void free_chain (chain_t *chain);
 
   int chain_size (chain_t *chain);
