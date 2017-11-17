@@ -384,8 +384,9 @@ void add_lines_for (chain_t **lines, face_t *t)
 
   if (*lines == NULL)
   {
-    *lines = make_chain(a);
+    *lines = make_chain();
     s = make_chainslider(*lines);
+    slider_insert_after(s, a);
     slider_insert_after(s, b);
     slider_insert_after(s, c);
     free(s);
@@ -485,7 +486,7 @@ void free_list (chain_t *list)
   if (list == NULL)
     return;
   chainslider_t *slider = make_chainslider (list);
-  while (chain_size (list) > 1)
+  while (chain_size (list))
   {
     free((void *) slider_current(slider));
     slider_procede(slider);
@@ -522,8 +523,9 @@ void init_net_builder (void)
     tr->pts[2] = (vtx2d_t *) calloc (1, sizeof(vtx2d_t));
     t->triangle = tr;
 
-    d20.positions = make_chain(t->triangle->pts[0]);
+    d20.positions = make_chain();
     chainslider_t *slider = make_chainslider (d20.positions);
+    slider_insert_after(slider, t->triangle->pts[0]);
     slider_insert_after(slider, t->triangle->pts[1]);
     slider_insert_after(slider, t->triangle->pts[2]);
     free_chainslider(slider);
@@ -567,7 +569,7 @@ void free_face_list(chain_t *list)
   chainslider_t *slider = make_chainslider (list);
   face_t *ptr = NULL;
 
-  while (chain_size (list) > 1)
+  while (chain_size (list))
   {
     ptr = slider_current(slider);
     free(ptr->triangle);
@@ -577,11 +579,11 @@ void free_face_list(chain_t *list)
     slider_remove_prev (slider);
   }
 
-  ptr = slider_current(slider);
+//  ptr = slider_current(slider);
   free_chainslider (slider);
 
-  free(ptr->triangle);
-  free(ptr);
+//  free(ptr->triangle);
+//  free(ptr);
   free_chain (list);
 
 }
@@ -1067,20 +1069,20 @@ void pin_root (void)
 {
   void insert (face_t *ptr)
   {
-
     if (d20.available == NULL)
-      d20.available = make_chain (ptr);
+      d20.available = make_chain ();
 
-    else
-    {
-      chainslider_t *slider = make_chainslider(d20.available);
-      slider_insert_after (slider, (void *) ptr);
-      free_chainslider(slider);
-    }
+    chainslider_t *slider = make_chainslider(d20.available);
+    slider_insert_after (slider, (void *) ptr);
+    free_chainslider(slider);
   }
 
   if (d20.faces == NULL)
-    d20.faces = make_chain (d20.current_free);
+  {
+    d20.faces = make_chain ();
+    chainslider_t *slider = make_chainslider(d20.faces);
+    slider_insert_after(slider, d20.current_free);
+  }
 
   face_t *ptr = NULL;
   char c = 'A';
