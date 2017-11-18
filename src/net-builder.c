@@ -52,33 +52,6 @@ int approximates (double test, double source, double accuracy)
 
 
 
-vtx2d_t *position_exists (vtx2d_t *p, chain_t *positions)
-{
-  vtx2d_t *ptr = NULL;
-
-  chainslider_t *slider = make_chainslider(positions);
-  vtx2d_t *start = slider_current(slider),
-      *cur = start;
-  do
-  {
-    if (equal_vertices(cur, p, FLOAT_ACC))
-    {
-      ptr = cur;
-      break;
-    }
-    slider_procede (slider);
-    cur = slider_current (slider);
-  }
-  while (cur != start);
-
-  if (ptr == NULL)
-    slider_insert_after(slider, p);
-
-  free_chainslider(slider);
-
-  return ptr;
-}
-
 
 
 typedef enum {APP_START, APP_MAIN, APP_END, APP_FREE} app_status;
@@ -165,17 +138,32 @@ d20_t d20;
 
 
 
-
-
-
-void print_face(face_t *f)
+vtx2d_t *position_exists (vtx2d_t *p, chain_t *positions)
 {
-  #define IDX(x) (int)(x - d20.net)
-  printf("face %p has slots %d, %d, %d\n", f, IDX(f->sA), IDX(f->sB), IDX(f->sC));
+  vtx2d_t *ptr = NULL;
+
+  chainslider_t *slider = make_chainslider(positions);
+  vtx2d_t *start = slider_current(slider),
+      *cur = start;
+  do
+  {
+    if (equal_vertices(cur, p, FLOAT_ACC))
+    {
+      ptr = cur;
+      break;
+    }
+    slider_procede (slider);
+    cur = slider_current (slider);
+  }
+  while (cur != start);
+
+  if (ptr == NULL)
+    slider_insert_after(slider, p);
+
+  free_chainslider(slider);
+
+  return ptr;
 }
-
-
-
 
 
 int face_exists_in (face_t *t, chain_t *list)
@@ -201,7 +189,6 @@ int face_exists_in (face_t *t, chain_t *list)
 }
 
 
-
 face_t *find_current_selected (chain_t *list, vtx2i_t *mouse)
 {
   chainslider_t *slider = make_chainslider (list);
@@ -223,7 +210,6 @@ face_t *find_current_selected (chain_t *list, vtx2i_t *mouse)
   free_chainslider(slider);
   return ret;
 }
-
 
 
 char line_exists (struct line *ptr, chain_t *lines)
@@ -248,6 +234,19 @@ char line_exists (struct line *ptr, chain_t *lines)
   free (s);
   return exists;
 }
+
+
+
+
+void print_face(face_t *f)
+{
+  #define IDX(x) (int)(x - d20.net)
+  printf("face %p has slots %d, %d, %d\n", f, IDX(f->sA), IDX(f->sB), IDX(f->sC));
+}
+
+
+
+
 
 
 void add_lines_for (chain_t **lines, triangle_t *t)
@@ -1004,6 +1003,7 @@ void create_neighbor_triangles_for (face_t *p)
       else
       {
         printf("triangle seems to exist on screen\n");
+        //  this case seemingly never occurs
         free(ptr->item);
         free(ptr);
       }
@@ -1015,6 +1015,7 @@ void create_neighbor_triangles_for (face_t *p)
   free_chainslider(s);
 }
 
+/*
 void unlink_unpinned (chain_t *unpinned, face_t *ptr)
 {
   if (unpinned == NULL)
@@ -1025,7 +1026,7 @@ void unlink_unpinned (chain_t *unpinned, face_t *ptr)
     *cur = start;
   do
   {
-    if (equal_triangles(cur->item, ptr->item, FLOAT_ACC))
+    if (cur == ptr)
     {
       slider_procede(s);
       slider_remove_prev(s);
@@ -1037,7 +1038,7 @@ void unlink_unpinned (chain_t *unpinned, face_t *ptr)
   }
   while (cur != start);
   free_chainslider(s);
-}
+}*/
 
 void remove_faces_similar_to (chain_t *unpinned, face_t *cmp)
   //  remove duplicates
@@ -1045,30 +1046,33 @@ void remove_faces_similar_to (chain_t *unpinned, face_t *cmp)
   int k = chain_size (unpinned), q = k;
   if ((unpinned == NULL) || (k == 1))
     return;
+
   printf("trying to remove duplicates\n");
   chainslider_t *s = make_chainslider(unpinned);
   face_t *cur = slider_current (s);
-
   do
   {
       slider_procede(s);
       if (equal_faces(cur, cmp))
       {
-
         slider_remove_prev(s);
-        printf("removed a duplicate :  ");
         print_face(cur);
+        if (cur != cmp)
+        {
+        printf("removed a duplicate :  ");
         free(cur->item);
         free(cur);
+        }
       }
     cur = slider_current (s);
     --k;
   }
   while (k);
   free(s);
+
   k = q-chain_size(unpinned);
   if (k)
-  printf("removed %d duplicates\n",k);
+    printf("removed %d duplicates\n",k);
 }
 
 
@@ -1084,7 +1088,7 @@ printf("####\n");
 
   //d20.current_used = NULL;
 
-  unlink_unpinned (d20.available, anchor);
+//  unlink_unpinned (d20.available, anchor);
 
   remove_faces_similar_to (d20.available, anchor);
 
