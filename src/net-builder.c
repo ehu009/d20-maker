@@ -21,12 +21,23 @@
 extern SDL_Rect draw_area;
 
 
+int SDLRect_contains (vtx2d_t *p, SDL_Rect *limit)
+{
+  int r = 0;
+  r |= ((p->pts[0] < limit->x) || (p->pts[0] > limit->x + limit->w));
+  r |= ((p->pts[1] < limit->y) || (p->pts[1] > limit->y + limit->h));
+  return (r == 0);
+}
+
 int mouse_on_draw_area (void)
 {
+  vtx2d_t pt;
   int x, y;
   mouse_position(&x, &y);
-  return ((x >= draw_area.x) && (x <= draw_area.x + draw_area.w)
-      &&  (y >= draw_area.y) && (y <= draw_area.y + draw_area.h));
+  pt.pts[0] = x;
+  pt.pts[1] = y;
+
+  return SDLRect_contains(&pt, &draw_area);
 }
 
 
@@ -37,6 +48,9 @@ int approximates (double test, double source, double accuracy)
       && (test >= source - accuracy);
 }
 #define FLOAT_ACC 2
+
+
+
 
 
 vtx2d_t *position_exists (vtx2d_t *p, chain_t *positions)
@@ -417,48 +431,34 @@ void free_face_list(chain_t *list)
     slider_remove_prev (slider);
   }
 
-//  ptr = slider_current(slider);
   free_chainslider (slider);
-
-//  free(ptr->triangle);
-//  free(ptr);
-
   free_chain (list);
 
 }
 
 void app_free (void)
 {
-LINE
-  //  free allocated structures
+  // free structures in the d20
   free_face_list(d20.available);
-  LINE
-  free_face_list(d20.faces);
- // free_list(d20.available);
- // free_list(d20.faces);
-LINE
-  free_list(application.lines);
-  LINE
-  free_list(application.positions);
-  LINE
-  application.positions = NULL;
-  LINE
-  application.lines = NULL;
-  LINE
-  d20.faces = NULL;
-  LINE
   d20.available = NULL;
- // free(d20.model);
-LINE
+  free_face_list(d20.faces);
+  d20.faces = NULL;
+
+  // free graphical elements
+  free_list(application.lines);
+  application.lines = NULL;
+  free_list(application.positions);
+  application.positions = NULL;
+
+  // free buttons
   button_free(application.reset_btn);
-  LINE
   application.reset_btn = NULL;
-  LINE
   button_free(application.save_btn);
-  LINE
   application.save_btn = NULL;
-  LINE
+
+  // free slidebar
   fader_free(application.colour_select);
+  application.colour_select = NULL;
 }
 
 
@@ -482,12 +482,12 @@ void unpinned_list_drawing (face_t *t)
   else
     draw_triangle_coloured (t, TRIANGLE_COLOUR_UNPINNED);
 }
-
+/*
 void finished_list_drawing (face_t *t)
 {
 //  draw_triangle_outline (t);
 
-}
+}*/
 
 
 
@@ -792,18 +792,6 @@ int reposition_root(void)
 }
 
 
-int SDLRect_contains (vtx2d_t *p, SDL_Rect *limit)
-{
-  int r = 0;
-  r |= ((p->pts[0] < limit->x) || (p->pts[0] > limit->x + limit->w));
-  r |= ((p->pts[1] < limit->y) || (p->pts[1] > limit->y + limit->h));
-  return (r == 0);
-}
-
-
-
-
-
 
 int equal_triangles (triangle_t *t1, triangle_t *t2, double acc)
 {
@@ -1076,8 +1064,6 @@ void remove_faces_similar_to (chain_t *unpinned, face_t *cmp)
         free(cur->item);
         free(cur);
       }
-//    }
-//    slider_procede (s);
     cur = slider_current (s);
     --k;
   }
@@ -1095,23 +1081,17 @@ void pin (void)
 printf("####\n");
   printf("PINNING\nnum pinned : %d\nthe face in question is: ", chain_size(d20.faces));
   face_t *anchor = d20.current_free;
+  d20.current_free = NULL;
 
   print_face(anchor);
 
-  //remove_unpinned(d20.available, anchor);
-
-d20.current_used = NULL;
-  d20.current_free = NULL;
+  //d20.current_used = NULL;
 
   unlink_unpinned (d20.available, anchor);
 
- // if (chain_size(d20.faces) != 4)
-//  else printf("NO NEIGHBORS HERE NYAA\n");
   remove_faces_similar_to (d20.available, anchor);
 
-    create_neighbor_triangles_for (anchor);
-
-
+  create_neighbor_triangles_for (anchor);
 
 
 //  insert into list of placed triangles
@@ -1318,9 +1298,7 @@ void app_usage ()
   if (application.reset)
   {
     app_free();
-    LINE
     app_start();
-    LINE
   }
 
 }

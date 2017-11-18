@@ -239,7 +239,6 @@ void transfer_triangle (triangle_t *t, SDL_Surface *dst, SDL_Rect *dst_rect)
   SDL_Rect *rect = get_bounds_of_triangle (t);
 
   vtx2i_t A, B, C;
-
   fit_vertex_in_rect(t->pts[0], &A, rect);
   fit_vertex_in_rect(t->pts[1], &B, rect);
   fit_vertex_in_rect(t->pts[2], &C, rect);
