@@ -79,11 +79,15 @@ void draw_triangle (triangle_t *t, plot_func plot, COLOUR color)
   draw_line2 (canvas, &C, &A, plot, color);
 }
 
+
+#define MARKUP(s)  SDL_MapRGBA(s->format, 0xff,0xff,0,0)
+
 SDL_Surface *get_markup_surface(SDL_Rect *r, vtx2i_t *A, vtx2i_t *B, vtx2i_t *C)
 {
   SDL_Surface *surf = SDL_CreateRGBSurface (0, r->w, r->h, 32,
       canvas->format->Rmask, canvas->format->Gmask, canvas->format->Bmask, 0xff000000);
-  COLOUR markup = SDL_MapRGBA(surf->format, 0xff,0xff,0,0),
+
+  COLOUR markup = MARKUP(surf),
       bg = SDL_MapRGBA(surf->format, 0,0,0,0);
 
   SDL_FillRect(surf, NULL, bg);
@@ -103,6 +107,22 @@ SDL_Surface *get_markup_surface(SDL_Rect *r, vtx2i_t *A, vtx2i_t *B, vtx2i_t *C)
 
 }
 
+int find_upper_markup(SDL_Surface *s, vtx2i_t*buf, COLOUR m, SDL_Rect *r)
+{
+  int limit = -1, i = 0;
+  COLOUR c;
+  for (; i <= r->h; i++)
+  {
+    buf->pts[1] = i;
+    c = getPixel(s, buf);
+    if (c != m)
+      continue;
+    limit = i;
+    break;
+  }
+  return limit;
+}
+
 void fill_triangle (triangle_t *t, plot_func plot, COLOUR color)
 {
   SDL_Rect *rect = get_bounds_of_triangle (t);
@@ -115,39 +135,19 @@ void fill_triangle (triangle_t *t, plot_func plot, COLOUR color)
   SDL_Surface *surf = get_markup_surface(rect, &A, &B, &C);
 
   COLOUR pixel, fill = color,
-      markup = SDL_MapRGBA(surf->format, 0xff,0xff,0,0);
-  if (plot != invertPixel)
-  {
-    unsigned R = (color & 0x00ff0000)>>16,
-        G = (color & 0x0000ff00)>>8,
-        B = (color & 0x000000ff),
-        Al = (color & 0xff000000)>>24;
-    fill = SDL_MapRGBA(surf->format, R, G, B, Al);
-    if (markup == fill)
-      markup = SDL_MapRGBA(surf->format, 0xff,0xee,0,0);
-  }
+      markup = MARKUP(surf);
 
   SDL_Rect clip_rect;
   SDL_GetClipRect(canvas, &clip_rect);
   SDL_SetClipRect(canvas, rect);
   vtx2i_t p;
   int i = 0, j = 0;
-
   for (i=0; i <= rect->w; i++)
   {
     p.pts[0] = i;
     int upper = -1, lower = -1;
+    upper = find_upper_markup(surf, &p, markup, rect);
 
-    for (j = 0; j <= rect->h; j++)
-    {
-      p.pts[1] = j;
-      pixel = getPixel (surf, &p);
-      if (pixel != markup)
-        continue;
-      upper = j;
-      break;
-
-    }
     if (upper != -1)
     {
       lower = upper;
@@ -196,13 +196,14 @@ int triangle_contains (triangle_t *t, vtx2i_t point)
   SDL_Surface *surf = get_markup_surface(rect, &A, &B, &C);
 
   COLOUR pixel,
-      markup = SDL_MapRGBA(surf->format, 0xff,0xff,0,0);
+      markup = MARKUP(surf);
 
   vtx2i_t p;
   int j = 0, upper = -1, lower = -1;
 
   p.pts[0] = point.pts[0];
-  for (j = 0; j <= rect->h; j++)
+  upper = find_upper_markup(surf, &p, markup, rect);
+  for (j = rect->h; j > 0; j--)
   {
     p.pts[1] = j;
     pixel = getPixel (surf, &p);
@@ -215,23 +216,10 @@ int triangle_contains (triangle_t *t, vtx2i_t point)
       }
     }
   }
-  for (j = rect->h; j > 0; j--)
-  {
-    p.pts[1] = j;
-    pixel = getPixel (surf, &p);
-    if (pixel == markup)
-    {
-      if (upper == -1)
-      {
-        upper = j;
-        break;
-      }
-    }
-  }
   SDL_FreeSurface (surf);
   free ((void *) rect);
 
-  return ((point.pts[1] > lower) && (point.pts[1] < upper));
+  return ((point.pts[1] > upper) && (point.pts[1] < lower));
 }
 
 void transfer_triangle (triangle_t *t, SDL_Surface *dst, SDL_Rect *dst_rect)
@@ -244,29 +232,18 @@ void transfer_triangle (triangle_t *t, SDL_Surface *dst, SDL_Rect *dst_rect)
   fit_vertex_in_rect(t->pts[2], &C, rect);
 
   SDL_Surface *surf = get_markup_surface(rect, &A, &B, &C);
+
   COLOUR pixel,
-      markup = SDL_MapRGBA(surf->format, 0xff,0xff,0,0),
-      bg = SDL_MapRGBA(surf->format, 0,0,0,0);
-  SDL_FillRect(surf, NULL,bg);
+      markup = MARKUP(surf);
 
   vtx2i_t p;
   int i = 0, j = 0;
-
   for (i=0; i <= rect->w; i++)
   {
     p.pts[0] = i;
+
     int upper = -1, lower = -1;
-
-    for (j = 0; j <= rect->h; j++)
-    {
-      p.pts[1] = j;
-      pixel = getPixel (surf, &p);
-      if (pixel != markup)
-        continue;
-      upper = j;
-      break;
-
-    }
+    upper = find_upper_markup(surf, &p, markup, rect);
     if (upper != -1)
     {
       lower = upper;
@@ -286,14 +263,13 @@ void transfer_triangle (triangle_t *t, SDL_Surface *dst, SDL_Rect *dst_rect)
         vtx2i_t p2 = {.pts = {i + rect->x, j + rect->y}};
         uint32_t clr = getPixel(canvas, &p2);
         clr |= alpha_mask;
+
         setPixel(surf, &p, clr);
       }
     }
   }
-
   rect->x -= dst_rect->x;
   rect->y -= dst_rect->y;
-
   SDL_BlitSurface (surf, NULL, dst, rect);
 
   SDL_FreeSurface (surf);
