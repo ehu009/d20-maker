@@ -472,6 +472,7 @@ void pinned_list_drawing (face_t *t)
     draw_triangle_coloured (t, TRIANGLE_COLOUR_PINNED);
   else
     draw_triangle_transparent (t);
+//    draw_triangle_coloured (t, TRIANGLE_COLOUR_HOVER);
 }
 
 void unpinned_list_drawing (face_t *t)
@@ -578,6 +579,8 @@ void _draw_main(void)
   else
   {
     draw_list (d20.faces, pinned_list_drawing);
+
+    draw_lines(application.lines);
 
     if (d20.available != NULL)
       draw_list (d20.available, unpinned_list_drawing);
@@ -1087,15 +1090,11 @@ printf("####\n");
   face_t *anchor = d20.current_free;
   d20.current_free = NULL;
 
-  print_face(anchor);
-
-  //d20.current_used = NULL;
-
-//  unlink_unpinned (d20.available, anchor);
+//  print_face(anchor);
 
   remove_faces_similar_to (d20.available, anchor);
 
-  create_neighbor_triangles_for (anchor);
+
 
 
 //  insert into list of placed triangles
@@ -1119,6 +1118,9 @@ printf("####\n");
     }
     free_chainslider(slider);
   }
+
+  create_neighbor_triangles_for (anchor);
+
 
 }
 
