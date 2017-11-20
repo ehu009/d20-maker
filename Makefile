@@ -7,7 +7,7 @@ LIBS = -lm -lSDL2 -lSDL2_image -lSDL2_ttf
 
 SRC_PATH=./src
 OBJS = vertex pixels lines mouse chain screen-triangles net-builder sha256 storage fader button
-HEAD =  mouse_app font colours d20
+HEAD =  debug mouse_app font colours d20
 SRCS = main
 
 OBJECTS = $(OBJS:%=$(SRC_PATH)/%.c) $(OBJS:%=$(SRC_PATH)/%.h)

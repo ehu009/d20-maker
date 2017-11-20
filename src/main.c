@@ -4,8 +4,11 @@
 #include    "SDL2/SDL_image.h"
 #include    "SDL2/SDL_ttf.h"
 
+#include "debug.h"
 #include "colours.h"
 #include "net-builder.h"
+
+int debug = 2;
 
 char *default_path = "default.jpg\0";
 char *image_path = NULL;
@@ -35,6 +38,7 @@ static int exit_condition (SDL_Event *event);
 
 int main (int argc, char *argv[])
 {
+  DEBUG(2,"Starting icosahedron maker.\0")
   if (argc > 1)
     image_path = argv[1];
   else
@@ -42,7 +46,7 @@ int main (int argc, char *argv[])
 
   if (!(init ()))
   {
-    printf ("Something went wrong- exiting.\n");
+    DEBUG(1,"Something went wrong- exiting.\0")
     unload ();
     return 1;
   }
@@ -52,6 +56,7 @@ int main (int argc, char *argv[])
   SDL_TimerID drawingTimer = SDL_AddTimer (draw_interval, draw_callback, NULL);
   SDL_TimerID updateTimer = SDL_AddTimer (update_interval, update_callback, NULL);
 
+  DEBUG(1,"Started icosahedron maker.\0")
   SDL_Event event;
   do
   {
@@ -76,14 +81,15 @@ int main (int argc, char *argv[])
   }
   while (!exit_condition(&event));
 
-
+  DEBUG(3,"Stopping icosahedron maker.\0")
   SDL_RemoveTimer (updateTimer);
   SDL_RemoveTimer (drawingTimer);
+  DEBUG(2,"Stopped icosahedron maker.\0")
 
   app_free ();
 
   unload ();
-
+  DEBUG(1, "Exiting icosahedron maker.\0")
   return 0;
 }
 

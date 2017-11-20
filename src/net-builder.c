@@ -14,9 +14,8 @@
 #include "fader.h"
 #include "button.h"
 
-//  #define DEBUG
 
-#define LINE printf("line: %d\n", __LINE__);fflush(stdout);
+
 
 extern SDL_Rect draw_area;
 
