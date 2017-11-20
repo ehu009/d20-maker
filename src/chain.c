@@ -7,7 +7,6 @@
 #include "chain.h"
 
 
-#define LINE printf("line chain: %d\n", __LINE__);
 
 /*
  *  Ring-linked list link data type
@@ -314,7 +313,7 @@ int slider_insert_after (chainslider_t *slider, void *item)
       slider->current = link;
     }
     ++slider->linked_chain->links;
-LINE
+
     SDL_UnlockMutex(slider->linked_chain->lock);
   }
   return 0;

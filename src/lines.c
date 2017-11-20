@@ -148,3 +148,36 @@ void invertPixel (SDL_Surface *dst, vtx2i_t *p, unsigned color)
   setPixel (dst, p, clr);
 }
 
+
+int negate_byte_at (unsigned byte, unsigned mask)
+{
+  int pt = ((byte ^ 0xffffff) & mask) - (byte & mask);
+  pt *= *colour_negate_rate;
+  pt += (byte & mask);
+  while (mask >0xff)
+  {
+    mask /= 0x100;
+    pt /= 0x100;
+  }
+  return pt;
+}
+
+void divertPixel (SDL_Surface *dst, vtx2i_t *p, unsigned color)
+{
+  vtx2i_t p2 = *p;
+  SDL_Rect clip_rect;
+  SDL_GetClipRect (canvas, &clip_rect);
+  if (clip_rect.x != 0)
+    p2.pts[0] += clip_rect.x;
+  if (clip_rect.y != 0)
+    p2.pts[1] += clip_rect.y;
+
+  unsigned clr = getPixel (canvas, &p2);
+  unsigned R, G, B;
+  R = negate_byte_at(clr, canvas->format->Rmask);
+  G = negate_byte_at(clr, canvas->format->Gmask);
+  B = negate_byte_at(clr, canvas->format->Bmask);
+
+  clr = SDL_MapRGBA(dst->format, R,G,B,0xff);
+  setPixel (dst, p, clr);
+}

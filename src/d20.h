@@ -2,30 +2,64 @@
 #ifndef   ICOSAHEDRON_H_
   #define   ICOSAHEDRON_H_
 
-  #include  "vertex.h"
 
+  #include "vertex.h"
 
-  #define NUM_D20_VTX   12
 
   /*
    *  model of vertices in an icosahedron
    */
+  #define NUM_D20_VTX   12
 
-  vtx5i_t d20_model[NUM_D20_VTX] =
+  vtx5i_t d20_model[NUM_D20_VTX];
+
+
+  #define NUM_VTX_POS   5
+
+  struct vertex_slot
   {
-   {.pts = {1,2,3,5,6}},
-   {.pts = {0,2,3,4,7}},
-   {.pts = {0,1,4,5,8}},
-   {.pts = {0,1,6,7,9}},
-   {.pts = {1,2,7,8,10}},
-   {.pts = {0,2,6,8,11}},
-   {.pts = {0,3,5,9,11}},
-   {.pts = {1,3,4,9,10}},
-   {.pts = {2,4,5,10,11}},
-   {.pts = {3,6,7,10,11}},
-   {.pts = {4,7,8,9,11}},
-   {.pts = {5,6,8,9,10}}
+    struct vertex_slot *links[NUM_VTX_POS];
   };
+  typedef struct vertex_slot slot_t;
+
+
+  void init_d20 (slot_t *root);
+
+
+  slot_t *find_slot_opposing (slot_t *a1, slot_t *a2, slot_t *opposer);
+
+
+
+  struct d20_slot
+  {
+    slot_t *sA, *sB, *sC;
+    void *item;
+  };
+
+  typedef struct d20_slot face_t;
+
+  int equal_faces (face_t *A, face_t *B);
+
+  face_t *new_face (slot_t *a, slot_t *b, slot_t *c);
+  face_t *copy_face (face_t *ptr);
+  face_t *face_that_neighbors (face_t *f, char k);
+
+
+  /*
+   * Storage object
+   */
+
+  #include "chain.h"
+
+  struct d20_object
+  {
+    chain_t *available, *faces;
+    face_t *current_used, *current_free;
+
+    slot_t net[NUM_D20_VTX];
+
+  };
+  typedef struct d20_object d20_t;
 
 
 
