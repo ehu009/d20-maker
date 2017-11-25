@@ -8,7 +8,10 @@
 #include "colours.h"
 #include "net-builder.h"
 
-int debug = 2;
+#define VERBOSE_CHAR  'v'
+#define VERBOSE_DEFAULT 2
+
+int debug = -1;
 
 char *default_path = "default.jpg\0";
 char *image_path = NULL;
@@ -38,11 +41,42 @@ static int exit_condition (SDL_Event *event);
 
 int main (int argc, char *argv[])
 {
-  DEBUG(2,"Starting icosahedron maker.\0")
+
   if (argc > 1)
-    image_path = argv[1];
+  {
+    if (argc == 2)
+    {
+      if (argv[1][0] == '-')
+      {
+        image_path = default_path;
+        if (argv[1][1] == VERBOSE_CHAR)
+          debug = argv[1][2] - '0';
+      }
+      else
+        image_path = argv[1];
+    }
+    else
+    {
+      if (argv[1][0] == '-')
+      {
+        image_path = argv[2];
+        if (argv[1][1] == VERBOSE_CHAR)
+          debug = argv[1][2] - '0';
+      }
+      else if (argv[2][0] == '-')
+      {
+        image_path = argv[1];
+        if (argv[2][0] == '-' && argv[2][1] == VERBOSE_CHAR)
+          debug = argv[2][2] - '0';
+      }
+    }
+  }
   else
     image_path = default_path;
+  if (debug == -1)
+    debug = VERBOSE_DEFAULT;
+
+  DEBUG(2,"Starting icosahedron maker.\0")
 
   if (!(init ()))
   {
