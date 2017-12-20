@@ -18,8 +18,8 @@ char *image_path = NULL;
 
 int init (void);
 void unload (void);
-const uint32_t draw_interval = 1000/24;
-const uint32_t update_interval = 1000/64;
+uint32_t draw_interval = 1000/128;
+uint32_t update_interval = 1000/64;
 
 static uint32_t draw_callback (uint32_t interval, void *param);
 static uint32_t update_callback (uint32_t interval, void *param);
@@ -101,6 +101,11 @@ int main (int argc, char *argv[])
     DEBUG(1,"\t- something went wrong- exiting.\0")
     unload ();
     return 1;
+  }
+  if (debug >= 1)
+  {
+    draw_interval *= 16;
+    update_interval *= 8;
   }
 
   app_start ();
