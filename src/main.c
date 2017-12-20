@@ -9,7 +9,7 @@
 #include "net-builder.h"
 
 #define VERBOSE_CHAR  'v'
-#define VERBOSE_DEFAULT 2
+#define VERBOSE_DEFAULT 0
 
 unsigned debug = -1;
 
@@ -66,11 +66,11 @@ void parse_args (int n, char *v[])
       SET_VERBOSITY_WITH(v[2])
     }
   }
+  verbosity_level -= '0';
   if (verbosity_level < 0)
     debug = VERBOSE_DEFAULT;
   else
   {
-    verbosity_level -= '0';
     debug = verbosity_level;
   }
 }
@@ -89,32 +89,36 @@ int main (int argc, char *argv[])
       parse_args (argc, argv);
   }
   else
+  {
+    debug = VERBOSE_DEFAULT;
     image_path = default_path;
-
+  }
 
   char str[] = "\t- verbosity was set to 0\0";
   str[strlen(str) - 1] += debug;
-  DEBUG(2,str)
+  DEBUG(1,str)
 
   if (!(init ()))
   {
-    DEBUG(1,"\t- something went wrong- exiting.\0")
+    DEBUG(0,"\t- something went wrong- exiting.\0")
     unload ();
     return 1;
   }
   if (debug >= 1)
   {
-    draw_interval *= 16;
+    draw_interval *= 8;
     update_interval *= 8;
   }
 
   app_start ();
-  DEBUG(2,"\t- initialized application\0")
+  DEBUG(3,"\t- initialized application\0")
+
+  /*
   SDL_TimerID drawingTimer = SDL_AddTimer (draw_interval, draw_callback, NULL);
   SDL_TimerID updateTimer = SDL_AddTimer (update_interval, update_callback, NULL);
   DEBUG(2,"\t- started drawing and update timers\0")
-
-  DEBUG(VERBOSE_DEFAULT,"Started icosahedron maker.\0")
+*/
+  DEBUG(1,"Started icosahedron maker.\0")
   SDL_Event event;
   do
   {
@@ -126,30 +130,40 @@ int main (int argc, char *argv[])
     else
     {
 
+      do
+      {
+      /*
       if (event.type == SDL_USEREVENT)
       {
           void (*p) (void*) = event.user.data1;
           p (NULL);
       }
+*/
+        mouse_update (&event);
+      }
+      while(SDL_PollEvent (&event));
 
-      mouse_update (&event);
-
-
+      app_usage ();
+      mouse_reset();
+      app_draw();
+      SDL_UpdateWindowSurface (myWindow);
+      SDL_Delay (update_interval);
     }
   }
   while (!exit_condition(&event));
 
-  DEBUG(1,"Stopping icosahedron maker.\0")
+  DEBUG(2,"Stopping icosahedron maker.\0")
+  /*
   SDL_RemoveTimer (updateTimer);
   SDL_RemoveTimer (drawingTimer);
   DEBUG(2,"\t- removed timers.\0")
-
+*/
   app_free ();
-  DEBUG(2,"\t- deallocated d20 builder structures\0")
+  DEBUG(3,"\t- deallocated d20 builder structures\0")
   unload ();
-  DEBUG(2,"\t- destroyed window\0")
+  DEBUG(3,"\t- destroyed window\0")
 
-  DEBUG(VERBOSE_DEFAULT, "Exiting icosahedron maker.\0")
+  DEBUG(1, "Exiting icosahedron maker.\0")
   return 0;
 }
 
