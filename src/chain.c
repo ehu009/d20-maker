@@ -164,6 +164,8 @@ typedef struct chain_iterator chainslider_t;
  */
 chainslider_t *make_chainslider (chain_t *linked_chain)
 { //  Create ring-linked list manipulator
+  if (linked_chain == NULL)
+    return NULL;
   chainslider_t *slider = calloc (1, sizeof (chainslider_t));
   if (slider != NULL)
   {
