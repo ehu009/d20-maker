@@ -4,6 +4,8 @@
   #define   COLOUR   uint32_t
 
   extern unsigned alpha_mask;
+  #define   GET_ALPHA_MASK(surface)  ((canvas->format->Rmask | canvas->format->Gmask | canvas->format->Bmask \
+  ) ^ 0xffffffff)
 
   #define   FONT_COLOUR_WHITE   (SDL_Color) {0xff,0xff,0xff}
   #define   FONT_COLOUR_BLACK   (SDL_Color) {0,0,0}

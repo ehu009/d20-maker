@@ -4,6 +4,8 @@
   #include <malloc.h>
 #endif
 
+#include "debug.h"
+
 #include "d20.h"
 #include "net-builder.h"
 #include "chain.h"
@@ -102,12 +104,6 @@ int relocate_mode (void)
   }
   return application.relocate_mode;
 }
-
-
-
-
-#include "d20.h"
-
 
 
 void draw_triangle_transparent (face_t *t)
@@ -489,6 +485,8 @@ void draw_list (chain_t *list, tripoint_draw_func draw_func)
 {
   chainslider_t *slider;
   slider = make_chainslider(list);
+  if (slider == NULL)
+    return;
   face_t *start, *cur;
   start = slider_current (slider);
   cur = start;
@@ -581,11 +579,13 @@ void _draw_main(void)
 
 void app_draw (void)
 {
+/*
   #ifdef DEBUG
   printf("drawing...");
   fflush(stdout);
   #endif
-
+*/
+  DEBUG(2, "Started drawing.")
   SDL_FillRect (canvas, NULL, COLOUR_BACKGROUND);
   SDL_BlitSurface (src_image, NULL, canvas, &draw_area);
 
@@ -608,20 +608,24 @@ void app_draw (void)
 
   if (application.reset_btn != NULL)
     button_draw(application.reset_btn);
-
+/*
   #ifdef DEBUG
   printf("\tdone\n");
   #endif
+  */
+  DEBUG(2, "Finished drawing.")
 }
 
 
 void select_triangle (void)
 {
+  /*
   #ifdef DEBUG
   printf("selecting...");
   fflush(stdout);
   #endif
-
+  */
+  DEBUG(2, "Started selecting.")
   vtx2i_t m = {.pts = {application.mX, application.mY}};
 
   face_t *new_cUsed = NULL, *new_cFree = NULL;
@@ -634,10 +638,11 @@ void select_triangle (void)
 
   d20.current_free = new_cFree;
   d20.current_used = new_cUsed;
-
+/*
   #ifdef DEBUG
   printf("\tdone\n");
-  #endif
+  #endif*/
+  DEBUG(2, "Finished selecting.")
 }
 
 
@@ -881,6 +886,7 @@ face_t *create_root_neighbor (char k)
         break;
     }
     t->item = p;
+    if (debug >= 1)
     print_face(t);
   }
   else
@@ -929,7 +935,7 @@ void pin_root (void)
 
   d20.current_used = NULL;
   d20.current_free = NULL;
-  printf("ROOT PINNED\n");
+  DEBUG(1, "Root pinned.\n");
 }
 
 
@@ -942,23 +948,32 @@ face_t *neighbor_for_slot (face_t *p, char k)
 
   if (err)
     return t;
-
+  if (debug >= 1)
+  {
+  printf("trying to add neighbor:  ");
+  print_face(t);
+}
   t->item = NULL;
 
   int q = face_exists_in(t, d20.faces);
   err |= (q);
 
-  printf("trying to add neighbor:  ");
-  print_face(t);
   if (err)
   {
+    if (debug >= 1)
     printf("already pinned\n");
     //print_face(t);
+
     free(t);
     return NULL;
   }
+  if (debug >= 1)
+  LINE
+
   vtx2d_t *tmp_pos = position_that_neighbors(p, k);
   triangle_t *pt = p->item;
+if (debug >= 1)
+LINE
 
   if (!SDLRect_contains(tmp_pos, &draw_area))
   {
@@ -967,17 +982,25 @@ face_t *neighbor_for_slot (face_t *p, char k)
     free (t);
     return NULL;
   }
+  if (debug >= 1)
+LINE
 
   vtx2d_t *pos = position_exists(tmp_pos, application.positions);
   if (pos != NULL)
   {
     free (tmp_pos);
     tmp_pos = pos;
+
+    if (debug >= 1)
     printf("used existing position %p\n", pos);
   }
+  if (debug >= 1)
+LINE
 
   triangle_t *tr = copy_triangle(pt);
   tr->pts[k-'A'] = tmp_pos;
+  if (debug >= 1)
+LINE
 
   t->item = tr;
   return t;
@@ -993,20 +1016,40 @@ void create_neighbor_triangles_for (face_t *p)
     ptr = neighbor_for_slot(p, c);
     if (ptr != NULL)
     {
-      if (!triangle_exists(ptr->item, d20.available, FLOAT_ACC))
+    if (debug >= 1)
+    {
+    LINE
+      printf("checking if triangle exists on screen already\nslot is %p\ntriangle is %p\nlist is %p\n",ptr, ptr->item, d20.available);
+      }
+      int ex = triangle_exists(ptr->item, d20.available, FLOAT_ACC);
+      if (debug >= 1)
+      LINE
+
+      if (!ex)
       {
+        if (debug >= 1)
+        LINE
+
         slider_insert_after (s, (void *) ptr);
-        printf("added neighbor\n");
+
+        DEBUG(1, "Added neighbor")
+
       }
       else
       {
-        printf("triangle seems to exist on screen\n");
+
+        DEBUG(1, "Triangle seems to exist on screen already.")
+
         //  this case seemingly never occurs
         free(ptr->item);
         free(ptr);
+        if (debug >= 1)
+        LINE
       }
     }
     ++ c;
+    if (debug >= 1)
+    LINE
   }
   while (c <= 'C');
 
@@ -1021,7 +1064,7 @@ void remove_faces_similar_to (chain_t *unpinned, face_t *cmp)
   if ((unpinned == NULL) || (k == 1))
     return;
 
-  printf("trying to remove duplicates\n");
+  DEBUG(1, "Trying to remove duplicates")
   chainslider_t *s = make_chainslider(unpinned);
   face_t *cur = slider_current (s);
   do
@@ -1030,10 +1073,11 @@ void remove_faces_similar_to (chain_t *unpinned, face_t *cmp)
       if (equal_faces(cur, cmp))
       {
         slider_remove_prev(s);
-        print_face(cur);
+        //print_face(cur);
         if (cur != cmp)
         {
-        printf("removed a duplicate :  ");
+
+        DEBUG(2, "\t- removed a duplicate");
         free(cur->item);
         free(cur);
         }
@@ -1043,22 +1087,29 @@ void remove_faces_similar_to (chain_t *unpinned, face_t *cmp)
   }
   while (k);
   free(s);
-
+  if (debug >= 1)
+  {
   k = q-chain_size(unpinned);
   if (k)
     printf("removed %d duplicates\n",k);
+    }
 }
 
 
 
 void pin (void)
 {
+if (debug >= 1)
+{
 printf("####\n");
   printf("PINNING\nnum pinned : %d\nthe face in question is: ", chain_size(d20.faces));
+  }
   face_t *anchor = d20.current_free;
   d20.current_free = NULL;
 
 //  print_face(anchor);
+if (debug >= 1)
+LINE
 
   remove_faces_similar_to (d20.available, anchor);
 
@@ -1069,27 +1120,45 @@ printf("####\n");
   chainslider_t *slider = make_chainslider(d20.faces);
   slider_insert_after (slider, anchor);
   free_chainslider(slider);
+if (debug >= 1)
+  LINE
+
   slider = NULL;
 
   add_lines_for (&application.lines, anchor->item);
 
-  //  no more triangles possible
-  if (chain_size(d20.available) == 1)
-  {
-    slider = make_chainslider(d20.available);
-  face_t *cur;
-    cur = slider_current (slider);
-    if (face_exists_in(cur, d20.faces))
-    {
-      free_chain(d20.available);
-      d20.available = NULL;
-    }
-    free_chainslider(slider);
-  }
+if (debug >= 1)
+LINE
 
   create_neighbor_triangles_for (anchor);
+if (debug >= 1)
+LINE
+/*
+  //  no more triangles possible
+  if (chain_size(d20.available) == 0)
+  {*/
+  /*
+    slider = make_chainslider(d20.available);
+  face_t *cur;*/
 
+//LINE
 
+    /*cur = slider_current (slider);
+
+    LINE
+
+    if (face_exists_in(cur, d20.faces))
+    {
+    LINE*//*
+      free_chain(d20.available);
+      d20.available = NULL;
+    LINE*/
+    /*}
+    free_chainslider(slider);
+    LINE*/
+  /*}*/
+
+//LINE
 }
 
 
@@ -1190,6 +1259,7 @@ void app_main (void)
                 fader_setPos(application.colour_select, canvas->w - (BORDER_SIZE + BUTTON_WIDTH), fader_yPos);
               }
             }
+
           }
         }
         else if (d20.current_used != NULL)
@@ -1224,6 +1294,7 @@ void app_main (void)
       else
       {
         select_triangle();
+
       }
     }
 }
@@ -1241,7 +1312,7 @@ void app_usage ()
   if (application.status == APP_MAIN)
   {
     app_main();
-
+  //  LINE
     if (application.reset_btn != NULL)
       button_update(application.reset_btn);
 
