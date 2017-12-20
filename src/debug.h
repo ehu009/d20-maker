@@ -3,7 +3,8 @@
 
   #include <stdio.h>
 
-  extern int debug;
+  extern unsigned debug;
+  //  do not set this value above nine
 
   #define DEBUG(lvl,x) if(debug >= lvl){printf("%s, %d: %s\n", __FILE__, __LINE__, x);}
 

@@ -11,7 +11,7 @@
 #define VERBOSE_CHAR  'v'
 #define VERBOSE_DEFAULT 2
 
-int debug = -1;
+unsigned debug = -1;
 
 char *default_path = "default.jpg\0";
 char *image_path = NULL;
@@ -38,66 +38,85 @@ SDL_Rect draw_area;
 
 static int exit_condition (SDL_Event *event);
 
+void parse_args (int n, char *v[])
+{
+  char verbosity_level = -1;
+  #define SET_VERBOSITY_WITH(x)  if (x[1] == VERBOSE_CHAR) verbosity_level = x[2];
+
+  if (n == 2)
+  {
+    if (v[1][0] == '-')
+    {
+      image_path = default_path;
+      SET_VERBOSITY_WITH(v[1])
+    }
+    else
+      image_path = v[1];
+  }
+  else
+  {
+    if (v[1][0] == '-')
+    {
+      image_path = v[2];
+      SET_VERBOSITY_WITH(v[1])
+    }
+    else if (v[2][0] == '-')
+    {
+      image_path = v[1];
+      SET_VERBOSITY_WITH(v[2])
+    }
+  }
+  if (verbosity_level < 0)
+    debug = VERBOSE_DEFAULT;
+  else
+  {
+    verbosity_level -= '0';
+    debug = verbosity_level;
+  }
+}
 
 int main (int argc, char *argv[])
 {
-
+  //DEBUG(1,"Starting icosahedron maker.\0")
   if (argc > 1)
   {
-    if (argc == 2)
+    if (argc > 3)
     {
-      if (argv[1][0] == '-')
-      {
-        image_path = default_path;
-        if (argv[1][1] == VERBOSE_CHAR)
-          debug = argv[1][2] - '0';
-      }
-      else
-        image_path = argv[1];
+      printf("\t- Too many arguments - exiting.\n");
+      return -1;
     }
     else
-    {
-      if (argv[1][0] == '-')
-      {
-        image_path = argv[2];
-        if (argv[1][1] == VERBOSE_CHAR)
-          debug = argv[1][2] - '0';
-      }
-      else if (argv[2][0] == '-')
-      {
-        image_path = argv[1];
-        if (argv[2][0] == '-' && argv[2][1] == VERBOSE_CHAR)
-          debug = argv[2][2] - '0';
-      }
-    }
+      parse_args (argc, argv);
   }
   else
     image_path = default_path;
-  if (debug == -1)
-    debug = VERBOSE_DEFAULT;
 
-  DEBUG(2,"Starting icosahedron maker.\0")
+
+  char str[] = "\t- verbosity was set to 0\0";
+  str[strlen(str) - 1] += debug;
+  DEBUG(2,str)
 
   if (!(init ()))
   {
-    DEBUG(1,"Something went wrong- exiting.\0")
+    DEBUG(1,"\t- something went wrong- exiting.\0")
     unload ();
     return 1;
   }
 
   app_start ();
-
+  DEBUG(2,"\t- initialized application\0")
   SDL_TimerID drawingTimer = SDL_AddTimer (draw_interval, draw_callback, NULL);
   SDL_TimerID updateTimer = SDL_AddTimer (update_interval, update_callback, NULL);
+  DEBUG(2,"\t- started drawing and update timers\0")
 
-  DEBUG(1,"Started icosahedron maker.\0")
+  DEBUG(VERBOSE_DEFAULT,"Started icosahedron maker.\0")
   SDL_Event event;
   do
   {
 
     if (!SDL_PollEvent (&event))
     {
-    //  SDL_Delay (draw_interval);
+      SDL_Delay (update_interval);
     }
     else
     {
@@ -115,15 +134,17 @@ int main (int argc, char *argv[])
   }
   while (!exit_condition(&event));
 
-  DEBUG(3,"Stopping icosahedron maker.\0")
+  DEBUG(1,"Stopping icosahedron maker.\0")
   SDL_RemoveTimer (updateTimer);
   SDL_RemoveTimer (drawingTimer);
-  DEBUG(2,"Stopped icosahedron maker.\0")
+  DEBUG(2,"\t- removed timers.\0")
 
   app_free ();
-
+  DEBUG(2,"\t- deallocated d20 builder structures\0")
   unload ();
-  DEBUG(1, "Exiting icosahedron maker.\0")
+  DEBUG(2,"\t- destroyed window\0")
+
+  DEBUG(VERBOSE_DEFAULT, "Exiting icosahedron maker.\0")
   return 0;
 }
 
@@ -139,14 +160,11 @@ typedef const char * (*error_source) (void);
 
 void print_error (const char *func_name, error_source func)
 {
-  printf ("%s: \"%s\"\n", func_name, func ());
+  printf ("\t- %s: \"%s\"\n", func_name, func ());
 }
-
-
 
 int init (void)
 {
-
   #define SDL_ERROR(x)  {print_error(x, SDL_GetError); return 0;}
 
   if (SDL_Init (SDL_INIT_EVENTS | SDL_INIT_VIDEO | SDL_INIT_TIMER))
@@ -157,6 +175,7 @@ int init (void)
     print_error ("TTF_Init\0", TTF_GetError);
     return 0;
   }
+  DEBUG(2, "\t- started SDL and SDL_ttf\0")
 
   src_image = IMG_Load (image_path);
   if (src_image == NULL)
@@ -164,6 +183,7 @@ int init (void)
     print_error ("IMG_Load\0", IMG_GetError);
     return 0;
   }
+  DEBUG(1, "\t- image loaded successfully\0")
 
   draw_area.x = BORDER_SIZE;
   draw_area.y = BORDER_SIZE;
@@ -179,17 +199,15 @@ int init (void)
       SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
       screenW, screenH, 0);
 
-
-
   if (myWindow == NULL)
     SDL_ERROR ("SDL_CreateWindow\0")
 
   canvas = SDL_GetWindowSurface (myWindow);
   if (canvas == NULL)
     SDL_ERROR ("SDL_GetWindowSurface\0")
+  alpha_mask = GET_ALPHA_MASK(canvas);
 
-  alpha_mask = canvas->format->Rmask | canvas->format->Gmask | canvas->format->Bmask;
-  alpha_mask ^= 0xffffffff;
+  DEBUG(2, "\t- created a window\0")
 
   return 1;
 }
@@ -255,7 +273,9 @@ void unload (void)
 {
   SDL_FreeSurface (src_image);
   SDL_DestroyWindow (myWindow);
+  DEBUG(2,"\t- freed surface and source image.\0")
 
   TTF_Quit ();
   SDL_Quit ();
+  DEBUG(2,"\t- quit SDL and SDL_ttf\0")
 }
