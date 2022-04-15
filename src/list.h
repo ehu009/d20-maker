@@ -11,7 +11,7 @@ void free_list(list_t *list);
 int list_size(list_t *list);
 int list_insert(list_t *list, void *item);
 void list_remove(list_t *list, void *item);
-
+void list_empty(list_t *list);
 
 struct linked_list_iterator;
 typedef struct linked_list_iterator list_i;

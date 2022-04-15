@@ -48,14 +48,25 @@ void free_list(list_t *list)
 {
   if (list != NULL)
   {  
+    list_empty(list);
+    free(list);
+  }
+}
+
+void list_empty(list_t *list)
+{
+  if (list != NULL)
+  {
     while (list->head != NULL)
     {
       l_node *next = list->head->next;
       free(list->head);
       list->head = next;
     }
+    list->size = 0;
   }
 }
+
 
 int list_size(list_t *list)
 {
