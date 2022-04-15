@@ -57,6 +57,15 @@ void free_list(list_t *list)
   }
 }
 
+int list_size(list_t *list)
+{
+  if (list == NULL)
+  {
+    return -1;
+  }
+  return list->size;
+} 
+
 int list_insert(list_t *list, void *item)
 {
   if (list != NULL)
@@ -78,21 +87,24 @@ void list_remove(list_t *list, void *item)
   {
     return;
   }
-  l_node **p = &list->head;
-  l_node *c = *p;
-  while(c != NULL)
+  l_node **prev = &list->head;
+  l_node *current = *prev;
+  while(current != NULL)
   {
-    l_node *n = c->next;
-    if (c->item == item)
+    int rm = 0;
+    l_node *next = current->next;
+    if (current->item == item)
     {
-      *p = n;
+      *prev = next;
+      rm = 1;
     }
-      p = &c->next;
-      c = n;
-      
-      
-      
-    
+    prev = &current->next;
+    if (rm)
+    {
+      free(current);
+      list->size --;
+    }
+    current = next;
   }
 }
 
@@ -136,5 +148,4 @@ void *list_iterator_next(list_i *iterator)
   }
   return NULL;
 }
-
 
