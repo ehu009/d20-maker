@@ -1,6 +1,9 @@
 #include "lines.h"
 
 
+double *colour_negate_rate = NULL;
+
+
 static void unsign (int *value, int *buf)
 { /*  if value is negative
     do buf = sign(value), value = abs(value)*2  */

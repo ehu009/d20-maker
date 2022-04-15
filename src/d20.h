@@ -11,7 +11,7 @@
    */
   #define NUM_D20_VTX   12
 
-  vtx5i_t d20_model[NUM_D20_VTX];
+  extern vtx5i_t d20_model[NUM_D20_VTX];
 
 
   #define NUM_VTX_POS   5

@@ -6,7 +6,7 @@
 #define STATE mouse.buttons
 
 
-
+mouse_t mouse;
 
 void mouse_reset (void)
 { //  Reset mouse state

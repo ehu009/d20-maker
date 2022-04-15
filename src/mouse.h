@@ -16,7 +16,7 @@
     mouse_data buttons;
   } mouse_t;
 
-  mouse_t mouse;
+  extern mouse_t mouse;
 
   /*
    *  Mouse state maintenance prototypes
