@@ -1,4 +1,5 @@
-
+#ifndef NET_BUILDER_H_
+#define NET_BUILDER_H_
 
 #include    "SDL2/SDL.h"
 
@@ -26,3 +27,5 @@ void app_free (void);
 
 void app_usage (void);
 void app_draw (void);
+
+#endif    /* NET_BUILDER_H_*/
