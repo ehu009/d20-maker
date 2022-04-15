@@ -8,7 +8,7 @@
 
 #include "d20.h"
 #include "net-builder.h"
-#include "chain.h"
+#include "list.h"
 #include "screen-triangles.h"
 
 
@@ -64,7 +64,7 @@ static struct
   double radius;
   int rotation;
 
-  chain_t *positions, *lines;
+  list_t *positions, *lines;
 
   //  togglers
   char rotate_root;
@@ -134,100 +134,93 @@ d20_t d20;
 
 
 
-vtx2d_t *position_exists (vtx2d_t *p, chain_t *positions)
+vtx2d_t *position_exists (vtx2d_t *p, list_t *positions)
 {
   vtx2d_t *ptr = NULL;
 
-  chainslider_t *slider = make_chainslider(positions);
-  vtx2d_t *start = slider_current(slider),
-      *cur = start;
-  do
+  list_i *slider = make_list_iterator(positions);
+  vtx2d_t *cur = list_iterator_next(slider);
+  while (cur != NULL)
   {
     if (equal_vertices(cur, p, FLOAT_ACC))
     {
       ptr = cur;
       break;
     }
-    slider_procede (slider);
-    cur = slider_current (slider);
+    cur = list_iterator_next(slider);
   }
-  while (cur != start);
+  
 
   if (ptr == NULL)
-    slider_insert_after(slider, p);
+    list_insert(positions, p);
 
-  free_chainslider(slider);
+  free_list_iterator(slider);
 
   return ptr;
 }
 
 
-int face_exists_in (face_t *t, chain_t *list)
+int face_exists_in (face_t *t, list_t *list)
 {
   int eq = 0;
-  chainslider_t *slider = make_chainslider(list);
-  face_t *start = slider_current (slider),
-      *cur = start;
+  list_i *slider = make_list_iterator(list);
+  face_t *cur = list_iterator_next(slider);
 
-  do
+  while (cur != NULL)
   {
     if (equal_faces(cur, t))
     {
       eq ++;
       break;
     }
-    slider_procede (slider);
-    cur = slider_current (slider);
+    cur = list_iterator_next(slider);
   }
-  while (cur != start);
-  free_chainslider(slider);
+  
+  
+  free_list_iterator(slider);
   return eq;
 }
 
 
-face_t *find_current_selected (chain_t *list, vtx2i_t *mouse)
+face_t *find_current_selected (list_t *list, vtx2i_t *mouse)
 {
-  chainslider_t *slider = make_chainslider (list);
-  face_t *start = slider_current (slider),
-      *cur = start,
+  list_i *slider = make_list_iterator (list);
+  face_t *cur = list_iterator_next(slider),
       *ret = NULL;
 
-  do
+  while (cur != NULL)
   {
     if (triangle_contains (cur->item, *mouse))
     {
       ret = cur;
       break;
     }
-    slider_procede (slider);
-    cur = slider_current (slider);
+    cur = list_iterator_next(slider);
   }
-  while (cur != start);
-  free_chainslider(slider);
+  
+  free_list_iterator(slider);
   return ret;
 }
 
 
-char line_exists (struct line *ptr, chain_t *lines)
+char line_exists (struct line *ptr, list_t *lines)
 {
-  chainslider_t *s = make_chainslider(lines);
+  list_i *s = make_list_iterator(lines);
 
-  struct line *start, *cur;
-  start = slider_current (s);
-  cur = start;
+  struct line *cur = list_iterator_next(s);
   char exists = 0;
-  do
+  while (cur != NULL)
   {
     if (equal_lines(cur, ptr))
     {
       exists ++;
       break;
     }
-    slider_procede (s);
-    cur = slider_current (s);
+    cur = list_iterator_next(s);
   }
-  while (cur != start);
-  free (s);
+  
+  
+  free_list_iterator(s);
   return exists;
 }
 
@@ -245,7 +238,7 @@ void print_face(face_t *f)
 
 
 
-void add_lines_for (chain_t **lines, triangle_t *t)
+void add_lines_for (list_t **lines, triangle_t *t)
 {
   struct line *a, *b, *c;
   a = malloc (sizeof (struct line));
@@ -258,20 +251,16 @@ void add_lines_for (chain_t **lines, triangle_t *t)
   b->B = t->pts[2];
   c->A = t->pts[2];
   c->B = t->pts[0];
-  chainslider_t *s;
-
+  
   if (*lines == NULL)
   {
-    *lines = make_chain();
-    s = make_chainslider(*lines);
-    slider_insert_after(s, a);
-    slider_insert_after(s, b);
-    slider_insert_after(s, c);
-    free(s);
+    *lines = make_list();
+    list_insert(*lines, a);
+    list_insert(*lines, b);
+    list_insert(*lines, c);
     return;
   }
 
-  s = make_chainslider(*lines);
   void add_or_free_line (struct line *ptr)
   {
     if (line_exists(ptr, *lines))
@@ -280,14 +269,13 @@ void add_lines_for (chain_t **lines, triangle_t *t)
     }
     else
     {
-      slider_insert_after(s, ptr);
+      list_insert(*lines, ptr);
     }
   }
   add_or_free_line (a);
   add_or_free_line (b);
   add_or_free_line (c);
 
-  free(s);
 }
 
 
@@ -322,20 +310,22 @@ int resize_root (int diff)
   return 0;
 }
 
-void free_list (chain_t *list)
+void empty_list (list_t *list)
 {
   if (list == NULL)
-    return;
-  chainslider_t *slider = make_chainslider (list);
-  while (chain_size (list))
   {
-    free((void *) slider_current(slider));
-    slider_procede(slider);
-    slider_remove_prev (slider);
+    return;
   }
-  free((void *) slider_current(slider));
-  free_chainslider (slider);
-  free_chain (list);
+  list_i *slider = make_list_iterator (list);
+  void *item = list_iterator_next(slider);
+  
+  while (item != NULL)
+  {
+    free(item);
+    item = list_iterator_next(slider);
+  }
+  free_list_iterator (slider);
+  free_list (list);
 }
 
 
@@ -372,11 +362,10 @@ void init_net_builder (void)
     tr->pts[2] = (vtx2d_t *) calloc (1, sizeof(vtx2d_t));
     t->item = tr;
 
-    application.positions = make_chain(tr->pts[0]);
-    chainslider_t *slider = make_chainslider (application.positions);
-    slider_insert_after(slider, tr->pts[1]);
-    slider_insert_after(slider, tr->pts[2]);
-    free_chainslider(slider);
+    application.positions = make_list();
+    list_insert(application.positions, tr->pts[0]);
+    list_insert(application.positions, tr->pts[1]);
+    list_insert(application.positions, tr->pts[2]);
   }
 
   d20.current_free = t;
@@ -406,11 +395,12 @@ void app_start (void)
   application.status = APP_MAIN;
 }
 
-void free_face_list(chain_t *list)
+/*
+void free_face_list(list_t *list)
 {
   if (list == NULL)
     return;
-  chainslider_t *slider = make_chainslider (list);
+  chainslider_i *slider = make_chainslider (list);
   face_t *ptr = NULL;
 
   while (chain_size (list))
@@ -427,19 +417,20 @@ void free_face_list(chain_t *list)
   free_chain (list);
 
 }
+*/
 
 void app_free (void)
 {
   // free structures in the d20
-  free_face_list(d20.available);
+  empty_list(d20.available);
   d20.available = NULL;
-  free_face_list(d20.faces);
+  empty_list(d20.faces);
   d20.faces = NULL;
 
   // free graphical elements
-  free_list(application.lines);
+  empty_list(application.lines);
   application.lines = NULL;
-  free_list(application.positions);
+  empty_list(application.positions);
   application.positions = NULL;
 
   // free buttons
@@ -486,56 +477,49 @@ void finished_list_drawing (face_t *t)
 
 typedef void (*tripoint_draw_func) (face_t *);
 
-void draw_list (chain_t *list, tripoint_draw_func draw_func)
+void draw_list (list_t *list, tripoint_draw_func draw_func)
 {
-  chainslider_t *slider;
-  slider = make_chainslider(list);
+  list_i *slider;
+  slider = make_list_iterator(list);
   if (slider == NULL)
     return;
-  face_t *start, *cur;
-  start = slider_current (slider);
-  cur = start;
-  do
+    
+  face_t *cur = list_iterator_next(slider);
+  while (cur != NULL)
   {
     draw_func(cur);
 
-    slider_procede (slider);
-    cur = slider_current (slider);
+    cur = list_iterator_next (slider);
   }
-  while (cur != start);
 
-  free_chainslider (slider);
+  free_list_iterator (slider);
 }
 
 
 
 
 
-void copy_triangles (chain_t *triangles, SDL_Surface *dst)
+void copy_triangles (list_t *triangles, SDL_Surface *dst)
 {
-  chainslider_t *s = make_chainslider (triangles);
-  face_t *start, *cur;
-  start = slider_current (s);
-  cur = start;
-  do
+  list_i *s = make_list_iterator (triangles);
+  face_t *cur = list_iterator_next (s);
+  while (cur != NULL)
   {
     draw_triangle_on(cur, dst, &draw_area);
 
-    slider_procede (s);
-    cur = slider_current (s);
+    cur = list_iterator_next (s);
   }
-  while (cur != start);
-  free_chainslider(s);
+  
+  free_list_iterator(s);
 }
 
-void draw_lines (chain_t *lines)
+void draw_lines (list_t *lines)
 {
-  chainslider_t *s = make_chainslider(lines);
+  list_i *s = make_list_iterator(lines);
 
-  struct line *start, *cur;
-  start = slider_current (s);
-  cur = start;
-  do
+  struct line *cur = list_iterator_next (s);
+  
+  while (cur != NULL)
   {
     vtx2i_t A, B;
     get_vtx2i_from_vtx2d(cur->A, &A);
@@ -543,11 +527,10 @@ void draw_lines (chain_t *lines)
 
     draw_line2(canvas, &A, &B, divertPixel, 0);
 
-    slider_procede (s);
-    cur = slider_current (s);
+    cur = list_iterator_next (s);
   }
-  while (cur != start);
-  free_chainslider(s);
+  
+  free_list_iterator(s);
 }
 
 
@@ -608,7 +591,7 @@ void app_draw (void)
     fader_draw(application.colour_select);
     draw_lines(application.lines);
   }
-  if ((application.save_btn != NULL) && (chain_size(d20.faces) == 20))
+  if ((application.save_btn != NULL) && (list_size(d20.faces) == 20))
     button_draw(application.save_btn);
 
   if (application.reset_btn != NULL)
@@ -818,22 +801,21 @@ int equal_triangles (triangle_t *t1, triangle_t *t2, double acc)
   return (q == 3);
 }
 
-int triangle_exists (triangle_t *t, chain_t *list, double acc)
+int triangle_exists (triangle_t *t, list_t *list, double acc)
 {
-  chainslider_t *s = make_chainslider(list);
-  face_t *start = slider_current(s), *cur = start;
+  list_i *s = make_list_iterator(list);
+  face_t *cur = list_iterator_next(s);
   int q = 0;
-  do
+  while (cur != NULL)
   {
     if (equal_triangles(cur->item, t, acc))
     {
       ++ q;
       break;
     }
-    cur = slider_current(s);
-    slider_procede(s);
+    cur = list_iterator_next(s);
   }
-  while (cur != start);
+  
   return q;
 }
 
@@ -867,10 +849,8 @@ face_t *create_root_neighbor (char k)
   if (SDLRect_contains(tmp_pos, &draw_area))
   {
 
-    chainslider_t *slider = make_chainslider(application.positions);
-    slider_insert_after(slider, tmp_pos);
-    free_chainslider(slider);
-
+    list_insert(application.positions, tmp_pos);
+    
     triangle_t *p = malloc (sizeof(triangle_t));
     switch (k)
     {
@@ -911,18 +891,15 @@ void pin_root (void)
   void insert (face_t *ptr)
   {
     if (d20.available == NULL)
-      d20.available = make_chain ();
+      d20.available = make_list ();
 
-    chainslider_t *slider = make_chainslider(d20.available);
-    slider_insert_after (slider, (void *) ptr);
-    free_chainslider(slider);
+    list_insert(d20.available, (void *) ptr);
   }
 
   if (d20.faces == NULL)
   {
-    d20.faces = make_chain ();
-    chainslider_t *slider = make_chainslider(d20.faces);
-    slider_insert_after(slider, d20.current_free);
+    d20.faces = make_list ();
+    list_insert(d20.faces, d20.current_free);
   }
 
   face_t *ptr = NULL;
@@ -1015,7 +992,6 @@ void create_neighbor_triangles_for (face_t *p)
 {
   char c = 'A';
   face_t *ptr = NULL;
-  chainslider_t *s = make_chainslider(d20.available);
   do
   {
     ptr = neighbor_for_slot(p, c);
@@ -1029,13 +1005,12 @@ void create_neighbor_triangles_for (face_t *p)
       int ex = triangle_exists(ptr->item, d20.available, FLOAT_ACC);
       if (debug >= 1)
       LINE
-
       if (!ex)
       {
         if (debug >= 1)
         LINE
 
-        slider_insert_after (s, (void *) ptr);
+        list_insert(d20.available, (void *) ptr);
 
         DEBUG(1, "Added neighbor")
 
@@ -1043,8 +1018,7 @@ void create_neighbor_triangles_for (face_t *p)
       else
       {
 
-        DEBUG(1, "Triangle seems to exist on screen already.")
-
+        DEBUG(1, "Triangle seems to exist on screen already.");
         //  this case seemingly never occurs
         free(ptr->item);
         free(ptr);
@@ -1054,11 +1028,12 @@ void create_neighbor_triangles_for (face_t *p)
     }
     ++ c;
     if (debug >= 1)
-    LINE
+    LINE;
+    
+      
   }
   while (c <= 'C');
 
-  free_chainslider(s);
 }
 
 /*
@@ -1086,39 +1061,38 @@ void unlink_unpinned (chain_t *unpinned, face_t *ptr)
   free_chainslider(s);
 }*/
 
-void remove_faces_similar_to (chain_t *unpinned, face_t *cmp)
+void remove_faces_similar_to (list_t *unpinned, face_t *cmp)
   //  remove duplicates
 {
-  int k = chain_size (unpinned), q = k;
+  int k = list_size (unpinned), q = k;
   if ((unpinned == NULL) || (k == 1))
     return;
 
   DEBUG(1, "Trying to remove duplicates")
-  chainslider_t *s = make_chainslider(unpinned);
-  face_t *cur = slider_current (s);
-  do
+  list_i *s = make_list_iterator(unpinned);
+  face_t *cur = list_iterator_next (s);
+  while (cur != NULL)
   {
-      slider_procede(s);
       if (equal_faces(cur, cmp))
       {
-        slider_remove_prev(s);
         //print_face(cur);
         if (cur != cmp)
         {
-
         DEBUG(2, "\t- removed a duplicate");
+        
+        list_remove(unpinned, cur);
         free(cur->item);
         free(cur);
         }
       }
-    cur = slider_current (s);
-    --k;
+    cur = list_iterator_next (s);
   }
-  while (k);
+  
+
   free(s);
   if (debug >= 1)
   {
-  k = q-chain_size(unpinned);
+  k = q-list_size(unpinned);
   if (k)
     printf("removed %d duplicates\n",k);
     }
@@ -1131,7 +1105,7 @@ void pin (void)
 if (debug >= 1)
 {
 printf("####\n");
-  printf("PINNING\nnum pinned : %d\nthe face in question is: ", chain_size(d20.faces));
+  printf("PINNING\nnum pinned : %d\nthe face in question is: ", list_size(d20.faces));
   }
   face_t *anchor = d20.current_free;
   d20.current_free = NULL;
@@ -1146,13 +1120,10 @@ LINE
 
 
 //  insert into list of placed triangles
-  chainslider_t *slider = make_chainslider(d20.faces);
-  slider_insert_after (slider, anchor);
-  free_chainslider(slider);
+  list_insert(d20.faces, anchor);
+  
 if (debug >= 1)
   LINE
-
-  slider = NULL;
 
   add_lines_for (&application.lines, anchor->item);
 
@@ -1273,7 +1244,7 @@ void app_main (void)
           if (mouse_on_draw_area())
           {
             pin();
-            if (chain_size(d20.faces) == 20)
+            if (list_size(d20.faces) == 20)
             {
               application.status = APP_END;
               if (application.save_btn == NULL)
@@ -1293,7 +1264,7 @@ void app_main (void)
         }
         else if (d20.current_used != NULL)
         { //  undo
-          if (chain_size(d20.faces) == 1)
+          if (list_size(d20.faces) == 1)
           {
             app_free();
             app_start();

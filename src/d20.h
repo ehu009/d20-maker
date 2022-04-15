@@ -49,11 +49,11 @@
    * Storage object
    */
 
-  #include "chain.h"
+  #include "list.h"
 
   struct d20_object
   {
-    chain_t *available, *faces;
+    list_t *available, *faces;
     face_t *current_used, *current_free;
 
     slot_t net[NUM_D20_VTX];
