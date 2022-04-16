@@ -1116,7 +1116,7 @@ LINE
 
   remove_faces_similar_to (d20.available, anchor);
 
-
+  list_remove(d20.available, anchor);
 
 
 //  insert into list of placed triangles
