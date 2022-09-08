@@ -4,6 +4,7 @@
 #include    "SDL2/SDL_image.h"
 #include    "SDL2/SDL_ttf.h"
 
+
 #include "debug.h"
 #include "colours.h"
 #include "net-builder.h"
@@ -11,15 +12,15 @@
 #define VERBOSE_CHAR  'v'
 #define VERBOSE_DEFAULT 2
 
-unsigned debug = -1;
+unsigned debug = 0;
 
 char *default_path = "default.jpg\0";
 char *image_path = NULL;
 
 int init (void);
 void unload (void);
-uint32_t draw_interval = 1000/128;
-uint32_t update_interval = 1000/64;
+uint32_t draw_interval = 1000/33;
+uint32_t update_interval = 1000/50;
 
 static uint32_t draw_callback (uint32_t interval, void *param);
 static uint32_t update_callback (uint32_t interval, void *param);
@@ -107,7 +108,7 @@ int main (int argc, char *argv[])
     draw_interval *= 16;
     update_interval *= 8;
   }
-
+  
   app_start ();
   DEBUG(2,"\t- initialized application\0")
   SDL_TimerID drawingTimer = SDL_AddTimer (draw_interval, draw_callback, NULL);
@@ -118,7 +119,6 @@ int main (int argc, char *argv[])
   SDL_Event event;
   do
   {
-
     if (!SDL_PollEvent (&event))
     {
       SDL_Delay (update_interval);
@@ -131,10 +131,10 @@ int main (int argc, char *argv[])
           void (*p) (void*) = event.user.data1;
           p (NULL);
       }
+      
 
       mouse_update (&event);
-
-
+      
     }
   }
   while (!exit_condition(&event));
@@ -148,7 +148,8 @@ int main (int argc, char *argv[])
   DEBUG(2,"\t- deallocated d20 builder structures\0")
   unload ();
   DEBUG(2,"\t- destroyed window\0")
-
+  
+  
   DEBUG(VERBOSE_DEFAULT, "Exiting icosahedron maker.\0")
   return 0;
 }
@@ -244,8 +245,6 @@ void updatefunc (void *param)
 {
   app_usage ();
   mouse_reset();
-
-
 }
 
 static uint32_t update_callback (uint32_t interval, void *param)
