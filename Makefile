@@ -3,7 +3,7 @@ PROG = d20-maker
 CC   = gcc
 FLAGS= -Wall
 LIBS = -lm -lSDL2 -lSDL2_image -lSDL2_ttf
-
+WLIBS = -lmingw32 -lSDL2main $(LIBS)
 
 SRC_PATH=./src
 
@@ -19,6 +19,9 @@ default : clean $(PROG)
 
 clean :
 		rm -f *.o $(PROG) *~
+
+winv : $(HEADERS) $(SOURCES) $(OBJECTS)
+		$(CC) $(FLAGS) -I ./include -L ./lib $^ $(WLIBS) -o $@
 
 $(PROG) : $(HEADERS) $(SOURCES) $(OBJECTS)
 		$(CC) $(FLAGS) $^ $(LIBS) -o $@
