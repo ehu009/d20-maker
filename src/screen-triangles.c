@@ -1,3 +1,4 @@
+#include    <string.h>
 #include    "screen-triangles.h"
 
 #ifdef _WIN32
