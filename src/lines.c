@@ -30,7 +30,7 @@ static void bresenham_adjustment (  int *A, int *B,
 }
 
 
-void draw_line (SDL_Surface *surface,
+void _draw_line (SDL_Surface *surface,
     int x1, int y1,
     int x2, int y2,
     plot_func plot,
@@ -68,43 +68,12 @@ void draw_line (SDL_Surface *surface,
   }
 }
 
-
-void draw_line2 (SDL_Surface *surface,
+void draw_line (SDL_Surface *surface,
     vtx2i_t *A, vtx2i_t *B,
     plot_func plot,
     COLOUR color)
-{ //  Bresenham algorithm
-  int frac;
-  vtx2i_t p1 = *A, p2 = *B;
-  int x = p1.pts[0], dx = p2.pts[0] - x, stepx = 1,
-      y = p1.pts[1], dy = p2.pts[1] - y, stepy = 1;
-
-  int *u = &x, *du = &dx, *su = &stepx,
-      *v = &y, *dv = &dy, *sv = &stepy,
-      *v2 = &p2.pts[1];
-
-  unsign (du, su);
-  unsign (dv, sv);
-
-  if (dx > dy)
-  {
-    u = &y;     v = &x;
-    su = &stepy;sv = &stepx;
-    du = &dy;   dv = &dx;
-    v2 = &p2.pts[0];
-  }
-  frac = *du - ((*dv) / 2);
-
-  //  Drawing
-  vtx2i_t p = {.pts={x,y}};
-
-  while (*v != *v2)
-  {
-    p.pts[0] = x;
-    p.pts[1] = y;
-    bresenham_adjustment (u,v, su, sv, du, dv, &frac);
-    plot (surface, &p, color);
-  }
+{
+  _draw_line(surface, A->pts[0], A->pts[1], B->pts[0], B->pts[1], plot, color);
 }
 
 
@@ -113,11 +82,6 @@ int equal_lines (struct line *A, struct line *B)
   return ((A->A == B->A && A->B == B->B)
       ||  (A->A == B->B && A->B == B->A));
 }
-
-
-
-
-
 
 
 

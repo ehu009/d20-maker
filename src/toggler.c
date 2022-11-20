@@ -130,9 +130,6 @@ void toggler_update (toggler_t *button)
         button->status ^= TOGGLE_DOWN;
     }
   }
-  /*
-  return ((button->status & TOGGLE_SWITCH) != 0);
-  */
 }
 
 void toggler_draw (toggler_t *button)

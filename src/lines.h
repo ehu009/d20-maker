@@ -21,14 +21,9 @@
    *
    */
   void draw_line (SDL_Surface *surface,
-      int x1, int y1,
-      int x2, int y2,
+      vtx2i_t *A, vtx2i_t *B,
       plot_func plot,
       COLOUR color);
-
-  void draw_line2 (SDL_Surface *surface,
-      vtx2i_t *A, vtx2i_t *B,
-      plot_func plot, COLOUR color);
 
 
   struct line

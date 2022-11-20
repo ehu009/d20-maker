@@ -152,7 +152,9 @@ vtx2d_t *position_exists (vtx2d_t *p, list_t *positions)
   
 
   if (ptr == NULL)
+  {
     list_insert(positions, p);
+  }
 
   free_list_iterator(slider);
 
@@ -219,12 +221,9 @@ char line_exists (struct line *ptr, list_t *lines)
     cur = list_iterator_next(s);
   }
   
-  
   free_list_iterator(s);
   return exists;
 }
-
-
 
 
 void print_face(face_t *f)
@@ -232,10 +231,6 @@ void print_face(face_t *f)
   #define IDX(x) (int)(x - d20.net)
   printf("face %p has slots %d, %d, %d\n", f, IDX(f->sA), IDX(f->sB), IDX(f->sC));
 }
-
-
-
-
 
 
 void add_lines_for (list_t **lines, triangle_t *t)
@@ -395,29 +390,6 @@ void app_start (void)
   application.status = APP_MAIN;
 }
 
-/*
-void free_face_list(list_t *list)
-{
-  if (list == NULL)
-    return;
-  chainslider_i *slider = make_chainslider (list);
-  face_t *ptr = NULL;
-
-  while (chain_size (list))
-  {
-    ptr = slider_current(slider);
-    free(ptr->item);
-    free(ptr);
-
-    slider_procede(slider);
-    slider_remove_prev (slider);
-  }
-
-  free_chainslider (slider);
-  free_chain (list);
-
-}
-*/
 
 void app_free (void)
 {
@@ -453,25 +425,26 @@ void app_free (void)
 void pinned_list_drawing (face_t *t)
 {
   if (t != d20.current_used)
+  {
     draw_triangle_coloured (t, TRIANGLE_COLOUR_PINNED);
+  }
   else
+  {
     draw_triangle_transparent (t);
-//    draw_triangle_coloured (t, TRIANGLE_COLOUR_HOVER);
+  }
 }
 
 void unpinned_list_drawing (face_t *t)
 {
   if (t != d20.current_free)
+  {
     draw_triangle_transparent (t);
+  }
   else
+  {
     draw_triangle_coloured (t, TRIANGLE_COLOUR_UNPINNED);
+  }
 }
-/*
-void finished_list_drawing (face_t *t)
-{
-//  draw_triangle_outline (t);
-
-}*/
 
 
 
@@ -482,7 +455,9 @@ void draw_list (list_t *list, tripoint_draw_func draw_func)
   list_i *slider;
   slider = make_list_iterator(list);
   if (slider == NULL)
+  {
     return;
+  }
     
   face_t *cur = list_iterator_next(slider);
   while (cur != NULL)
@@ -525,7 +500,7 @@ void draw_lines (list_t *lines)
     get_vtx2i_from_vtx2d(cur->A, &A);
     get_vtx2i_from_vtx2d(cur->B, &B);
 
-    draw_line2(canvas, &A, &B, divertPixel, 0);
+    draw_line(canvas, &A, &B, divertPixel, 0);
 
     cur = list_iterator_next (s);
   }
@@ -553,7 +528,9 @@ void _draw_end (void)
 void _draw_main(void)
 {
   if (d20.faces == NULL)
+  {
     draw_triangle_transparent (d20.current_free);
+  }
   else
   {
     draw_list (d20.faces, pinned_list_drawing);
@@ -561,18 +538,14 @@ void _draw_main(void)
     draw_lines(application.lines);
 
     if (d20.available != NULL)
+    {
       draw_list (d20.available, unpinned_list_drawing);
+    }
   }
 }
 
 void app_draw (void)
 {
-/*
-  #ifdef DEBUG
-  printf("drawing...");
-  fflush(stdout);
-  #endif
-*/
   DEBUG(2, "Started drawing.")
   SDL_FillRect (canvas, NULL, COLOUR_BACKGROUND);
   SDL_BlitSurface (src_image, NULL, canvas, &draw_area);
@@ -592,27 +565,22 @@ void app_draw (void)
     draw_lines(application.lines);
   }
   if ((application.save_btn != NULL) && (list_size(d20.faces) == 20))
+  {
     button_draw(application.save_btn);
+  }
 
   if (application.reset_btn != NULL)
+  {
     button_draw(application.reset_btn);
-/*
-  #ifdef DEBUG
-  printf("\tdone\n");
-  #endif
-  */
+  }
+
   DEBUG(2, "Finished drawing.")
 }
 
 
 void select_triangle (void)
 {
-  /*
-  #ifdef DEBUG
-  printf("selecting...");
-  fflush(stdout);
-  #endif
-  */
+
   DEBUG(2, "Started selecting.")
   vtx2i_t m = {.pts = {application.mX, application.mY}};
 
@@ -620,16 +588,15 @@ void select_triangle (void)
 
   new_cUsed = find_current_selected(d20.faces, &m);
   if(d20.available != NULL)
+  {
     new_cFree = find_current_selected(d20.available, &m);
+  }
 
 
 
   d20.current_free = new_cFree;
   d20.current_used = new_cUsed;
-/*
-  #ifdef DEBUG
-  printf("\tdone\n");
-  #endif*/
+
   DEBUG(2, "Finished selecting.")
 }
 
@@ -639,7 +606,9 @@ void select_triangle (void)
 void adjust_root_coordinate (double *coordinate, double *error, int reference, int limit)
 {
   if (coordinate != error)
+  {
     *coordinate = limit + ((reference - *error) + (*coordinate - reference));
+  }
 }
 
 int limit_root_triangle (triangle_t *r, SDL_Rect *R)
@@ -647,26 +616,26 @@ int limit_root_triangle (triangle_t *r, SDL_Rect *R)
   double *lX = &r->pts[0]->pts[0], *lY = &r->pts[0]->pts[1],
       *hX = &r->pts[0]->pts[0], *hY = &r->pts[0]->pts[1];
   if (*lX > r->pts[1]->pts[0])
-    lX = &r->pts[1]->pts[0];
+    {lX = &r->pts[1]->pts[0];}
   if (*lY > r->pts[1]->pts[1])
-    lY = &r->pts[1]->pts[1];
+    {lY = &r->pts[1]->pts[1];}
   if (*lX > r->pts[2]->pts[0])
-    lX = &r->pts[2]->pts[0];
+    {lX = &r->pts[2]->pts[0];}
   if (*lY > r->pts[2]->pts[1])
-    lY = &r->pts[2]->pts[1];
+    {lY = &r->pts[2]->pts[1];}
   if (*hX < r->pts[1]->pts[0])
-    hX = &r->pts[1]->pts[0];
+    {hX = &r->pts[1]->pts[0];}
   if (*hY < r->pts[1]->pts[1])
-    hY = &r->pts[1]->pts[1];
+    {hY = &r->pts[1]->pts[1];}
   if (*hX < r->pts[2]->pts[0])
-    hX = &r->pts[2]->pts[0];
+    {hX = &r->pts[2]->pts[0];}
   if (*hY < r->pts[2]->pts[1])
-    hY = &r->pts[2]->pts[1];
+    {hY = &r->pts[2]->pts[1];}
 
   if ( R->h < (*hY - *lY))
-    return 0;
+    {return 0;}
   if ( R->w < (*hX - *lX))
-    return 0;
+    {return 0;}
 
 
   //  lower limits
@@ -872,7 +841,7 @@ face_t *create_root_neighbor (char k)
     }
     t->item = p;
     if (debug >= 1)
-    print_face(t);
+      {print_face(t);}
   }
   else
   {
@@ -891,7 +860,7 @@ void pin_root (void)
   void insert (face_t *ptr)
   {
     if (d20.available == NULL)
-      d20.available = make_list ();
+      {d20.available = make_list ();}
 
     list_insert(d20.available, (void *) ptr);
   }
@@ -908,7 +877,7 @@ void pin_root (void)
   {
     ptr = create_root_neighbor(c);
     if (ptr != NULL)
-      insert(ptr);
+      {insert(ptr);}
     ++c;
   }
   while(c <= 'C');
@@ -929,12 +898,12 @@ face_t *neighbor_for_slot (face_t *p, char k)
   err |= (t == NULL);
 
   if (err)
-    return t;
+    {return t;}
   if (debug >= 1)
   {
-  printf("trying to add neighbor:  ");
-  print_face(t);
-}
+    printf("trying to add neighbor:  ");
+    print_face(t);
+  }
   t->item = NULL;
 
   int q = face_exists_in(t, d20.faces);
@@ -943,29 +912,28 @@ face_t *neighbor_for_slot (face_t *p, char k)
   if (err)
   {
     if (debug >= 1)
-    printf("already pinned\n");
-    //print_face(t);
+    {printf("already pinned\n");}
 
     free(t);
     return NULL;
   }
   if (debug >= 1)
-  LINE
+    {LINE}
 
   vtx2d_t *tmp_pos = position_that_neighbors(p, k);
   triangle_t *pt = p->item;
-if (debug >= 1)
-LINE
+  if (debug >= 1)
+    {LINE}
 
   if (!SDLRect_contains(tmp_pos, &draw_area))
   {
-  printf("outside draw area\n");
+    printf("outside draw area\n");
     free (tmp_pos);
     free (t);
     return NULL;
   }
   if (debug >= 1)
-LINE
+    {LINE}
 
   vtx2d_t *pos = position_exists(tmp_pos, application.positions);
   if (pos != NULL)
@@ -974,15 +942,15 @@ LINE
     tmp_pos = pos;
 
     if (debug >= 1)
-    printf("used existing position %p\n", pos);
+    {printf("used existing position %p\n", pos);}
   }
   if (debug >= 1)
-LINE
+    {LINE}
 
   triangle_t *tr = copy_triangle(pt);
   tr->pts[k-'A'] = tmp_pos;
   if (debug >= 1)
-LINE
+    {LINE}
 
   t->item = tr;
   return t;
@@ -999,16 +967,16 @@ void create_neighbor_triangles_for (face_t *p)
     {
     if (debug >= 1)
     {
-    LINE
+      LINE
       printf("checking if triangle exists on screen already\nslot is %p\ntriangle is %p\nlist is %p\n",ptr, ptr->item, d20.available);
       }
       int ex = triangle_exists(ptr->item, d20.available, FLOAT_ACC);
       if (debug >= 1)
-      LINE
+        {LINE}
       if (!ex)
       {
         if (debug >= 1)
-        LINE
+          {LINE}
 
         list_insert(d20.available, (void *) ptr);
 
@@ -1023,12 +991,12 @@ void create_neighbor_triangles_for (face_t *p)
         free(ptr->item);
         free(ptr);
         if (debug >= 1)
-        LINE
+          {LINE}
       }
     }
     ++ c;
     if (debug >= 1)
-    LINE;
+      {LINE;}
     
       
   }
@@ -1036,37 +1004,13 @@ void create_neighbor_triangles_for (face_t *p)
 
 }
 
-/*
-void unlink_unpinned (chain_t *unpinned, face_t *ptr)
-{
-  if (unpinned == NULL)
-    return;
-
-  chainslider_t *s = make_chainslider(unpinned);
-  face_t *start = slider_current(s),
-    *cur = start;
-  do
-  {
-    if (cur == ptr)
-    {
-      slider_procede(s);
-      slider_remove_prev(s);
-      break;
-    }
-
-    slider_procede (s);
-    cur = slider_current (s);
-  }
-  while (cur != start);
-  free_chainslider(s);
-}*/
 
 void remove_faces_similar_to (list_t *unpinned, face_t *cmp)
   //  remove duplicates
 {
   int k = list_size (unpinned), q = k;
   if ((unpinned == NULL) || (k == 1))
-    return;
+    {return;}
 
   DEBUG(1, "Trying to remove duplicates")
   list_i *s = make_list_iterator(unpinned);
@@ -1075,14 +1019,13 @@ void remove_faces_similar_to (list_t *unpinned, face_t *cmp)
   {
       if (equal_faces(cur, cmp))
       {
-        //print_face(cur);
         if (cur != cmp)
         {
-        DEBUG(2, "\t- removed a duplicate");
-        
-        list_remove(unpinned, cur);
-        free(cur->item);
-        free(cur);
+          DEBUG(2, "\t- removed a duplicate");
+          
+          list_remove(unpinned, cur);
+          free(cur->item);
+          free(cur);
         }
       }
     cur = list_iterator_next (s);
@@ -1092,73 +1035,46 @@ void remove_faces_similar_to (list_t *unpinned, face_t *cmp)
   free(s);
   if (debug >= 1)
   {
-  k = q-list_size(unpinned);
-  if (k)
-    printf("removed %d duplicates\n",k);
-    }
+    k = q-list_size(unpinned);
+    if (k)
+      {printf("removed %d duplicates\n",k);}
+  }
 }
 
 
 
 void pin (void)
 {
-if (debug >= 1)
-{
-printf("####\n");
-  printf("PINNING\nnum pinned : %d\nthe face in question is: ", list_size(d20.faces));
+  if (debug >= 1)
+  {
+    printf("####\n");
+    printf("PINNING\nnum pinned : %d\nthe face in question is: ", list_size(d20.faces));
   }
   face_t *anchor = d20.current_free;
   d20.current_free = NULL;
 
-//  print_face(anchor);
-if (debug >= 1)
-LINE
+  if (debug >= 1)
+    {LINE}
 
   remove_faces_similar_to (d20.available, anchor);
 
   list_remove(d20.available, anchor);
 
 
-//  insert into list of placed triangles
+  //  insert into list of placed triangles
   list_insert(d20.faces, anchor);
   
-if (debug >= 1)
-  LINE
+  if (debug >= 1)
+    {LINE}
 
   add_lines_for (&application.lines, anchor->item);
 
-if (debug >= 1)
-LINE
+  if (debug >= 1)
+    {LINE}
 
   create_neighbor_triangles_for (anchor);
-if (debug >= 1)
-LINE
-/*
-  //  no more triangles possible
-  if (chain_size(d20.available) == 0)
-  {*/
-  /*
-    slider = make_chainslider(d20.available);
-  face_t *cur;*/
-
-//LINE
-
-    /*cur = slider_current (slider);
-
-    LINE
-
-    if (face_exists_in(cur, d20.faces))
-    {
-    LINE*//*
-      free_chain(d20.available);
-      d20.available = NULL;
-    LINE*/
-    /*}
-    free_chainslider(slider);
-    LINE*/
-  /*}*/
-
-//LINE
+  if (debug >= 1)
+    {LINE}
 }
 
 
@@ -1200,7 +1116,7 @@ void app_main (void)
         {
           rotate_root(scroll);
           if (!reposition_root())
-            rotate_root(-scroll);
+            {rotate_root(-scroll);}
         }
       }
     }
@@ -1229,7 +1145,7 @@ void app_main (void)
       if (relocate)
       {
         if (application.being_relocated)
-          application.being_relocated --;
+          {application.being_relocated --;}
         else
         {
           application.being_relocated ++;
@@ -1306,15 +1222,14 @@ void app_main (void)
 void app_usage ()
 {
   if (mouse_moves ())
+    {mouse_position (&application.mX, &application.mY);}
 
-
-    mouse_position (&application.mX, &application.mY);
   if (application.status == APP_MAIN)
   {
     app_main();
-  //  LINE
+  
     if (application.reset_btn != NULL)
-      button_update(application.reset_btn);
+      {button_update(application.reset_btn);}
 
   }
   else if (application.status == APP_END)
@@ -1326,10 +1241,10 @@ void app_usage ()
     }
 
     if (application.reset_btn != NULL)
-      button_update(application.reset_btn);
+      {button_update(application.reset_btn);}
 
     if (application.save_btn != NULL)
-      button_update(application.save_btn);
+      {button_update(application.save_btn);}
 
     if (application.save)
     {

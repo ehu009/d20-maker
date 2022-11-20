@@ -75,9 +75,9 @@ void draw_triangle (triangle_t *t, plot_func plot, COLOUR color)
   get_vtx2i_from_vtx2d (t->pts[1], &B);
   get_vtx2i_from_vtx2d (t->pts[2], &C);
 
-  draw_line2 (canvas, &A, &B, plot, color);
-  draw_line2 (canvas, &B, &C, plot, color);
-  draw_line2 (canvas, &C, &A, plot, color);
+  draw_line (canvas, &A, &B, plot, color);
+  draw_line (canvas, &B, &C, plot, color);
+  draw_line (canvas, &C, &A, plot, color);
 }
 
 
@@ -92,9 +92,9 @@ SDL_Surface *get_markup_surface(SDL_Rect *r, vtx2i_t *A, vtx2i_t *B, vtx2i_t *C)
       bg = SDL_MapRGBA(surf->format, 0,0,0,0);
 
   SDL_FillRect(surf, NULL, bg);
-  draw_line2 (surf, A, B, colourPixel, markup);
-  draw_line2 (surf, B, C, colourPixel, markup);
-  draw_line2 (surf, C, A, colourPixel, markup);
+  draw_line (surf, A, B, colourPixel, markup);
+  draw_line (surf, B, C, colourPixel, markup);
+  draw_line (surf, C, A, colourPixel, markup);
 
   return surf;
 
@@ -163,7 +163,7 @@ void fill_triangle (triangle_t *t, plot_func plot, COLOUR color)
       }
       p.pts[1] = upper;
       vtx2i_t p2 = {.pts = {i, lower}};
-      draw_line2 (surf, &p, &p2, plot, fill);
+      draw_line (surf, &p, &p2, plot, fill);
     }
   }
 
