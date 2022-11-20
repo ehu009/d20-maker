@@ -757,11 +757,13 @@ int equal_triangles (triangle_t *t1, triangle_t *t2, double acc)
     q += equal_vertices(t1->pts[1],t2->pts[0],acc);
     q += equal_vertices(t1->pts[2],t2->pts[0],acc);
   }
+  if (q > 0)
   {
     q += equal_vertices(t1->pts[0],t2->pts[1],acc);
     q += equal_vertices(t1->pts[1],t2->pts[1],acc);
     q += equal_vertices(t1->pts[2],t2->pts[1],acc);
   }
+  if (q > 1)
   {
     q += equal_vertices(t1->pts[0],t2->pts[2],acc);
     q += equal_vertices(t1->pts[1],t2->pts[2],acc);
