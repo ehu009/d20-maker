@@ -201,6 +201,12 @@ void grid_reset (vtx2d_t *a, vtx2d_t *b, vtx2d_t *c)
   }
 }
 
+void grid_free (void)
+{
+  free_coordinates(grid.coords);
+  grid.coords = NULL;
+}
+
 void draw_rect (vtx2d_t *pos)
 {
   #define DOT_SIZE 8
