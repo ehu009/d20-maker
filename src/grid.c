@@ -1,5 +1,7 @@
 #include <stdlib.h>
+#include "grid.h"
 #include "vertex.h"
+#include "pixels.h"
 
 static struct 
 {
@@ -185,3 +187,31 @@ void grid_reset (vtx2d_t *a, vtx2d_t *b, vtx2d_t *c)
 
 }
 
+void draw_rect (vtx2d_t *pos)
+{
+  #define DOT_SIZE 8
+  int x = pos->pts[0], y = pos->pts[1];
+  int i, j;
+  for (i = x; i < x + DOT_SIZE; i ++)
+  {
+    for (j = y; j < y + DOT_SIZE; j ++)
+    {
+      setPixel(canvas, i, j, 0x00FF00);
+    }
+  }
+}
+
+void draw_grid (void)
+{
+  int i, j;
+  for (i = 0; i < grid.size.pts[0]; i ++)
+  {
+    for (j = 0; j < grid.size.pts[1]; j ++)
+    {
+      if (grid.coords[i][j] != NULL)
+      {
+        draw_rect(grid.coords[i][j]);
+      }
+    }
+  }
+}
