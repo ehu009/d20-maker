@@ -184,7 +184,15 @@ void populate_coordinates (vtx2d_t *a, vtx2d_t *b, vtx2d_t *c)
 
 void grid_reset (vtx2d_t *a, vtx2d_t *b, vtx2d_t *c)
 {
-
+  calc_distance(a, b, c);
+  calc_offset(a, b, c);
+  calc_size();
+  vtx2d_t **coords = init_coordinates();
+  if (coords != NULL)
+  {
+    grid.coords = coords;
+    populate_grid(a, b, c);
+  }
 }
 
 void draw_rect (vtx2d_t *pos)
