@@ -11,6 +11,12 @@ static struct
 } grid;
 
 
+void grid_set_bounds (vtx2i_t bounds)
+{
+  grid.bounds.pts[0] = bounds.pts[0];
+  grid.bounds.pts[1] = bounds.pts[1];
+}
+
 void grid_rotate (void)
 {
   grid.rotation ++;
