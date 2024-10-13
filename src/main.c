@@ -20,10 +20,8 @@ char *image_path = NULL;
 
 int init (void);
 void unload (void);
-uint32_t draw_interval = 1000/33;
 uint32_t update_interval = 1000/50;
 
-static uint32_t draw_callback (uint32_t interval, void *param);
 static uint32_t update_callback (uint32_t interval, void *param);
 
 unsigned alpha_mask;
@@ -106,15 +104,13 @@ int main (int argc, char *argv[])
   }
   if (debug >= 1)
   {
-    draw_interval *= 16;
     update_interval *= 8;
   }
   
   app_start ();
   DEBUG(2,"\t- initialized application\0")
-  SDL_TimerID drawingTimer = SDL_AddTimer (draw_interval, draw_callback, NULL);
   SDL_TimerID updateTimer = SDL_AddTimer (update_interval, update_callback, NULL);
-  DEBUG(2,"\t- started drawing and update timers\0")
+  DEBUG(2,"\t- started update timers\0")
 
   DEBUG(VERBOSE_DEFAULT,"Started icosahedron maker.\0")
   SDL_Event event;
@@ -142,7 +138,6 @@ int main (int argc, char *argv[])
 
   DEBUG(1,"Stopping icosahedron maker.\0")
   SDL_RemoveTimer (updateTimer);
-  SDL_RemoveTimer (drawingTimer);
   DEBUG(2,"\t- removed timers.\0")
 
   app_free ();
@@ -219,33 +214,12 @@ int init (void)
   return 1;
 }
 
-void drawfunc (void *param)
-{ //  update screen image
-  app_draw();
-  SDL_UpdateWindowSurface (myWindow);
-}
-
-SDL_UserEvent _drawEvent = {
-  .type = SDL_USEREVENT,
-  .code = 0,
-  .data1 = &drawfunc
-};
-
-static uint32_t draw_callback (uint32_t interval, void *param)
-{
-  SDL_Event event = {
-    .type = SDL_USEREVENT,
-    .user = _drawEvent
-  };
-  SDL_PushEvent (&event);
-
-  return (interval);
-}
-
 void updatefunc (void *param)
 {
   app_usage ();
   mouse_reset();
+  app_draw();
+  SDL_UpdateWindowSurface (myWindow);
 }
 
 static uint32_t update_callback (uint32_t interval, void *param)
