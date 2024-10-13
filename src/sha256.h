@@ -1,5 +1,5 @@
-#ifndef   HASH_H_
-  #define   HASH_H_
+#ifndef   HASH256_H_
+  #define   HASH256_H_
 
   /*
    *
