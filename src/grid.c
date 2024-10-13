@@ -108,11 +108,15 @@ void free_coordinates (vtx2d_t **coords)
   {
     return;
   }
-  unsigned int i;
+  unsigned int i, j;
   for (i = 0; i < grid.size.pts[0]; i ++)
   {
     if (coords[i] != NULL)
     {
+      for (j = 0; j < grid.size.pts[1]; j ++)
+      {
+        free(coords[i][j]);
+      }
       free(coords[i]);
     }
   }
@@ -123,27 +127,29 @@ vtx2d_t **init_coordinates ()
 {
   char error = 0;
   vtx2d_t **new = (vtx2d_t **) malloc((sizeof(vtx2d_t **)) * grid.size.pts[0]);
-  if (new != NULL)
+  if (new == NULL)
   {
-    unsigned int i;
-    for (i = 0; i < grid.size.pts[0]; i ++)
+    return NULL;
+  }
+  unsigned int i;
+  for (i = 0; i < grid.size.pts[0]; i ++)
+  {
+    new[i] = NULL;
+  }
+  for (i = 0; i < grid.size.pts[0]; i ++)
+  {
+    vtx2d_t **col = (vtx2d_t **) malloc((sizeof(vtx2d_t *)) * grid.size.pts[1]);
+    if (col == NULL)
     {
-      new[i] = NULL;
+      error ++;
+      break;
     }
-    for (i = 0; i < grid.size.pts[0]; i ++)
+    unsigned int j = 0;
+    for (; j < grid.size.pts[1]; j ++)
     {
-      vtx2d_t *col = (vtx2d_t *) calloc((sizeof(vtx2d_t *)) * grid.size.pts[1]);
-      if (col == NULL)
-      {
-        error ++;
-        break;
-      }
-      unsigned int j = 0;
-      for (; j < grid.size.pts[1]; j ++)
-      {
-        new[i][j] = NULL;
-      }
-      new[i] = col;
+      new[i][j] = NULL;
+    }
+    new[i] = col;
   }
   if (error)
   {
