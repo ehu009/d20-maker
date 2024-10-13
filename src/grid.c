@@ -13,12 +13,6 @@ static struct
 } grid;
 
 
-void grid_set_bounds (vtx2i_t bounds)
-{
-  grid.bounds.pts[0] = bounds.pts[0];
-  grid.bounds.pts[1] = bounds.pts[1];
-}
-
 void grid_rotate (void)
 {
   grid.rotation ++;
@@ -182,8 +176,20 @@ void populate_coordinates (vtx2d_t *a, vtx2d_t *b, vtx2d_t *c)
 
 }
 
+void grid_init (vtx2i_t *bounds)
+{
+  grid.bounds.pts[0] = bounds->pts[0];
+  grid.bounds.pts[1] = bounds->pts[1];
+  grid.coords = NULL;
+  grid.rotation = 0;
+}
+
 void grid_reset (vtx2d_t *a, vtx2d_t *b, vtx2d_t *c)
 {
+  if (grid.coords != NULL)
+  {
+    free_coordinates(grid.coords);
+  }
   calc_distance(a, b, c);
   calc_offset(a, b, c);
   calc_size();

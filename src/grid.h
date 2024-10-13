@@ -6,7 +6,7 @@
 
 static struct grid;
 
-void grid_set_bounds (vtx2i_t bounds);
+void grid_init (vtx2i_t *bounds);
 
 void grid_rotate (void);
 
