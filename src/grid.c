@@ -167,12 +167,12 @@ vtx2d_t **init_coordinates ()
   return new;
 }
 
-unsigned int get_row (vtx2d_t * coord)
+unsigned int get_row (vtx2d_t *coord)
 {
   
 }
 
-unsigned int get_col (vtx2d_t * coord)
+unsigned int get_col (vtx2d_t *coord)
 {
 
 }
