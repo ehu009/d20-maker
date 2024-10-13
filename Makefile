@@ -7,7 +7,7 @@ WLIBS = -lmingw32 -lSDL2main $(LIBS)
 
 SRC_PATH=./src
 
-OBJS = vertex pixels lines mouse list screen-triangles net-builder sha256 storage fader button d20
+OBJS = vertex pixels lines mouse list screen-triangles net-builder sha256 storage fader button d20 memory
 HEAD = mouse_app font colours
 SRCS = main
 
