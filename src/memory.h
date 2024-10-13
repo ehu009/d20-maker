@@ -19,7 +19,7 @@
   void _free(void *ptr);
 
   #define MALLOC(x) _malloc(x, __FILE__);
-  #define CALLOC(x) _calloc(1, x, __FILE__);
+  #define CALLOC(y, x) _calloc(y, x, __FILE__);
   #define FREE(x) _free(x);
 
   void memory_report(void);
