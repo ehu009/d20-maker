@@ -15,7 +15,7 @@
 #include "storage.h"
 #include "fader.h"
 #include "button.h"
-
+#include "pixels.h"
 
 
 
@@ -68,10 +68,8 @@ static struct
 
   //  togglers
   char rotate_root;
-  char relocate_mode;
   //  relocation
   char being_relocated;
-  int diff_x, diff_y;
 
   double negate_rate;
   fader_t *colour_select;
@@ -93,16 +91,6 @@ int change_root_size (void)
     application.rotate_root ^= 1;
   }
   return application.rotate_root;
-}
-
-int relocate_mode (void)
-{ //  toggle between using mouse wheel or position for selections
-  if((mouse_middle() == -1)
-      ||  (mouse_right() == -1))
-  {
-    application.relocate_mode ^= 1;
-  }
-  return application.relocate_mode;
 }
 
 
@@ -376,7 +364,6 @@ void app_start (void)
 
   init_net_builder();
   application.rotate_root = 1;
-  application.relocate_mode = 0;
   application.being_relocated = 0;
 
   application.colour_select = NULL;
@@ -508,6 +495,22 @@ void draw_lines (list_t *lines)
   free_list_iterator(s);
 }
 
+    void draw_rect (vtx2d_t *pos)
+    {
+      #define DOT_SIZE 8
+      int x = pos->pts[0], y = pos->pts[1];
+      int i, j;
+      for (i = x; i < x + DOT_SIZE; i ++)
+      {
+        for (j = y; j < y + DOT_SIZE; j ++)
+        {
+          vtx2i_t g;
+          g.pts[0] = i;
+          g.pts[1] = j;
+          setPixel(canvas, &g, 0x00FF00);
+        }
+      }
+    }
 
 void _draw_end (void)
 {
@@ -522,7 +525,6 @@ void _draw_end (void)
     SDL_BlitSurface (surf, NULL, canvas, &draw_area);
     SDL_FreeSurface (surf);
   }
-
 }
 
 void _draw_main(void)
@@ -1080,6 +1082,55 @@ void pin (void)
 }
 
 
+void remove_unused_coordinates()
+{
+  list_t *unused = make_list();
+  list_i *s = make_list_iterator(application.positions);
+  vtx2d_t *coord = list_iterator_next (s);
+  while (coord != NULL)
+  {
+    int found = 0;
+    list_i *k = make_list_iterator(application.lines);
+    struct line *t = list_iterator_next(k);
+    while(t != NULL)
+    {
+      
+      if (t->A == coord
+          || t->B == coord)
+      {
+        found = 1;
+        printf("found coordinate\r\n");
+        break;
+      }
+      
+      t = list_iterator_next(k);
+    }
+    free_list_iterator(k);
+    if (!found)
+    {
+      list_insert(unused, coord);
+    }
+    
+    coord = list_iterator_next(s);
+  }
+
+  free_list_iterator(s);
+  s = make_list_iterator(unused);
+  coord = list_iterator_next (s);
+  printf("removing %i unused coordinates\r\n", list_size(unused));
+  while (coord != NULL)
+  {
+    list_remove(application.positions, coord);
+    coord = list_iterator_next (s);
+  }
+  printf("coordinates: %i\r\n", list_size(application.positions));
+  free_list_iterator(s);
+  list_empty(unused);
+  free_list(unused);
+
+  
+}
+
 
 
 void app_main (void)
@@ -1141,22 +1192,8 @@ void app_main (void)
   else
   {
     //  root triangle has been pinned
-    int relocate = relocate_mode();
     if (mouse_left() == -1)
     {
-      if (relocate)
-      {
-        if (application.being_relocated)
-          {application.being_relocated --;}
-        else
-        {
-          application.being_relocated ++;
-          application.diff_x = application.x - application.mX;
-          application.diff_y = application.y - application.mY;
-        }
-      }
-      else
-      {
         if (d20.current_free != NULL)
         {
           if (mouse_on_draw_area())
@@ -1176,6 +1213,8 @@ void app_main (void)
                 application.colour_select = fader_create(80.0, FADER_WIDTH, canvas->h - (BORDER_SIZE + fader_yPos), &application.negate_rate);
                 fader_setPos(application.colour_select, canvas->w - (BORDER_SIZE + BUTTON_WIDTH), fader_yPos);
               }
+              
+              remove_unused_coordinates();
             }
 
           }
@@ -1193,33 +1232,15 @@ void app_main (void)
 
           }
         }
-
-      }
     }
 
     if (mouse_moves ())
     {
-      if (relocate)
-      {
-        if (application.being_relocated)
-        {
-          //  reposition vertices
-
-
-
-        }
-      }
-      else
-      {
         select_triangle();
-
-      }
     }
-}
+  }
 
 }
-
-
 
 void app_usage ()
 {
@@ -1247,6 +1268,94 @@ void app_usage ()
 
     if (application.save_btn != NULL)
       {button_update(application.save_btn);}
+
+    //relocate
+    if (mouse_left() == 1 && mouse_on_draw_area())
+    {
+        application.being_relocated = 1;
+        application.x = application.mX;
+        application.y = application.mY;
+    }
+    
+    if (application.being_relocated)
+    {
+      if (mouse_left() == -1)
+      {
+        application.being_relocated = 0;
+      }
+      else
+      {
+        vtx2d_t min = {.pts = {draw_area.w, draw_area.h}},
+            max = {.pts = {-1, -1}};
+        
+        list_i *s = make_list_iterator(application.positions);
+        vtx2d_t *cur = list_iterator_next (s);
+        while (cur != NULL)
+        {
+          if (min.pts[0] > cur->pts[0])
+          {
+            min.pts[0] = cur->pts[0];
+          }
+          if (min.pts[1] > cur->pts[1])
+          {
+            min.pts[1] = cur->pts[1];
+          }
+          if (max.pts[0] < cur->pts[0])
+          {
+            max.pts[0] = cur->pts[0];
+          }
+          if (max.pts[1] < cur->pts[1])
+          {
+            max.pts[1] = cur->pts[1];
+          }
+          cur = list_iterator_next (s);
+        }
+        free_list_iterator(s);
+
+        int diffX, diffY;
+        diffX = application.mX - application.x;
+        diffY = application.mY - application.y;
+
+        int moveX = 0, moveY = 0;
+        if (diffX
+            && min.pts[0] + diffX > draw_area.x
+            && max.pts[0] + diffX < draw_area.x + draw_area.w)
+        {
+          moveX = 1;
+        }
+        if (diffY
+            && min.pts[1] + diffY > draw_area.y
+            && max.pts[1] + diffY < draw_area.y + draw_area.h)
+        {
+          moveY = 1;
+        }
+        if (moveX || moveY)
+        {
+          s = make_list_iterator(application.positions);
+          cur = list_iterator_next (s);
+          while (cur != NULL)
+          {
+            if (moveX)
+            {
+              cur->pts[0] += diffX;
+            }
+            if (moveY)
+            {
+              cur->pts[1] += diffY;
+            }
+            cur = list_iterator_next (s);
+          }
+          free_list_iterator(s);
+        }
+        application.x = application.mX;
+        application.y = application.mY;
+      }
+    }
+
+
+
+
+
 
     if (application.save)
     {
