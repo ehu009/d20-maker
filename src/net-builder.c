@@ -288,30 +288,11 @@ int resize_root (int diff)
   return 0;
 }
 
-void empty_list (list_t *list)
-{
-  if (list == NULL)
-  {
-    return;
-  }
-  list_i *slider = make_list_iterator (list);
-  void *item = list_iterator_next(slider);
-  
-  while (item != NULL)
-  {
-    FREE(item);
-    item = list_iterator_next(slider);
-  }
-  free_list_iterator (slider);
-  free_list (list);
-}
 
 
 #define NET_START_X 50
 #define NET_START_Y 50
 #define NET_START_RADIUS 30.0
-
-
 
 face_t *root_face (slot_t *root)
 {

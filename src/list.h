@@ -12,7 +12,7 @@ int list_size(list_t *list);
 int list_insert(list_t *list, void *item);
 void list_remove(list_t *list, void *item);
 void *list_pop(list_t *list);
-//void list_empty(list_t *list);
+void list_empty(list_t *list);
 
 
 struct linked_list_iterator;
