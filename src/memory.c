@@ -47,6 +47,10 @@ void *_calloc(size_t num, size_t size, const char *file, int line)
 
 void _free(void *ptr, const char *file, int line)
 {
+  if (ptr == NULL)
+  {
+    return;
+  }
   list_i *iter = make_list_iterator(allocations);
   alloc_t *cur = list_iterator_next(iter);
   while (cur != NULL)
@@ -58,6 +62,11 @@ void _free(void *ptr, const char *file, int line)
     }
     cur = list_iterator_next(iter);
   }
+  if (cur != NULL)
+  {
+    free(cur->ptr);
+  }
+  free(iter);
 }
 
 void memory_report(void)
