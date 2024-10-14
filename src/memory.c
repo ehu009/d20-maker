@@ -29,16 +29,18 @@ void free_memory(void)
   free_list(allocations);
 }
 
-void *_malloc(size_t size, const char *file)
+void *_malloc(size_t size, const char *file, int line)
 {
   void *ptr = malloc(size);
+  printf("%s: %d, allocating %p\r\n", file, line, ptr);
   enter(size, ptr);
   return ptr;
 }
 
-void *_calloc(size_t num, size_t size, const char *file)
+void *_calloc(size_t num, size_t size, const char *file, int line)
 {
   void *ptr = calloc(num, size);
+  printf("%s: %d, allocating %p\r\n", file, line, ptr);
   enter(size, ptr);
   return ptr;
 }
