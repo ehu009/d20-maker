@@ -39,7 +39,7 @@ void *_calloc(size_t num, size_t size, const char *file)
   return ptr;
 }
 
-void _free(void *ptr)
+void _free(void *ptr, const char *file, int line)
 {
   list_i *iter = make_list_iterator(allocations);
   alloc_t *cur = list_iterator_next(iter);
@@ -47,11 +47,11 @@ void _free(void *ptr)
   {
     if (cur->ptr == ptr)
     {
+      enter(-cur->size, ptr);
       break;
     }
     cur = list_iterator_next(iter);
   }
-  enter(-cur->size, ptr);
 }
 
 void memory_report(void)
