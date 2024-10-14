@@ -9,6 +9,7 @@
 #include "debug.h"
 #include "colours.h"
 #include "net-builder.h"
+#include "memory.h"
 
 #define VERBOSE_CHAR  'v'
 #define VERBOSE_DEFAULT 2
@@ -102,11 +103,14 @@ int main (int argc, char *argv[])
     unload ();
     return 1;
   }
-  if (debug >= 1)
+  if (debug > 1)
   {
     update_interval *= 8;
   }
-  
+  if (debug >= 1)
+  {
+    init_memory();
+  }
   app_start ();
   DEBUG(2,"\t- initialized application\0")
   SDL_TimerID updateTimer = SDL_AddTimer (update_interval, update_callback, NULL);
@@ -141,6 +145,12 @@ int main (int argc, char *argv[])
   DEBUG(2,"\t- removed timers.\0")
 
   app_free ();
+  if (debug >= 1)
+  {
+    memory_report();
+    free_memory();
+  }
+  
   DEBUG(2,"\t- deallocated d20 builder structures\0")
   unload ();
   DEBUG(2,"\t- destroyed window\0")

@@ -4,20 +4,29 @@
   #ifdef _WIN32
     #include <malloc.h>
   #endif
+  
   #include <stdio.h>
+  #include "debug.h"
   
   
   void init_memory(void);
   void free_memory(void);
   void memory_report(void);
 
+  #define MALLOC(x) (debug >= 1) ?\
+      _malloc(x, __FILE__) :\
+      malloc(x);
+  #define CALLOC(y, x) (debug >= 1) ?\
+      _calloc(y, x, __FILE__) :\
+      calloc(y, x);
+  #define FREE(x) (debug >= 1) ?\
+      _free(x, __FILE__, __LINE__) :\
+      free(x);
+
+
+
   void *_malloc(size_t size, const char *file);
   void *_calloc(size_t num, size_t size, const char *file);
   void _free(void *ptr, const char *file, int line);
-
-  #define MALLOC(x) _malloc(x, __FILE__);
-  #define CALLOC(y, x) _calloc(y, x, __FILE__);
-  #define FREE(x) _free(x, __FILE__, __LINE__);
-
 
 #endif
