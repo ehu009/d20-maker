@@ -57,14 +57,15 @@ void _free(void *ptr, const char *file, int line)
   {
     if (cur->ptr == ptr)
     {
-      enter(-cur->size, ptr);
       break;
     }
     cur = list_iterator_next(iter);
   }
   if (cur != NULL)
   {
+    printf("%s: %d, freeing %p\r\n", file, line, ptr);
     free(cur->ptr);
+    enter(-cur->size, ptr);
   }
   free(iter);
 }
