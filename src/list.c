@@ -119,6 +119,20 @@ void list_remove(list_t *list, void *item)
   }
 }
 
+void *list_pop(list_t *list)
+{
+  l_node *node = list->head;
+  if (node == NULL)
+  {
+    return NULL;
+  }
+  void *item = node->item;
+  free(node);
+  list->size --;
+  return item;
+}
+
+
 
 struct linked_list_iterator
 {
