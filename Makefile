@@ -18,10 +18,10 @@ SOURCES = $(SRCS:%=$(SRC_PATH)/%.c)
 default : clean $(PROG)
 
 clean :
-		rm -f *.o $(PROG) *~
+	rm -f *.o $(PROG) *~
 
 win : $(HEADERS) $(SOURCES) $(OBJECTS)
-		$(CC) $(FLAGS) -I ./include -L ./lib $^ $(WLIBS) -o d20-maker.exe
+	$(CC) $(FLAGS) -I ./include -L ./lib $^ $(WLIBS) -o d20-maker.exe
 
 $(PROG) : $(HEADERS) $(SOURCES) $(OBJECTS)
-		$(CC) $(FLAGS) $^ $(LIBS) -o $@
+	$(CC) $(FLAGS) $^ $(LIBS) -o $@
