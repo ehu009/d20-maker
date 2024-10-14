@@ -19,9 +19,7 @@
 #include "pixels.h"
 
 
-
 extern SDL_Rect draw_area;
-
 
 int SDLRect_contains (vtx2d_t *p, SDL_Rect *limit)
 {
@@ -42,18 +40,12 @@ int mouse_on_draw_area (void)
   return SDLRect_contains(&pt, &draw_area);
 }
 
-
-
 int approximates (double test, double source, double accuracy)
 {
   return (source + accuracy >= test)
       && (test >= source - accuracy);
 }
 #define FLOAT_ACC 2
-
-
-
-
 
 
 
@@ -86,7 +78,7 @@ static struct
 
 int change_root_size (void)
 { //  toggle between rotation and resizing of root triangle
-  if((mouse_middle() == -1)
+  if ((mouse_middle() == -1)
       ||  (mouse_right() == -1))
   {
     application.rotate_root ^= 1;
@@ -274,9 +266,11 @@ int rotate_root (int diff)
   {
     application.rotation += diff;
     while (application.rotation < 0)
+    {
       application.rotation += TRIANGLE_NUM_ROTATIONS;
+    }
     application.rotation %= TRIANGLE_NUM_ROTATIONS;
-    return 1;;
+    return 1;
   }
   return 0;
 }
@@ -311,7 +305,6 @@ void empty_list (list_t *list)
   free_list_iterator (slider);
   free_list (list);
 }
-
 
 
 #define NET_START_X 50
@@ -384,7 +377,7 @@ void app_free (void)
   // free structures in the d20
   void free_face_list(list_t * list)
   {
-    if(list == NULL)
+    if (list == NULL)
     {
       return;
     }
@@ -392,11 +385,6 @@ void app_free (void)
     while (f != NULL)
     {
       triangle_t *t = f->item;
-      /*
-      FREE(t->pts[0]);
-      FREE(t->pts[1]);
-      FREE(t->pts[2]);
-      */
       FREE(t);
       FREE(f);
       f = list_pop(list);
@@ -405,10 +393,8 @@ void app_free (void)
   }
 
   free_face_list(d20.available);
-  //empty_list(d20.available);
   d20.available = NULL;
   free_face_list(d20.faces);
-  //empty_list(d20.faces);
   d20.faces = NULL;
   
   // free graphical elements
@@ -417,28 +403,17 @@ void app_free (void)
     FREE(d20.current_free->item);
     FREE(d20.current_free);
   }
-  /*
-  struct line *l = list_pop(application.lines);
-  while(l != NULL)
-  {
-    FREE(l->A);
-    FREE(l->B);
-    FREE(l);
-    l = list_pop(application.lines);
-  }
-  */
-  empty_list(application.lines);
+  list_empty(application.lines);
   FREE(application.lines);
   application.lines = NULL;
 
   vtx2d_t *coord = list_pop(application.positions);
-  while(coord != NULL)
+  while (coord != NULL)
   {
     FREE(coord);
     coord = list_pop(application.positions);
   }
   FREE(application.positions);
-  //empty_list(application.positions);
   application.positions = NULL;
 
   // free buttons
@@ -451,10 +426,6 @@ void app_free (void)
   fader_free(application.colour_select);
   application.colour_select = NULL;
 }
-
-
-
-
 
 
 
@@ -544,22 +515,22 @@ void draw_lines (list_t *lines)
   free_list_iterator(s);
 }
 
-    void draw_rect (vtx2d_t *pos)
+void draw_rect (vtx2d_t *pos)
+{
+  #define DOT_SIZE 8
+  int x = pos->pts[0], y = pos->pts[1];
+  int i, j;
+  for (i = x; i < x + DOT_SIZE; i ++)
+  {
+    for (j = y; j < y + DOT_SIZE; j ++)
     {
-      #define DOT_SIZE 8
-      int x = pos->pts[0], y = pos->pts[1];
-      int i, j;
-      for (i = x; i < x + DOT_SIZE; i ++)
-      {
-        for (j = y; j < y + DOT_SIZE; j ++)
-        {
-          vtx2i_t g;
-          g.pts[0] = i;
-          g.pts[1] = j;
-          setPixel(canvas, &g, 0x00FF00);
-        }
-      }
+      vtx2i_t g;
+      g.pts[0] = i;
+      g.pts[1] = j;
+      setPixel(canvas, &g, 0x00FF00);
     }
+  }
+}
 
 void _draw_end (void)
 {
@@ -638,12 +609,10 @@ void select_triangle (void)
   face_t *new_cUsed = NULL, *new_cFree = NULL;
 
   new_cUsed = find_current_selected(d20.faces, &m);
-  if(d20.available != NULL)
+  if (d20.available != NULL)
   {
     new_cFree = find_current_selected(d20.available, &m);
   }
-
-
 
   d20.current_free = new_cFree;
   d20.current_used = new_cUsed;
@@ -667,26 +636,46 @@ int limit_root_triangle (triangle_t *r, SDL_Rect *R)
   double *lX = &r->pts[0]->pts[0], *lY = &r->pts[0]->pts[1],
       *hX = &r->pts[0]->pts[0], *hY = &r->pts[0]->pts[1];
   if (*lX > r->pts[1]->pts[0])
-    {lX = &r->pts[1]->pts[0];}
+  {
+    lX = &r->pts[1]->pts[0];
+  }
   if (*lY > r->pts[1]->pts[1])
-    {lY = &r->pts[1]->pts[1];}
+  {
+    lY = &r->pts[1]->pts[1];
+  }
   if (*lX > r->pts[2]->pts[0])
-    {lX = &r->pts[2]->pts[0];}
+  {
+    lX = &r->pts[2]->pts[0];
+  }
   if (*lY > r->pts[2]->pts[1])
-    {lY = &r->pts[2]->pts[1];}
+  {
+    lY = &r->pts[2]->pts[1];
+  }
   if (*hX < r->pts[1]->pts[0])
-    {hX = &r->pts[1]->pts[0];}
+  {
+    hX = &r->pts[1]->pts[0];
+  }
   if (*hY < r->pts[1]->pts[1])
-    {hY = &r->pts[1]->pts[1];}
+  {
+    hY = &r->pts[1]->pts[1];
+  }
   if (*hX < r->pts[2]->pts[0])
-    {hX = &r->pts[2]->pts[0];}
+  {
+    hX = &r->pts[2]->pts[0];
+  }
   if (*hY < r->pts[2]->pts[1])
-    {hY = &r->pts[2]->pts[1];}
+  {
+    hY = &r->pts[2]->pts[1];
+  }
 
-  if ( R->h < (*hY - *lY))
-    {return 0;}
-  if ( R->w < (*hX - *lX))
-    {return 0;}
+  if (R->h < (*hY - *lY))
+  {
+    return 0;
+  }
+  if (R->w < (*hX - *lX))
+  {
+    return 0;
+  }
 
 
   //  lower limits
@@ -864,9 +853,7 @@ vtx2d_t *position_that_neighbors(face_t *f, char k)
 
 face_t *create_root_neighbor (char k)
 {
-  LINE
   face_t *anchor = d20.current_free, *t = face_that_neighbors(anchor, k);
-  LINE
   triangle_t *q = anchor->item;
   vtx2d_t *tmp_pos = position_that_neighbors(anchor, k);
 
@@ -896,7 +883,9 @@ face_t *create_root_neighbor (char k)
     }
     t->item = p;
     if (debug >= 2)
-      {print_face(t);}
+    {
+      print_face(t);
+    }
   }
   else
   {
@@ -933,7 +922,7 @@ void pin_root (void)
     }
     ++c;
   }
-  while(c <= 'C');
+  while (c <= 'C');
 
   add_lines_for(&application.lines, d20.current_free->item);
 
@@ -951,7 +940,9 @@ face_t *neighbor_for_slot (face_t *p, char k)
   err |= (t == NULL);
 
   if (err)
-    {return t;}
+  {
+    return t;
+  }
   if (debug >= 2)
   {
     printf("trying to add neighbor:  ");
@@ -971,22 +962,28 @@ face_t *neighbor_for_slot (face_t *p, char k)
     return NULL;
   }
   if (debug >= 2)
-    {LINE}
+  {
+    LINE
+  }
 
   vtx2d_t *tmp_pos = position_that_neighbors(p, k);
   triangle_t *pt = p->item;
   if (debug >= 2)
-    {LINE}
+  {
+    LINE
+  }
 
   if (!SDLRect_contains(tmp_pos, &draw_area))
   {
-    printf("outside draw area\n");
+    DEBUG(2, "outside draw area\n");
     FREE (tmp_pos);
     FREE (t);
     return NULL;
   }
   if (debug >= 2)
-    {LINE}
+  {
+    LINE
+  }
 
   vtx2d_t *pos = position_exists(tmp_pos, application.positions);
   if (pos != NULL)
@@ -995,15 +992,21 @@ face_t *neighbor_for_slot (face_t *p, char k)
     tmp_pos = pos;
 
     if (debug >= 2)
-    {printf("used existing position %p\n", pos);}
+    {
+      printf("used existing position %p\n", pos);
+    }
   }
   if (debug >= 2)
-    {LINE}
+  {
+    LINE
+  }
 
   triangle_t *tr = copy_triangle(pt);
   tr->pts[k-'A'] = tmp_pos;
   if (debug >= 2)
-    {LINE}
+  {
+    LINE
+  }
 
   t->item = tr;
   return t;
@@ -1025,12 +1028,16 @@ void create_neighbor_triangles_for (face_t *p)
       }
       int ex = triangle_exists(ptr->item, d20.available, FLOAT_ACC);
       if (debug >= 2)
-        {LINE}
+      {
+        LINE
+      }
       if (!ex)
       {
 
         if (debug >= 2) 
-          {LINE}
+        {
+          LINE
+        }
 
         list_insert(d20.available, (void *) ptr);
 
@@ -1045,12 +1052,16 @@ void create_neighbor_triangles_for (face_t *p)
         FREE(ptr->item);
         FREE(ptr);
         if (debug >= 2)
-          {LINE}
+        {
+          LINE
+        }
       }
     }
     ++ c;
     if (debug >= 2)
-      {LINE;}
+    {
+      LINE
+    }
     
       
   }
@@ -1064,9 +1075,11 @@ void remove_faces_similar_to (list_t *unpinned, face_t *cmp)
 {
   int k = list_size (unpinned), q = k;
   if ((unpinned == NULL) || (k == 1))
-    {return;}
+  {
+    return;
+  }
 
-  DEBUG(1, "Trying to remove duplicates")
+  DEBUG(2, "Trying to remove duplicates")
   list_i *s = make_list_iterator(unpinned);
   face_t *cur = list_iterator_next (s);
   while (cur != NULL)
@@ -1091,7 +1104,9 @@ void remove_faces_similar_to (list_t *unpinned, face_t *cmp)
   {
     k = q-list_size(unpinned);
     if (k)
-      {printf("removed %d duplicates\n",k);}
+    {
+      printf("removed %d duplicates\n",k);
+    }
   }
 }
 
@@ -1101,14 +1116,15 @@ void pin (void)
 {
   if (debug >= 2)
   {
-    printf("####\n");
-    printf("PINNING\nnum pinned : %d\nthe face in question is: ", list_size(d20.faces));
+    printf("PINNING\nnum pinned : %d\n", list_size(d20.faces));
   }
   face_t *anchor = d20.current_free;
   d20.current_free = NULL;
 
   if (debug >= 2)
-    {LINE}
+  {
+    LINE
+  }
 
   remove_faces_similar_to (d20.available, anchor);
 
@@ -1119,16 +1135,22 @@ void pin (void)
   list_insert(d20.faces, anchor);
   
   if (debug >= 2)
-    {LINE}
+  {
+    LINE
+  }
 
   add_lines_for (&application.lines, anchor->item);
 
   if (debug >= 2)
-    {LINE}
+  {
+    LINE
+  }
 
   create_neighbor_triangles_for (anchor);
   if (debug >= 2)
-    {LINE}
+  {
+    LINE
+  }
 }
 
 
@@ -1142,14 +1164,14 @@ void remove_unused_coordinates()
     int found = 0;
     list_i *k = make_list_iterator(application.lines);
     struct line *t = list_iterator_next(k);
-    while(t != NULL)
+    while (t != NULL)
     {
       
       if (t->A == coord
           || t->B == coord)
       {
         found = 1;
-        printf("found coordinate\r\n");
+        DEBUG(2, "found coordinate\r\n");
         break;
       }
       
@@ -1219,7 +1241,9 @@ void app_main (void)
         {
           rotate_root(scroll);
           if (!reposition_root())
-            {rotate_root(-scroll);}
+          {
+            rotate_root(-scroll);
+          }
         }
       }
     }
@@ -1244,49 +1268,49 @@ void app_main (void)
     //  root triangle has been pinned
     if (mouse_left() == -1)
     {
-        if (d20.current_free != NULL)
+      if (d20.current_free != NULL)
+      {
+        if (mouse_on_draw_area())
         {
-          if (mouse_on_draw_area())
+          pin();
+          if (list_size(d20.faces) == 20)
           {
-            pin();
-            if (list_size(d20.faces) == 20)
+            application.status = APP_END;
+            if (application.save_btn == NULL)
             {
-              application.status = APP_END;
-              if (application.save_btn == NULL)
-              {
-                application.save_btn = button_create ("save \0", &application.save);
-                button_setPosition(application.save_btn, canvas->w-(BORDER_SIZE+BUTTON_WIDTH), 2*BORDER_SIZE + BUTTON_HEIGHT);
-              }
-              if (application.colour_select == NULL)
-              {
-                unsigned fader_yPos = 3*BORDER_SIZE + 2*BUTTON_HEIGHT;
-                application.colour_select = fader_create(80.0, FADER_WIDTH, canvas->h - (BORDER_SIZE + fader_yPos), &application.negate_rate);
-                fader_setPos(application.colour_select, canvas->w - (BORDER_SIZE + BUTTON_WIDTH), fader_yPos);
-              }
-              
-              remove_unused_coordinates();
+              application.save_btn = button_create ("save \0", &application.save);
+              button_setPosition(application.save_btn, canvas->w-(BORDER_SIZE+BUTTON_WIDTH), 2*BORDER_SIZE + BUTTON_HEIGHT);
             }
-
+            if (application.colour_select == NULL)
+            {
+              unsigned fader_yPos = 3*BORDER_SIZE + 2*BUTTON_HEIGHT;
+              application.colour_select = fader_create(80.0, FADER_WIDTH, canvas->h - (BORDER_SIZE + fader_yPos), &application.negate_rate);
+              fader_setPos(application.colour_select, canvas->w - (BORDER_SIZE + BUTTON_WIDTH), fader_yPos);
+            }
+            
+            remove_unused_coordinates();
           }
+
         }
-        else if (d20.current_used != NULL)
-        { //  undo
-          if (list_size(d20.faces) == 1)
-          {
-            app_free();
-            app_start();
-          }
-          else
-          {
-
-
-          }
+      }
+      else if (d20.current_used != NULL)
+      { //  undo
+        if (list_size(d20.faces) == 1)
+        {
+          app_free();
+          app_start();
         }
+        else
+        {
+
+
+        }
+      }
     }
 
     if (mouse_moves ())
     {
-        select_triangle();
+      select_triangle();
     }
   }
 
@@ -1295,14 +1319,18 @@ void app_main (void)
 void app_usage ()
 {
   if (mouse_moves ())
-    {mouse_position (&application.mX, &application.mY);}
+  {
+    mouse_position (&application.mX, &application.mY);
+  }
 
   if (application.status == APP_MAIN)
   {
     app_main();
   
     if (application.reset_btn != NULL)
-      {button_update(application.reset_btn);}
+    {
+      button_update(application.reset_btn);
+    }
 
   }
   else if (application.status == APP_END)
@@ -1314,10 +1342,14 @@ void app_usage ()
     }
 
     if (application.reset_btn != NULL)
-      {button_update(application.reset_btn);}
+    {
+      button_update(application.reset_btn);
+    }
 
     if (application.save_btn != NULL)
-      {button_update(application.save_btn);}
+    {
+      button_update(application.save_btn);
+    }
 
     //relocate
     if (mouse_left() == 1 && mouse_on_draw_area())
@@ -1401,11 +1433,6 @@ void app_usage ()
         application.y = application.mY;
       }
     }
-
-
-
-
-
 
     if (application.save)
     {

@@ -47,9 +47,15 @@ void mouse_handle_up (SDL_Event *e)
   {
     switch (e->button.button)
     {
-      case SDL_BUTTON_LEFT:   { SET(MASK_L_UP); break;  }
-      case SDL_BUTTON_RIGHT:  { SET(MASK_R_UP); break;  }
-      case SDL_BUTTON_MIDDLE: { SET(MASK_M_UP); break;  }
+      case SDL_BUTTON_LEFT:
+        SET(MASK_L_UP);
+        break;
+      case SDL_BUTTON_RIGHT:
+        SET(MASK_R_UP);
+        break;
+      case SDL_BUTTON_MIDDLE:
+        SET(MASK_M_UP);
+        break;
     }
   }
 }
@@ -61,9 +67,15 @@ void mouse_handle_down (SDL_Event *e)
   {
     switch (e->button.button)
     {
-      case SDL_BUTTON_LEFT:   { SET(MASK_L_DOWN); break;  }
-      case SDL_BUTTON_RIGHT:  { SET(MASK_R_DOWN); break;  }
-      case SDL_BUTTON_MIDDLE: { SET(MASK_M_DOWN); break;  }
+      case SDL_BUTTON_LEFT:
+        SET(MASK_L_DOWN);
+        break;
+      case SDL_BUTTON_RIGHT:
+        SET(MASK_R_DOWN);
+        break;
+      case SDL_BUTTON_MIDDLE:
+        SET(MASK_M_DOWN);
+        break;
     }
   }
 }
@@ -71,9 +83,13 @@ void mouse_handle_down (SDL_Event *e)
 void mouse_handle_scroll (SDL_Event *e)
 { //  Handle mouse scroll event
   if (e->wheel.y < 0)
+  {
     SET(MASK_WHEEL_DOWN);
+  }
   if (e->wheel.y > 0)
+  {
     SET(MASK_WHEEL_UP);
+  }
 }
 
 int mouse_update (SDL_Event *e)
@@ -82,10 +98,22 @@ int mouse_update (SDL_Event *e)
   mouse.moving = 0;
   switch (e->type)
   {
-    case SDL_MOUSEBUTTONUP:   { mouse_handle_up (e);    ++q;  break;  }
-    case SDL_MOUSEBUTTONDOWN: { mouse_handle_down (e);  ++q;  break;  }
-    case SDL_MOUSEMOTION:     { mouse_handle_move (e);  ++q;  break;  }
-    case SDL_MOUSEWHEEL:      { mouse_handle_scroll (e);++q;  break;  }
+    case SDL_MOUSEBUTTONUP:
+      mouse_handle_up(e);
+      ++q;
+      break;
+    case SDL_MOUSEBUTTONDOWN:
+      mouse_handle_down(e);
+      ++q;
+      break;
+    case SDL_MOUSEMOTION:
+      mouse_handle_move(e);
+      ++q;
+      break;
+    case SDL_MOUSEWHEEL:
+      mouse_handle_scroll(e);
+      ++q;
+      break;
   }
   return q;
 }
