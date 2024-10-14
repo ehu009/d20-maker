@@ -20,8 +20,8 @@ default : clean $(PROG)
 clean :
 		rm -f *.o $(PROG) *~
 
-winv : $(HEADERS) $(SOURCES) $(OBJECTS)
-		$(CC) $(FLAGS) -I ./include -L ./lib $^ $(WLIBS) -o $@
+win : $(HEADERS) $(SOURCES) $(OBJECTS)
+		$(CC) $(FLAGS) -I ./include -L ./lib $^ $(WLIBS) -o d20-maker.exe
 
 $(PROG) : $(HEADERS) $(SOURCES) $(OBJECTS)
 		$(CC) $(FLAGS) $^ $(LIBS) -o $@
