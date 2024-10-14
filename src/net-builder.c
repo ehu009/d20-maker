@@ -11,6 +11,7 @@
 #include "list.h"
 #include "screen-triangles.h"
 
+#include "memory.h"
 
 #include "storage.h"
 #include "fader.h"
@@ -224,9 +225,9 @@ void print_face(face_t *f)
 void add_lines_for (list_t **lines, triangle_t *t)
 {
   struct line *a, *b, *c;
-  a = malloc (sizeof (struct line));
-  b = malloc (sizeof (struct line));
-  c = malloc (sizeof (struct line));
+  a = MALLOC(sizeof (struct line));
+  b = MALLOC(sizeof (struct line));
+  c = MALLOC(sizeof (struct line));
 
   a->A = t->pts[0];
   a->B = t->pts[1];
@@ -248,7 +249,7 @@ void add_lines_for (list_t **lines, triangle_t *t)
   {
     if (line_exists(ptr, *lines))
     {
-      free(ptr);
+      FREE(ptr);
     }
     else
     {
@@ -304,7 +305,7 @@ void empty_list (list_t *list)
   
   while (item != NULL)
   {
-    free(item);
+    FREE(item);
     item = list_iterator_next(slider);
   }
   free_list_iterator (slider);
@@ -338,11 +339,11 @@ void init_net_builder (void)
   face_t *t = root_face(d20.net);
   if (t != NULL)
   {
-    triangle_t *tr = calloc(1, sizeof(triangle_t));
+    triangle_t *tr = CALLOC(1, sizeof(triangle_t));
 
-    tr->pts[0] = (vtx2d_t *) calloc (1, sizeof(vtx2d_t));
-    tr->pts[1] = (vtx2d_t *) calloc (1, sizeof(vtx2d_t));
-    tr->pts[2] = (vtx2d_t *) calloc (1, sizeof(vtx2d_t));
+    tr->pts[0] = (vtx2d_t *) CALLOC(1, sizeof(vtx2d_t));
+    tr->pts[1] = (vtx2d_t *) CALLOC(1, sizeof(vtx2d_t));
+    tr->pts[2] = (vtx2d_t *) CALLOC(1, sizeof(vtx2d_t));
     t->item = tr;
 
     application.positions = make_list();
@@ -383,13 +384,23 @@ void app_free (void)
   // free structures in the d20
   empty_list(d20.available);
   d20.available = NULL;
+  
   empty_list(d20.faces);
   d20.faces = NULL;
-
+  
   // free graphical elements
   empty_list(application.lines);
+  FREE(application.lines);
   application.lines = NULL;
-  empty_list(application.positions);
+
+  vtx2d_t *coord = list_pop(application.positions);
+  while(coord != NULL)
+  {
+    FREE(coord);
+    coord = list_pop(application.positions);
+  }
+  FREE(application.positions);
+  //empty_list(application.positions);
   application.positions = NULL;
 
   // free buttons
@@ -815,7 +826,9 @@ vtx2d_t *position_that_neighbors(face_t *f, char k)
 
 face_t *create_root_neighbor (char k)
 {
+  LINE
   face_t *anchor = d20.current_free, *t = face_that_neighbors(anchor, k);
+  LINE
   triangle_t *q = anchor->item;
   vtx2d_t *tmp_pos = position_that_neighbors(anchor, k);
 
@@ -824,7 +837,7 @@ face_t *create_root_neighbor (char k)
 
     list_insert(application.positions, tmp_pos);
     
-    triangle_t *p = malloc (sizeof(triangle_t));
+    triangle_t *p = MALLOC(sizeof(triangle_t));
     switch (k)
     {
       case 'A':
@@ -844,13 +857,13 @@ face_t *create_root_neighbor (char k)
         break;
     }
     t->item = p;
-    if (debug >= 1)
+    if (debug >= 2)
       {print_face(t);}
   }
   else
   {
-    free(tmp_pos);
-    free(t);
+    FREE(tmp_pos);
+    FREE(t);
     t = NULL;
   }
   return t;
@@ -861,27 +874,25 @@ face_t *create_root_neighbor (char k)
 
 void pin_root (void)
 {
-  void insert (face_t *ptr)
-  {
-    if (d20.available == NULL)
-      {d20.available = make_list ();}
-
-    list_insert(d20.available, (void *) ptr);
-  }
-
   if (d20.faces == NULL)
   {
     d20.faces = make_list ();
-    list_insert(d20.faces, d20.current_free);
   }
-
+  list_insert(d20.faces, d20.current_free);
+  
+  if (d20.available == NULL)
+  {
+    d20.available = make_list ();
+  }
   face_t *ptr = NULL;
   char c = 'A';
   do
   {
     ptr = create_root_neighbor(c);
     if (ptr != NULL)
-      {insert(ptr);}
+    {
+      list_insert(d20.available, ptr);
+    }
     ++c;
   }
   while(c <= 'C');
@@ -890,7 +901,7 @@ void pin_root (void)
 
   d20.current_used = NULL;
   d20.current_free = NULL;
-  DEBUG(1, "Root pinned.\n");
+  DEBUG(2, "Root pinned.\n");
 }
 
 
@@ -903,7 +914,7 @@ face_t *neighbor_for_slot (face_t *p, char k)
 
   if (err)
     {return t;}
-  if (debug >= 1)
+  if (debug >= 2)
   {
     printf("trying to add neighbor:  ");
     print_face(t);
@@ -918,42 +929,42 @@ face_t *neighbor_for_slot (face_t *p, char k)
     if (debug >= 1)
     {printf("already pinned\n");}
 
-    free(t);
+    FREE(t);
     return NULL;
   }
-  if (debug >= 1)
+  if (debug >= 2)
     {LINE}
 
   vtx2d_t *tmp_pos = position_that_neighbors(p, k);
   triangle_t *pt = p->item;
-  if (debug >= 1)
+  if (debug >= 2)
     {LINE}
 
   if (!SDLRect_contains(tmp_pos, &draw_area))
   {
     printf("outside draw area\n");
-    free (tmp_pos);
-    free (t);
+    FREE (tmp_pos);
+    FREE (t);
     return NULL;
   }
-  if (debug >= 1)
+  if (debug >= 2)
     {LINE}
 
   vtx2d_t *pos = position_exists(tmp_pos, application.positions);
   if (pos != NULL)
   {
-    free (tmp_pos);
+    FREE (tmp_pos);
     tmp_pos = pos;
 
-    if (debug >= 1)
+    if (debug >= 2)
     {printf("used existing position %p\n", pos);}
   }
-  if (debug >= 1)
+  if (debug >= 2)
     {LINE}
 
   triangle_t *tr = copy_triangle(pt);
   tr->pts[k-'A'] = tmp_pos;
-  if (debug >= 1)
+  if (debug >= 2)
     {LINE}
 
   t->item = tr;
@@ -969,37 +980,38 @@ void create_neighbor_triangles_for (face_t *p)
     ptr = neighbor_for_slot(p, c);
     if (ptr != NULL)
     {
-    if (debug >= 1)
-    {
-      LINE
-      printf("checking if triangle exists on screen already\nslot is %p\ntriangle is %p\nlist is %p\n",ptr, ptr->item, d20.available);
+      if (debug >= 2)
+      {
+        LINE
+        printf("checking if triangle exists on screen already\nslot is %p\ntriangle is %p\nlist is %p\n",ptr, ptr->item, d20.available);
       }
       int ex = triangle_exists(ptr->item, d20.available, FLOAT_ACC);
-      if (debug >= 1)
+      if (debug >= 2)
         {LINE}
       if (!ex)
       {
-        if (debug >= 1)
+
+        if (debug >= 2) 
           {LINE}
 
         list_insert(d20.available, (void *) ptr);
 
-        DEBUG(1, "Added neighbor")
+        printf("Added neighbor %p\r\n", ptr);
 
       }
       else
       {
 
-        DEBUG(1, "Triangle seems to exist on screen already.");
+        DEBUG(0, "Triangle seems to exist on screen already.");
         //  this case seemingly never occurs
-        free(ptr->item);
-        free(ptr);
-        if (debug >= 1)
+        FREE(ptr->item);
+        FREE(ptr);
+        if (debug >= 2)
           {LINE}
       }
     }
     ++ c;
-    if (debug >= 1)
+    if (debug >= 2)
       {LINE;}
     
       
@@ -1028,15 +1040,15 @@ void remove_faces_similar_to (list_t *unpinned, face_t *cmp)
           DEBUG(2, "\t- removed a duplicate");
           
           list_remove(unpinned, cur);
-          free(cur->item);
-          free(cur);
+          FREE(cur->item);
+          FREE(cur);
         }
       }
     cur = list_iterator_next (s);
   }
   
 
-  free(s);
+  free_list_iterator(s);
   if (debug >= 1)
   {
     k = q-list_size(unpinned);
@@ -1049,7 +1061,7 @@ void remove_faces_similar_to (list_t *unpinned, face_t *cmp)
 
 void pin (void)
 {
-  if (debug >= 1)
+  if (debug >= 2)
   {
     printf("####\n");
     printf("PINNING\nnum pinned : %d\nthe face in question is: ", list_size(d20.faces));
@@ -1057,7 +1069,7 @@ void pin (void)
   face_t *anchor = d20.current_free;
   d20.current_free = NULL;
 
-  if (debug >= 1)
+  if (debug >= 2)
     {LINE}
 
   remove_faces_similar_to (d20.available, anchor);
@@ -1068,16 +1080,16 @@ void pin (void)
   //  insert into list of placed triangles
   list_insert(d20.faces, anchor);
   
-  if (debug >= 1)
+  if (debug >= 2)
     {LINE}
 
   add_lines_for (&application.lines, anchor->item);
 
-  if (debug >= 1)
+  if (debug >= 2)
     {LINE}
 
   create_neighbor_triangles_for (anchor);
-  if (debug >= 1)
+  if (debug >= 2)
     {LINE}
 }
 
