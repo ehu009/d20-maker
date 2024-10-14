@@ -4,13 +4,13 @@
 #ifdef _WIN32
   #include    <malloc.h>
 #endif
-
+#include "memory.h"
 
 
 
 triangle_t *copy_triangle(triangle_t *t)
 {
-  triangle_t *tr = malloc(sizeof(triangle_t));
+  triangle_t *tr = MALLOC(sizeof(triangle_t));
   if (tr != NULL)
   {
     memcpy(tr, t, sizeof(triangle_t));
@@ -23,7 +23,7 @@ SDL_Rect *get_bounds_of_triangle (triangle_t *t)
   vtx2d_t *a = t->pts[0],
       *b = t->pts[1],
       *c = t->pts[2];
-  SDL_Rect *ptr = (SDL_Rect *) malloc (sizeof (SDL_Rect));
+  SDL_Rect *ptr = (SDL_Rect *) MALLOC (sizeof (SDL_Rect));
   if (ptr != NULL)
   {
     vtx2d_t lowest = *a, highest = *a;
@@ -171,7 +171,7 @@ void fill_triangle (triangle_t *t, plot_func plot, COLOUR color)
 
   SDL_BlitSurface (surf, NULL, canvas, rect);
   SDL_FreeSurface (surf);
-  free ((void *) rect);
+  FREE ((void *) rect);
 }
 
 int triangle_contains (triangle_t *t, vtx2i_t point)
@@ -182,7 +182,7 @@ int triangle_contains (triangle_t *t, vtx2i_t point)
       ||  (point.pts[1] < rect->y)
       ||  (point.pts[1] > rect->y + rect->h))
   {
-    free (rect);
+    FREE (rect);
     return 0;
   }
 
@@ -218,7 +218,7 @@ int triangle_contains (triangle_t *t, vtx2i_t point)
     }
   }
   SDL_FreeSurface (surf);
-  free ((void *) rect);
+  FREE ((void *) rect);
 
   return ((point.pts[1] > upper) && (point.pts[1] < lower));
 }
@@ -274,7 +274,7 @@ void transfer_triangle (triangle_t *t, SDL_Surface *dst, SDL_Rect *dst_rect)
   SDL_BlitSurface (surf, NULL, dst, rect);
 
   SDL_FreeSurface (surf);
-  free ((void *) rect);
+  FREE ((void *) rect);
 
 }
 

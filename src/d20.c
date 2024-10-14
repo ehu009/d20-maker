@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "memory.h"
 
 vtx5i_t d20_model[NUM_D20_VTX] =
 {
@@ -62,7 +63,7 @@ slot_t *find_slot_opposing (slot_t *a1, slot_t *a2, slot_t *opposer)
 
 face_t *new_face (slot_t *a, slot_t *b, slot_t *c)
 {
-  face_t *f = malloc(sizeof(face_t));
+  face_t *f = MALLOC(sizeof(face_t));
   if (f != NULL)
   {
     f->sA = a;
@@ -92,7 +93,7 @@ int equal_faces (face_t *A, face_t *B)
 
 face_t *copy_face (face_t *ptr)
 {
-  face_t *f = malloc (sizeof(face_t));
+  face_t *f = MALLOC (sizeof(face_t));
   if (f == NULL)
     return f;
   char l = sizeof(face_t);

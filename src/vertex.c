@@ -3,7 +3,7 @@
 #ifdef _WIN32
   #include <malloc.h>
 #endif
-
+#include "memory.h"
 #include "vertex.h"
 
 void get_vtx2i_from_vtx2d (vtx2d_t *src, vtx2i_t *dst)
@@ -15,7 +15,7 @@ void get_vtx2i_from_vtx2d (vtx2d_t *src, vtx2i_t *dst)
 
 vtx2i_t *make_vtx2i_from_vtx2d (vtx2d_t *src)
 { //  Create two-point integer vertex from existing two-point FP vertex
-  vtx2i_t *ptr = (vtx2i_t *) calloc (1, sizeof (vtx2i_t));
+  vtx2i_t *ptr = (vtx2i_t *) CALLOC (1, sizeof (vtx2i_t));
   if (ptr != NULL)
   {
     get_vtx2i_from_vtx2d (src, ptr);
@@ -46,7 +46,7 @@ vtx2d_t *find_vector_opposing (vtx2d_t *anchor1, vtx2d_t *anchor2, vtx2d_t *poin
   middle.pts[0] += anchor1->pts[0];
   middle.pts[1] += anchor1->pts[1];
 
-  vtx2d_t *vector = malloc (sizeof(vtx2d_t));
+  vtx2d_t *vector = MALLOC (sizeof(vtx2d_t));
   *vector = (vtx2d_t) {.pts = {point->pts[0] - middle.pts[0], point->pts[1] - middle.pts[1]}};
   vector->pts[0] *= -1;
   vector->pts[1] *= -1;
