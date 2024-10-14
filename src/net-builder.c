@@ -1022,8 +1022,6 @@ void create_neighbor_triangles_for (face_t *p)
 
         list_insert(d20.available, (void *) ptr);
 
-        printf("Added neighbor %p\r\n", ptr);
-
       }
       else
       {
@@ -1170,13 +1168,13 @@ void remove_unused_coordinates()
   free_list_iterator(s);
   s = make_list_iterator(unused);
   coord = list_iterator_next (s);
-  printf("removing %i unused coordinates\r\n", list_size(unused));
+  
   while (coord != NULL)
   {
     list_remove(application.positions, coord);
     coord = list_iterator_next (s);
   }
-  printf("coordinates: %i\r\n", list_size(application.positions));
+  
   free_list_iterator(s);
   list_empty(unused);
   free_list(unused);
