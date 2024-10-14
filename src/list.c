@@ -135,6 +135,7 @@ void *list_pop(list_t *list)
     return NULL;
   }
   void *item = node->item;
+  list->head = node->next;
   free(node);
   list->size --;
   return item;
