@@ -382,13 +382,51 @@ void app_start (void)
 void app_free (void)
 {
   // free structures in the d20
-  empty_list(d20.available);
+  void free_face_list(list_t * list)
+  {
+    if(list == NULL)
+    {
+      return;
+    }
+    face_t *f = list_pop(list);
+    while (f != NULL)
+    {
+      triangle_t *t = f->item;
+      /*
+      FREE(t->pts[0]);
+      FREE(t->pts[1]);
+      FREE(t->pts[2]);
+      */
+      FREE(t);
+      FREE(f);
+      f = list_pop(list);
+    }
+    FREE(list);
+  }
+
+  free_face_list(d20.available);
+  //empty_list(d20.available);
   d20.available = NULL;
-  
-  empty_list(d20.faces);
+  free_face_list(d20.faces);
+  //empty_list(d20.faces);
   d20.faces = NULL;
   
   // free graphical elements
+  if (d20.current_free != NULL)
+  {
+    FREE(d20.current_free->item);
+    FREE(d20.current_free);
+  }
+  /*
+  struct line *l = list_pop(application.lines);
+  while(l != NULL)
+  {
+    FREE(l->A);
+    FREE(l->B);
+    FREE(l);
+    l = list_pop(application.lines);
+  }
+  */
   empty_list(application.lines);
   FREE(application.lines);
   application.lines = NULL;
@@ -1385,8 +1423,3 @@ void app_usage ()
   }
 
 }
-
-
-
-
-
