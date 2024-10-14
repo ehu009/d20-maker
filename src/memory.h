@@ -6,9 +6,6 @@
   #endif
   #include <stdio.h>
   
-  #include "list.h"
-
-  static list_t *allocations = NULL;
   
   void init_memory(void);
   void free_memory(void);

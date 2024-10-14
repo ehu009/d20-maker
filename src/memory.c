@@ -1,4 +1,8 @@
 #include "memory.h"
+#include "list.h"
+
+
+static list_t *allocations = NULL;
 
 
 typedef struct {
