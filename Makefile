@@ -15,13 +15,18 @@ OBJECTS = $(OBJS:%=$(SRC_PATH)/%.c) $(OBJS:%=$(SRC_PATH)/%.h)
 HEADERS = $(HEAD:%=$(SRC_PATH)/%.h)
 SOURCES = $(SRCS:%=$(SRC_PATH)/%.c)
 
+
+
 default : clean $(PROG)
 
 clean :
-	rm -f *.o $(PROG) *~
+	rm -f *.o ./$(PROG).* *~
 
-win : $(HEADERS) $(SOURCES) $(OBJECTS)
-	$(CC) $(FLAGS) -I ./include -L ./lib $^ $(WLIBS) -o d20-maker.exe
+all : default
 
 $(PROG) : $(HEADERS) $(SOURCES) $(OBJECTS)
+ifeq ($(OS), Windows_NT)
+	$(CC) $(FLAGS) -I ./include -L ./lib $^ $(WLIBS) -o $@.exe
+else
 	$(CC) $(FLAGS) $^ $(LIBS) -o $@
+endif
