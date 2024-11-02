@@ -11,14 +11,13 @@
 #define OUTPUT_DIR_PATH "output/"
 
 
-int name_exists (char *name)
+int name_exists (DIR *dir, char *name)
 {
   int found = 0;
   struct dirent *e = NULL;
-  DIR *d = opendir(OUTPUT_DIR_PATH);
   do
   {
-    e = readdir(d);
+    e = readdir(dir);
     if (e == NULL)
     {
       break;
@@ -76,7 +75,8 @@ char *generate_name (SDL_Surface *surface)
   sprintf(name, "%X.bmp", hash);
 
   char c = 0;
-  while (name_exists(name))
+  DIR *dir = opendir(OUTPUT_DIR_PATH);
+  while (name_exists(dir, name))
   {
     if (c == 999)
     {
@@ -87,6 +87,7 @@ char *generate_name (SDL_Surface *surface)
     ++ c;
     sprintf(name, "%X (%d).bmp", hash, c);
   }
+  closedir(dir);
 
   return name;
 }
