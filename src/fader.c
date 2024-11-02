@@ -25,9 +25,11 @@ struct fader_bar
 
 fader_t *make_fader (double start, int width, int height, double *value)
 {
-  SDL_Surface *surf = SDL_CreateRGBSurface (0, width, height, 32, 0,0,0,0);
+  SDL_Surface *surf = SDL_CreateRGBSurface(0, width, height, 32, 0,0,0,0);
   if (surf == NULL)
+  {
     return NULL;
+  }
   fader_t *slide  = (fader_t *) MALLOC(sizeof(fader_t));
   if (slide != NULL)
   {
@@ -49,9 +51,13 @@ fader_t *make_fader (double start, int width, int height, double *value)
 void fader_reposition (fader_t *slide, int _x, int _y)
 {
   if (_x >= 0)
+  {
     slide->posx = _x;
+  }
   if (_y >= 0)
+  {
     slide->posy = _y;
+  }
 }
 
 
@@ -78,36 +84,52 @@ void get_button_rect (fader_t *slide, SDL_Rect *buf)
 void fader_draw (fader_t *slide)
 {
   int horizontal = (slide->bar.w > slide->bar.h);
-  SDL_FillRect (slide->surface, NULL, FADER_COLOUR_BAR);
+  SDL_FillRect(slide->surface, NULL, FADER_COLOUR_BAR);
 
   SDL_Rect button_rect;
   get_button_rect(slide, &button_rect);
   COLOUR btn_clr;
   if (SLIDESTATUS_OVER & slide->status)
+  {
     btn_clr = FADER_COLOUR_OVER;
+  }
   else
+  {
     btn_clr = FADER_COLOUR_DEFAULT;
+  }
   if (SLIDESTATUS_DOWN & slide->status)
+  {
     btn_clr = FADER_COLOUR_DOWN;
+  }
 
-  SDL_FillRect (slide->surface, &button_rect, btn_clr);
+  SDL_FillRect(slide->surface, &button_rect, btn_clr);
 
   if (slide->font != NULL)
   {
     char text[] = {0,0,0,0};
-  //  bzero(text, 4);
-    if ((slide->position == 100.0) || (slide->position == 0.0))
-      sprintf (text, "%.0f", slide->position);
-    else
-      sprintf (text, "%.1f", slide->position);
 
-    SDL_Surface *tmp_surf = TTF_RenderText_Solid (slide->font, text, FONT_COLOUR_WHITE);
+    if ((slide->position == 100.0) || (slide->position == 0.0))
+    {
+      sprintf(text, "%.0f", slide->position);
+    }
+    else
+    {
+      sprintf(text, "%.1f", slide->position);
+    }
+
+    SDL_Surface *tmp_surf = TTF_RenderText_Solid(slide->font, text, FONT_COLOUR_WHITE);
     if (tmp_surf == NULL)
-      printf ("TTF_RenderText_Solid: \"%s\"\n", TTF_GetError ());
+    {
+      printf("TTF_RenderText_Solid: \"%s\"\n", TTF_GetError());
+    }
     else
     {
 
-      SDL_Rect text_rect;
+      SDL_Rect text_rect = {
+        .y = 0.5 + (((slide->bar.h - slide->bar.w) * slide->position / 100) + (0.5 + tmp_surf->h/2)),
+        .x = (0.5 + slide->bar.w / 2) - (0.5 + tmp_surf->w /2),
+        .w = tmp_surf->w, .h = tmp_surf->h
+      };
       if (horizontal)
       {
         text_rect = (SDL_Rect) {
@@ -116,25 +138,18 @@ void fader_draw (fader_t *slide)
           .w = tmp_surf->w, .h = tmp_surf->h
         };
       }
-      else
+
+      if (SDL_BlitSurface(tmp_surf, NULL, slide->surface, &text_rect))
       {
-        text_rect = (SDL_Rect) {
-          .y = 0.5 + (((slide->bar.h - slide->bar.w) * slide->position / 100) + (0.5 + tmp_surf->h/2)),
-          .x = (0.5 + slide->bar.w / 2) - (0.5 + tmp_surf->w /2),
-          .w = tmp_surf->w, .h = tmp_surf->h
-        };
+        printf("SDL_Blitscreen: \"%s\"\n", SDL_GetError());
       }
-      if (SDL_BlitSurface (tmp_surf, NULL, slide->surface, &text_rect))
-      {
-        printf ("SDL_Blitscreen: \"%s\"\n", SDL_GetError ());
-      }
-      SDL_FreeSurface (tmp_surf);
+      SDL_FreeSurface(tmp_surf);
     }
   }
   slide->bar.x += slide->posx;
   slide->bar.y += slide->posy;
 
-  SDL_BlitSurface (slide->surface, NULL, canvas, &slide->bar);
+  SDL_BlitSurface(slide->surface, NULL, canvas, &slide->bar);
 
   slide->bar.x -= slide->posx;
   slide->bar.y -= slide->posy;
@@ -151,7 +166,7 @@ void fader_update (fader_t *slide)
 
 
   SDL_Rect temp_rect;
-  get_button_rect (slide, &temp_rect);
+  get_button_rect(slide, &temp_rect);
 
   temp_rect.x += slide->posx;
   temp_rect.y += slide->posy;
@@ -163,32 +178,33 @@ void fader_update (fader_t *slide)
       slide->status |= SLIDESTATUS_OVER;
     else
     {
-      if (mouseIsDown)
+      if (mouseIsDown && !(SLIDESTATUS_DOWN & slide->status))
       {
-        if (!(SLIDESTATUS_DOWN & slide->status))
+        if (horizontal)
         {
-          if (horizontal)
-            slide->diff = mouseX - temp_rect.x;
-          else
-            slide->diff = mouseY - temp_rect.y;
-          slide->status |= SLIDESTATUS_DOWN;
+          slide->diff = mouseX - temp_rect.x;
         }
+        else
+        {
+          slide->diff = mouseY - temp_rect.y;
+        }
+        slide->status |= SLIDESTATUS_DOWN;
       }
-      if (mouseIsUp)
+      if (mouseIsUp && (SLIDESTATUS_DOWN & slide->status))
       {
-        if (SLIDESTATUS_DOWN & slide->status)
-          slide->status ^= SLIDESTATUS_DOWN;
+        slide->status ^= SLIDESTATUS_DOWN;
       }
     }
   }
   else
   {
     if (SLIDESTATUS_OVER & slide->status)
-        slide->status ^= SLIDESTATUS_OVER;
-    if (SLIDESTATUS_DOWN & slide->status)
     {
-      if (mouseIsUp)
-        slide->status ^= SLIDESTATUS_DOWN;
+      slide->status ^= SLIDESTATUS_OVER;
+    }
+    if (mouseIsUp && (SLIDESTATUS_DOWN & slide->status))
+    {
+      slide->status ^= SLIDESTATUS_DOWN;
     }
 
   }
@@ -226,9 +242,13 @@ void fader_update (fader_t *slide)
       slide->position -= bMin;
       slide->position *= 100;
       if (horizontal)
+      {
         slide->position /= (slide->bar.w - slide->bar.h);
+      }
       else
+      {
         slide->position /= (slide->bar.h - slide->bar.w);
+      }
     }
   }
   *slide->value = slide->position;
@@ -239,8 +259,8 @@ void  free_fader (fader_t *slide)
 {
   if (slide != NULL)
   {
-  SDL_FreeSurface (slide->surface);
-  TTF_CloseFont (slide->font);
-}
+    SDL_FreeSurface(slide->surface);
+    TTF_CloseFont(slide->font);
+  }
   FREE(slide);
 }

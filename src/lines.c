@@ -44,8 +44,8 @@ void _draw_line (SDL_Surface *surface,
       *v = &y, *dv = &dy, *sv = &stepy,
       *v2 = &y2;
 
-  unsign (du, su);
-  unsign (dv, sv);
+  unsign(du, su);
+  unsign(dv, sv);
 
   if (dx > dy)
   {
@@ -58,13 +58,13 @@ void _draw_line (SDL_Surface *surface,
 
   //  Drawing
   vtx2i_t p = {.pts={x,y}};
-  plot (surface, &p, color);
+  plot(surface, &p, color);
   while (*v != *v2)
   {
     p.pts[0] = x;
     p.pts[1] = y;
-    bresenham_adjustment (u,v, su, sv, du, dv, &frac);
-    plot (surface, &p, color);
+    bresenham_adjustment(u,v, su, sv, du, dv, &frac);
+    plot(surface, &p, color);
   }
 }
 
@@ -102,17 +102,21 @@ void invertPixel (SDL_Surface *dst, vtx2i_t *p, unsigned color)
 {
   vtx2i_t p2 = *p;
   SDL_Rect clip_rect;
-  SDL_GetClipRect (canvas, &clip_rect);
+  SDL_GetClipRect(canvas, &clip_rect);
   if (clip_rect.x != 0)
+  {
     p2.pts[0] += clip_rect.x;
+  }
   if (clip_rect.y != 0)
+  {
     p2.pts[1] += clip_rect.y;
+  }
 
-  unsigned clr = getPixel (canvas, &p2);
+  unsigned clr = getPixel(canvas, &p2);
   clr ^= 0xffffffff;
   clr |= dst->format->Amask;
 
-  setPixel (dst, p, clr);
+  setPixel(dst, p, clr);
 }
 
 
@@ -133,18 +137,22 @@ void divertPixel (SDL_Surface *dst, vtx2i_t *p, unsigned color)
 {
   vtx2i_t p2 = *p;
   SDL_Rect clip_rect;
-  SDL_GetClipRect (canvas, &clip_rect);
+  SDL_GetClipRect(canvas, &clip_rect);
   if (clip_rect.x != 0)
+  {
     p2.pts[0] += clip_rect.x;
+  }
   if (clip_rect.y != 0)
+  {
     p2.pts[1] += clip_rect.y;
+  }
 
-  unsigned clr = getPixel (canvas, &p2);
+  unsigned clr = getPixel(canvas, &p2);
   unsigned R, G, B;
   R = negate_byte_at(clr, canvas->format->Rmask);
   G = negate_byte_at(clr, canvas->format->Gmask);
   B = negate_byte_at(clr, canvas->format->Bmask);
 
   clr = SDL_MapRGBA(dst->format, R,G,B,0xff);
-  setPixel (dst, p, clr);
+  setPixel(dst, p, clr);
 }

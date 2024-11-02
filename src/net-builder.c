@@ -143,7 +143,7 @@ int face_exists_in (face_t *t, list_t *list)
 
 face_t *find_current_selected (list_t *list, vtx2i_t *mouse)
 {
-  list_i *slider = make_list_iterator (list);
+  list_i *slider = make_list_iterator(list);
   face_t *cur = list_iterator_next(slider),
       *ret = NULL;
 
@@ -183,7 +183,7 @@ char line_exists (struct line *ptr, list_t *lines)
 }
 
 
-void print_face(face_t *f)
+void print_face (face_t *f)
 {
   #define IDX(x) (int)(x - d20.net)
   printf("face %p has slots %d, %d, %d\n", f, IDX(f->sA), IDX(f->sB), IDX(f->sC));
@@ -224,9 +224,9 @@ void add_lines_for (list_t **lines, triangle_t *t)
       list_insert(*lines, ptr);
     }
   }
-  add_or_free_line (a);
-  add_or_free_line (b);
-  add_or_free_line (c);
+  add_or_free_line(a);
+  add_or_free_line(b);
+  add_or_free_line(c);
 
 }
 
@@ -390,11 +390,11 @@ void pinned_list_drawing (face_t *t)
 {
   if (t != d20.current_used)
   {
-    draw_triangle_coloured (t->item, TRIANGLE_COLOUR_PINNED);
+    draw_triangle_coloured(t->item, TRIANGLE_COLOUR_PINNED);
   }
   else
   {
-    draw_triangle_transparent (t->item);
+    draw_triangle_transparent(t->item);
   }
 }
 
@@ -402,11 +402,11 @@ void unpinned_list_drawing (face_t *t)
 {
   if (t != d20.current_free)
   {
-    draw_triangle_transparent (t->item);
+    draw_triangle_transparent(t->item);
   }
   else
   {
-    draw_triangle_coloured (t->item, TRIANGLE_COLOUR_UNPINNED);
+    draw_triangle_coloured(t->item, TRIANGLE_COLOUR_UNPINNED);
   }
 }
 
@@ -428,10 +428,10 @@ void draw_list (list_t *list, tripoint_draw_func draw_func)
   {
     draw_func(cur);
 
-    cur = list_iterator_next (slider);
+    cur = list_iterator_next(slider);
   }
 
-  free_list_iterator (slider);
+  free_list_iterator(slider);
 }
 
 
@@ -440,13 +440,13 @@ void draw_list (list_t *list, tripoint_draw_func draw_func)
 
 void copy_triangles (list_t *triangles, SDL_Surface *dst)
 {
-  list_i *s = make_list_iterator (triangles);
-  face_t *cur = list_iterator_next (s);
+  list_i *s = make_list_iterator(triangles);
+  face_t *cur = list_iterator_next(s);
   while (cur != NULL)
   {
     transfer_triangle(cur->item, dst, &draw_area);
 
-    cur = list_iterator_next (s);
+    cur = list_iterator_next(s);
   }
   
   free_list_iterator(s);
@@ -456,7 +456,7 @@ void draw_lines (list_t *lines)
 {
   list_i *s = make_list_iterator(lines);
 
-  struct line *cur = list_iterator_next (s);
+  struct line *cur = list_iterator_next(s);
   
   while (cur != NULL)
   {
@@ -466,7 +466,7 @@ void draw_lines (list_t *lines)
 
     draw_line(canvas, &A, &B, divertPixel, 0);
 
-    cur = list_iterator_next (s);
+    cur = list_iterator_next(s);
   }
   
   free_list_iterator(s);
@@ -491,7 +491,7 @@ void draw_rect (vtx2d_t *pos)
 
 void _draw_end (void)
 {
-  SDL_Surface *surf = SDL_CreateRGBSurface (0, draw_area.w, draw_area.h, 32, canvas->format->Rmask, canvas->format->Gmask, canvas->format->Bmask, alpha_mask);
+  SDL_Surface *surf = SDL_CreateRGBSurface(0, draw_area.w, draw_area.h, 32, canvas->format->Rmask, canvas->format->Gmask, canvas->format->Bmask, alpha_mask);
   if (surf != NULL)
   {
     COLOUR filler = SDL_MapRGBA(surf->format, 0,0,0,0xff);
@@ -499,8 +499,8 @@ void _draw_end (void)
 
     copy_triangles(d20.faces, surf);
 
-    SDL_BlitSurface (surf, NULL, canvas, &draw_area);
-    SDL_FreeSurface (surf);
+    SDL_BlitSurface(surf, NULL, canvas, &draw_area);
+    SDL_FreeSurface(surf);
   }
 }
 
@@ -508,17 +508,17 @@ void _draw_main(void)
 {
   if (d20.faces == NULL)
   {
-    draw_triangle_transparent (d20.current_free->item);
+    draw_triangle_transparent(d20.current_free->item);
   }
   else
   {
-    draw_list (d20.faces, pinned_list_drawing);
+    draw_list(d20.faces, pinned_list_drawing);
 
     draw_lines(application.lines);
 
     if (d20.available != NULL)
     {
-      draw_list (d20.available, unpinned_list_drawing);
+      draw_list(d20.available, unpinned_list_drawing);
     }
   }
 }
@@ -526,8 +526,8 @@ void _draw_main(void)
 void app_draw (void)
 {
   DEBUG(2, "Started drawing.")
-  SDL_FillRect (canvas, NULL, COLOUR_BACKGROUND);
-  SDL_BlitSurface (src_image, NULL, canvas, &draw_area);
+  SDL_FillRect(canvas, NULL, COLOUR_BACKGROUND);
+  SDL_BlitSurface(src_image, NULL, canvas, &draw_area);
 
   if (application.status == APP_MAIN)
   {
@@ -638,34 +638,34 @@ int limit_root_triangle (triangle_t *r, SDL_Rect *R)
   //  lower limits
   if (*lX < R->x)
   {
-    adjust_root_coordinate (&r->pts[0]->pts[0], lX, application.x, R->x);
-    adjust_root_coordinate (&r->pts[1]->pts[0], lX, application.x, R->x);
-    adjust_root_coordinate (&r->pts[2]->pts[0], lX, application.x, R->x);
+    adjust_root_coordinate(&r->pts[0]->pts[0], lX, application.x, R->x);
+    adjust_root_coordinate(&r->pts[1]->pts[0], lX, application.x, R->x);
+    adjust_root_coordinate(&r->pts[2]->pts[0], lX, application.x, R->x);
 
     *lX = R->x;
   }
   if (*lY < R->y)
   {
-    adjust_root_coordinate (&r->pts[0]->pts[1], lY, application.y, R->y);
-    adjust_root_coordinate (&r->pts[1]->pts[1], lY, application.y, R->y);
-    adjust_root_coordinate (&r->pts[2]->pts[1], lY, application.y, R->y);
+    adjust_root_coordinate(&r->pts[0]->pts[1], lY, application.y, R->y);
+    adjust_root_coordinate(&r->pts[1]->pts[1], lY, application.y, R->y);
+    adjust_root_coordinate(&r->pts[2]->pts[1], lY, application.y, R->y);
 
     *lY = R->y;
   }
   // upper limits
   if (*hX > R->x + R->w)
   {
-    adjust_root_coordinate (&r->pts[0]->pts[0], hX, application.x, R->x + R->w);
-    adjust_root_coordinate (&r->pts[1]->pts[0], hX, application.x, R->x + R->w);
-    adjust_root_coordinate (&r->pts[2]->pts[0], hX, application.x, R->x + R->w);
+    adjust_root_coordinate(&r->pts[0]->pts[0], hX, application.x, R->x + R->w);
+    adjust_root_coordinate(&r->pts[1]->pts[0], hX, application.x, R->x + R->w);
+    adjust_root_coordinate(&r->pts[2]->pts[0], hX, application.x, R->x + R->w);
 
     *hX = R->x + R->w;
   }
   if (*hY > R->y + R->h)
   {
-    adjust_root_coordinate (&r->pts[0]->pts[1], hY, application.y, R->y + R->h);
-    adjust_root_coordinate (&r->pts[1]->pts[1], hY, application.y, R->y + R->h);
-    adjust_root_coordinate (&r->pts[2]->pts[1], hY, application.y, R->y + R->h);
+    adjust_root_coordinate(&r->pts[0]->pts[1], hY, application.y, R->y + R->h);
+    adjust_root_coordinate(&r->pts[1]->pts[1], hY, application.y, R->y + R->h);
+    adjust_root_coordinate(&r->pts[2]->pts[1], hY, application.y, R->y + R->h);
 
     *hY = R->y + R->h;
   }
@@ -717,31 +717,29 @@ void standard_root (triangle_t *dst)
   ptr->pts[1] = cY + application.y;
 }
 
-int reposition_root(void)
+int reposition_root (void)
 {
   vtx2d_t a, b, c;
   triangle_t root = {.pts = {&a, &b, &c}};
 
-  standard_root (&root);
-  if (limit_root_triangle (&root, &draw_area))
+  standard_root(&root);
+  if (!limit_root_triangle(&root, &draw_area))
   {
-
-    vtx2d_t *ptr;
-    triangle_t *t = d20.current_free->item;
-    ptr = t->pts[0];
-    ptr->pts[0] = a.pts[0];
-    ptr->pts[1] = a.pts[1];
-    ptr = t->pts[1];
-    ptr->pts[0] = b.pts[0];
-    ptr->pts[1] = b.pts[1];
-    ptr = t->pts[2];
-    ptr->pts[0] = c.pts[0];
-    ptr->pts[1] = c.pts[1];
-
-    return 1;
-  }
-  else
     return 0;
+  }
+  vtx2d_t *ptr;
+  triangle_t *t = d20.current_free->item;
+  ptr = t->pts[0];
+  ptr->pts[0] = a.pts[0];
+  ptr->pts[1] = a.pts[1];
+  ptr = t->pts[1];
+  ptr->pts[0] = b.pts[0];
+  ptr->pts[1] = b.pts[1];
+  ptr = t->pts[2];
+  ptr->pts[0] = c.pts[0];
+  ptr->pts[1] = c.pts[1];
+
+  return 1;
 }
 
 
@@ -860,13 +858,13 @@ void pin_root (void)
 {
   if (d20.faces == NULL)
   {
-    d20.faces = make_list ();
+    d20.faces = make_list();
   }
   list_insert(d20.faces, d20.current_free);
   
   if (d20.available == NULL)
   {
-    d20.available = make_list ();
+    d20.available = make_list();
   }
   face_t *ptr = NULL;
   char c = 'A';
@@ -933,8 +931,8 @@ face_t *neighbor_for_slot (face_t *p, char k)
   if (!SDLRect_contains(tmp_pos, &draw_area))
   {
     DEBUG(2, "outside draw area\n");
-    FREE (tmp_pos);
-    FREE (t);
+    FREE(tmp_pos);
+    FREE(t);
     return NULL;
   }
   if (debug >= 2)
@@ -953,17 +951,9 @@ face_t *neighbor_for_slot (face_t *p, char k)
       printf("used existing position %p\n", pos);
     }
   }
-  if (debug >= 2)
-  {
-    LINE
-  }
 
   triangle_t *tr = copy_triangle(pt);
   tr->pts[k-'A'] = tmp_pos;
-  if (debug >= 2)
-  {
-    LINE
-  }
 
   t->item = tr;
   return t;
@@ -978,26 +968,11 @@ void create_neighbor_triangles_for (face_t *p)
     ptr = neighbor_for_slot(p, c);
     if (ptr != NULL)
     {
-      if (debug >= 2)
-      {
-        LINE
-        printf("checking if triangle exists on screen already\nslot is %p\ntriangle is %p\nlist is %p\n",ptr, ptr->item, d20.available);
-      }
       int ex = triangle_exists(ptr->item, d20.available, FLOAT_ACC);
-      if (debug >= 2)
-      {
-        LINE
-      }
+
       if (!ex)
       {
-
-        if (debug >= 2) 
-        {
-          LINE
-        }
-
         list_insert(d20.available, (void *) ptr);
-
       }
       else
       {
@@ -1028,7 +1003,7 @@ void create_neighbor_triangles_for (face_t *p)
 void remove_faces_similar_to (list_t *unpinned, face_t *cmp)
   //  remove duplicates
 {
-  int k = list_size (unpinned), q = k;
+  int k = list_size(unpinned), q = k;
   if ((unpinned == NULL) || (k == 1))
   {
     return;
@@ -1036,7 +1011,7 @@ void remove_faces_similar_to (list_t *unpinned, face_t *cmp)
 
   DEBUG(2, "Trying to remove duplicates")
   list_i *s = make_list_iterator(unpinned);
-  face_t *cur = list_iterator_next (s);
+  face_t *cur = list_iterator_next(s);
   while (cur != NULL)
   {
       if (equal_faces(cur, cmp))
@@ -1050,7 +1025,7 @@ void remove_faces_similar_to (list_t *unpinned, face_t *cmp)
           FREE(cur);
         }
       }
-    cur = list_iterator_next (s);
+    cur = list_iterator_next(s);
   }
   
 
@@ -1076,12 +1051,7 @@ void pin (void)
   face_t *anchor = d20.current_free;
   d20.current_free = NULL;
 
-  if (debug >= 2)
-  {
-    LINE
-  }
-
-  remove_faces_similar_to (d20.available, anchor);
+  remove_faces_similar_to(d20.available, anchor);
 
   list_remove(d20.available, anchor);
 
@@ -1089,23 +1059,10 @@ void pin (void)
   //  insert into list of placed triangles
   list_insert(d20.faces, anchor);
   
-  if (debug >= 2)
-  {
-    LINE
-  }
 
-  add_lines_for (&application.lines, anchor->item);
+  add_lines_for(&application.lines, anchor->item);
 
-  if (debug >= 2)
-  {
-    LINE
-  }
-
-  create_neighbor_triangles_for (anchor);
-  if (debug >= 2)
-  {
-    LINE
-  }
+  create_neighbor_triangles_for(anchor);
 }
 
 
@@ -1263,7 +1220,7 @@ void app_main (void)
       }
     }
 
-    if (mouse_moves ())
+    if (mouse_moves())
     {
       select_triangle();
     }
@@ -1273,9 +1230,9 @@ void app_main (void)
 
 void app_usage ()
 {
-  if (mouse_moves ())
+  if (mouse_moves())
   {
-    mouse_position (&application.mX, &application.mY);
+    mouse_position(&application.mX, &application.mY);
   }
 
   if (application.status == APP_MAIN)

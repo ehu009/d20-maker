@@ -16,7 +16,7 @@ struct list_node
   void *item;
 };
 
-l_node *make_list_node(void *item)
+l_node *make_list_node (void *item)
 {
   l_node *n = malloc(sizeof(l_node));
   if (n == NULL)
@@ -34,7 +34,7 @@ struct linked_list
   int size;
 };
 
-list_t *make_list(void)
+list_t *make_list (void)
 {
   list_t *l = malloc(sizeof(list_t));
   if (l == NULL)
@@ -46,7 +46,7 @@ list_t *make_list(void)
   return l;
 }
 
-void free_list(list_t *list)
+void free_list (list_t *list)
 {
   if (list == NULL)
   {
@@ -56,7 +56,7 @@ void free_list(list_t *list)
   free(list);
 }
 
-void list_empty(list_t *list)
+void list_empty (list_t *list)
 {
   if (list == NULL)
   {
@@ -72,7 +72,7 @@ void list_empty(list_t *list)
 }
 
 
-int list_size(list_t *list)
+int list_size (list_t *list)
 {
   if (list == NULL)
   {
@@ -81,7 +81,7 @@ int list_size(list_t *list)
   return list->size;
 } 
 
-int list_insert(list_t *list, void *item)
+int list_insert (list_t *list, void *item)
 {
   if (list == NULL)
   {
@@ -97,7 +97,7 @@ int list_insert(list_t *list, void *item)
   return 0;
 }
 
-void list_remove(list_t *list, void *item)
+void list_remove (list_t *list, void *item)
 {
   if (list == NULL)
   {
@@ -105,7 +105,7 @@ void list_remove(list_t *list, void *item)
   }
   l_node **prev = &list->head;
   l_node *current = *prev;
-  while(current != NULL)
+  while (current != NULL)
   {
     int rm = 0;
     l_node *next = current->next;
@@ -124,7 +124,7 @@ void list_remove(list_t *list, void *item)
   }
 }
 
-void *list_pop(list_t *list)
+void *list_pop (list_t *list)
 {
   if (list == NULL)
   {
@@ -150,7 +150,7 @@ struct linked_list_iterator
   l_node *current;
 };
 
-list_i *make_list_iterator(list_t *list)
+list_i *make_list_iterator (list_t *list)
 {
   list_i *iter = NULL;
   if (list == NULL)
@@ -158,7 +158,7 @@ list_i *make_list_iterator(list_t *list)
     return iter;
   }
   
-  iter = malloc(sizeof(list_i));
+  iter = MALLOC(sizeof(list_i));
   if (iter == NULL)
   {
     return iter;
@@ -168,12 +168,12 @@ list_i *make_list_iterator(list_t *list)
   return iter;
 }
 
-void free_list_iterator(list_i *iterator)
+void free_list_iterator (list_i *iterator)
 {
-  free(iterator);
+  FREE(iterator);
 }
 
-void *list_iterator_next(list_i *iterator)
+void *list_iterator_next (list_i *iterator)
 {
   if (iterator == NULL)
   {

@@ -12,7 +12,7 @@ typedef struct {
   void *ptr;
 } alloc_t;
 
-void enter(size_t size, void *ptr)
+void enter (size_t size, void *ptr)
 {
   alloc_t *a = calloc(1, sizeof(alloc_t));
   a->size = size;
@@ -21,17 +21,17 @@ void enter(size_t size, void *ptr)
 }
 
 
-void init_memory(void)
+void init_memory (void)
 {
   allocations = make_list();
 }
 
-void free_memory(void)
+void free_memory (void)
 {
   free_list(allocations);
 }
 
-void *_malloc(size_t size, const char *file, int line)
+void *_malloc (size_t size, const char *file, int line)
 {
   void *ptr = malloc(size);
   printf("%s: %d, allocating %p\r\n", file, line, ptr);
@@ -39,7 +39,7 @@ void *_malloc(size_t size, const char *file, int line)
   return ptr;
 }
 
-void *_calloc(size_t num, size_t size, const char *file, int line)
+void *_calloc (size_t num, size_t size, const char *file, int line)
 {
   void *ptr = calloc(num, size);
   printf("%s: %d, allocating %p\r\n", file, line, ptr);
@@ -47,7 +47,7 @@ void *_calloc(size_t num, size_t size, const char *file, int line)
   return ptr;
 }
 
-void _free(void *ptr, const char *file, int line)
+void _free (void *ptr, const char *file, int line)
 {
   if (ptr == NULL)
   {
@@ -72,7 +72,7 @@ void _free(void *ptr, const char *file, int line)
   free(iter);
 }
 
-void memory_report(void)
+void memory_report (void)
 {
   int allocated = 0;
 

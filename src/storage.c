@@ -22,7 +22,9 @@ int name_exists (char *name)
   {
     e = readdir(d);
     if (e == NULL)
+    {
       break;
+    }
     int s = strcmp(e->d_name, name);
     found |= (s == 0);
   }
@@ -35,7 +37,9 @@ char hex_from_halfbyte (char c)
 {
   char r = c + 0x30;
   if (c >= 0xA)
+  {
     r += 0x41;
+  }
   return r;
 }
 
@@ -54,7 +58,7 @@ short hex_from_byte (char c)
   #else
     B <<= 8;
   #endif
-  return A|B;
+  return A | B;
 }
 
 
@@ -69,7 +73,7 @@ char *generate_name (SDL_Surface *surface)
   sha256_final(&h, (unsigned char *) &tmp);
   memcpy(&hash, tmp, 4);
 
-  char *name = calloc(1, 4 + 3 + 3 + 4 + 1);
+  char *name = CALLOC(1, 4 + 3 + 3 + 4 + 1);
 
   sprintf(name, "%X.bmp", hash);
 
@@ -78,7 +82,7 @@ char *generate_name (SDL_Surface *surface)
   {
     if (c == 999)
     {
-      free(name);
+      FREE(name);
       name = NULL;
       break;
     }
@@ -96,29 +100,29 @@ void store_subsurface (SDL_Surface *surface, SDL_Rect *rect)
   {
     DIR *d = opendir(OUTPUT_DIR_PATH);
     if (d == NULL)
+    {
       system("mkdir output\0");
+    }
     closedir(d);
   }
 
   SDL_Surface *surf = NULL;
   {
     SDL_PixelFormat *f = surface->format;
-
-    surf = SDL_CreateRGBSurface (0, rect->w, rect->h, 32, f->Rmask, f->Gmask, f->Bmask, alpha_mask);
+    surf = SDL_CreateRGBSurface(0, rect->w, rect->h, 32, f->Rmask, f->Gmask, f->Bmask, alpha_mask);
+    SDL_BlitSurface(surface, rect, surf, NULL);
   }
 
-  SDL_BlitSurface(surface, rect, surf, NULL);
-
   char path[FILENAME_MAX + strlen(OUTPUT_DIR_PATH)];
-  memset (path, '\0', FILENAME_MAX + strlen(OUTPUT_DIR_PATH));
+  memset(path, '\0', FILENAME_MAX + strlen(OUTPUT_DIR_PATH));
 
   char *buf = generate_name(surf);
 
-  strcat (path, OUTPUT_DIR_PATH);
-  strcat (path, buf);
+  strcat(path, OUTPUT_DIR_PATH);
+  strcat(path, buf);
 
   SDL_SaveBMP(surf, path);
 
   SDL_FreeSurface(surf);
-  free(buf);
+  FREE(buf);
 }

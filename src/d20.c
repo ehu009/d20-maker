@@ -41,19 +41,29 @@ slot_t *find_slot_opposing (slot_t *a1, slot_t *a2, slot_t *opposer)
   for (;  link1 < NUM_VTX_POS; link1 ++)
   {
     if (r != NULL)
+    {
       break;
+    }
     slot_t *cur1 = a1->links[link1];
     if (cur1 == opposer)
+    {
       continue;
+    }
     for (link2 = 0; link2 < NUM_VTX_POS; link2 ++)
     {
       if (r != NULL)
+      {
         break;
+      }
       slot_t *cur2 = a2->links[link2];
       if (cur2 == opposer)
+      {
         continue;
+      }
       if (cur1 == cur2)
+      {
         r = cur1;
+      }
     }
   }
   return r;
@@ -92,9 +102,11 @@ int equal_faces (face_t *A, face_t *B)
 
 face_t *copy_face (face_t *ptr)
 {
-  face_t *f = MALLOC (sizeof(face_t));
+  face_t *f = MALLOC(sizeof(face_t));
   if (f == NULL)
+  {
     return f;
+  }
   char l = sizeof(face_t);
   memcpy(f, ptr, l);
   return f;
@@ -105,17 +117,19 @@ face_t *face_that_neighbors (face_t *f, char k)
   face_t *n = NULL;
   n = copy_face(f);
   if (n == NULL)
+  {
     return n;
+  }
   switch (k)
   {
     case 'A':
-      n->sA = find_slot_opposing (f->sB, f->sC, f->sA);
+      n->sA = find_slot_opposing(f->sB, f->sC, f->sA);
       break;
     case 'B':
-      n->sB = find_slot_opposing (f->sC, f->sA, f->sB);
+      n->sB = find_slot_opposing(f->sC, f->sA, f->sB);
       break;
     case 'C':
-      n->sC = find_slot_opposing (f->sA, f->sB, f->sC);
+      n->sC = find_slot_opposing(f->sA, f->sB, f->sC);
       break;
   }
   return n;
