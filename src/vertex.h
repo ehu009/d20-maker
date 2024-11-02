@@ -1,5 +1,5 @@
 #ifndef   VERTICES_H_
-  #define   VERTICES_H_
+  #define VERTICES_H_
 
 
   /*
@@ -27,6 +27,7 @@
 
   int equal_vertices (vtx2d_t *A, vtx2d_t *B, double acc);
   vtx2d_t *find_vector_opposing (vtx2d_t *anchor1, vtx2d_t *anchor2, vtx2d_t *point);
+
 
   /*
    *  Five-point vertex types

@@ -1,5 +1,5 @@
 #ifndef   HASH256_H_
-  #define   HASH256_H_
+  #define HASH256_H_
 
   /*
    *
@@ -24,10 +24,11 @@
 
   //  SHA-256 prototypes
 
-  void sha256_init(SHA256_CTX *ctx);
+  void sha256_init (SHA256_CTX *ctx);
 
-  void sha256_update(SHA256_CTX *ctx, unsigned char data[], unsigned int len);
+  void sha256_update (SHA256_CTX *ctx, unsigned char data[], unsigned int len);
 
-  void sha256_final(SHA256_CTX *ctx, unsigned char hash[]);
+  void sha256_final (SHA256_CTX *ctx, unsigned char hash[]);
 
-  #endif
+
+#endif    /*  HASH256_H_  */

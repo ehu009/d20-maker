@@ -9,4 +9,5 @@
 
   #define   FONT_DEFAULT  TTF_OpenFont(FONT_FILE, FONT_SIZE)
 
-#endif  /*  FONT_H_ */
+
+#endif    /*  FONT_H_ */

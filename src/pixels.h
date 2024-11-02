@@ -1,5 +1,4 @@
 #ifndef   PIXELS_H_
-
   #define PIXELS_H_
 
     #include    "SDL2/SDL.h"
@@ -14,7 +13,7 @@
 
     COLOUR getPixel (SDL_Surface *src, vtx2i_t *p);
 
-    void setPixel(SDL_Surface *dst, vtx2i_t *p, COLOUR color);
+    void setPixel (SDL_Surface *dst, vtx2i_t *p, COLOUR color);
 
 
-#endif  /*  PIXELS_H_ */
+#endif    /*  PIXELS_H_ */

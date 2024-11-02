@@ -1,11 +1,13 @@
 #ifndef   COLOURS_H_
-  #define   COLOURS_H_
+  #define COLOURS_H_
 
   #define   COLOUR   uint32_t
 
   extern unsigned alpha_mask;
-  #define   GET_ALPHA_MASK(surface)  ((canvas->format->Rmask | canvas->format->Gmask | canvas->format->Bmask \
-  ) ^ 0xffffffff)
+  #define   GET_ALPHA_MASK(surface)  ((canvas->format->Rmask\
+      | canvas->format->Gmask \
+      | canvas->format->Bmask) \
+        ^ 0xffffffff)
 
   #define   FONT_COLOUR_WHITE   (SDL_Color) {0xff,0xff,0xff}
   #define   FONT_COLOUR_BLACK   (SDL_Color) {0,0,0}
@@ -29,6 +31,4 @@
   #define   FADER_COLOUR_DOWN     0x0ff0000
 
 
-
-
-#endif  /*  COLOURS_H_  */
+#endif    /*  COLOURS_H_  */

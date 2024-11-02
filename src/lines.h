@@ -1,7 +1,8 @@
 #ifndef   LINES_H_
   #define LINES_H_
-  
+
   #include "pixels.h"
+
 
   extern SDL_Surface *canvas;
 
@@ -31,4 +32,5 @@
 
   int equal_lines (struct line *A, struct line *B);
 
-#endif  /*  LINES_H_  */
+
+#endif    /*  LINES_H_  */

@@ -1,6 +1,6 @@
 
 #ifndef   ICOSAHEDRON_H_
-  #define   ICOSAHEDRON_H_
+  #define ICOSAHEDRON_H_
 
   #include "vertex.h"
   #include "list.h"
@@ -60,4 +60,4 @@
 
 
 
-#endif
+#endif    /*  ICOSAHEDRON_H_  */

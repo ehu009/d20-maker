@@ -1,8 +1,8 @@
 #ifndef   MOUSE_H_
-
   #define MOUSE_H_
 
   #include  "SDL2/SDL.h"
+
 
   /*
    *  Keeping track of mouse input
@@ -25,4 +25,5 @@
 
   void mouse_reset (void);
 
-#endif  /*  MOUSE_H_  */
+
+#endif    /*  MOUSE_H_  */

@@ -20,4 +20,5 @@
   int mouse_middle  (void);
   int mouse_scroll  (void);
 
-#endif  /*  MOUSE_APP_H_  */
+
+#endif    /*  MOUSE_APP_H_  */
