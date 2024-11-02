@@ -359,6 +359,7 @@ void app_free (void)
   {
     FREE(d20.current_free->item);
     FREE(d20.current_free);
+    d20.current_free = NULL;
   }
   list_empty(application.lines);
   FREE(application.lines);
@@ -812,42 +813,41 @@ face_t *create_root_neighbor (char k)
   triangle_t *q = anchor->item;
   vtx2d_t *tmp_pos = position_that_neighbors(anchor, k);
 
-  if (SDLRect_contains(tmp_pos, &draw_area))
-  {
-
-    list_insert(application.positions, tmp_pos);
-    
-    triangle_t *p = MALLOC(sizeof(triangle_t));
-    switch (k)
-    {
-      case 'A':
-        p->pts[0] = tmp_pos;
-        p->pts[1] = q->pts[1];
-        p->pts[2] = q->pts[2];
-        break;
-      case 'B':
-        p->pts[1] = tmp_pos;
-        p->pts[2] = q->pts[2];
-        p->pts[0] = q->pts[0];
-        break;
-      case 'C':
-        p->pts[2] = tmp_pos;
-        p->pts[0] = q->pts[0];
-        p->pts[1] = q->pts[1];
-        break;
-    }
-    t->item = p;
-    if (debug >= 2)
-    {
-      print_face(t);
-    }
-  }
-  else
+  if (!SDLRect_contains(tmp_pos, &draw_area))
   {
     FREE(tmp_pos);
     FREE(t);
-    t = NULL;
+    return NULL;
   }
+
+  triangle_t *p = MALLOC(sizeof(triangle_t));
+  if (p == NULL)
+  {
+    FREE(tmp_pos);
+    FREE(t);
+    return NULL;
+  }
+  t->item = p;
+  list_insert(application.positions, tmp_pos);
+  switch (k)
+  {
+    case 'A':
+      p->pts[0] = tmp_pos;
+      p->pts[1] = q->pts[1];
+      p->pts[2] = q->pts[2];
+      break;
+    case 'B':
+      p->pts[1] = tmp_pos;
+      p->pts[2] = q->pts[2];
+      p->pts[0] = q->pts[0];
+      break;
+    case 'C':
+      p->pts[2] = tmp_pos;
+      p->pts[0] = q->pts[0];
+      p->pts[1] = q->pts[1];
+      break;
+  }
+  
   return t;
 }
 
@@ -923,10 +923,6 @@ face_t *neighbor_for_slot (face_t *p, char k)
 
   vtx2d_t *tmp_pos = position_that_neighbors(p, k);
   triangle_t *pt = p->item;
-  if (debug >= 2)
-  {
-    LINE
-  }
 
   if (!SDLRect_contains(tmp_pos, &draw_area))
   {
@@ -935,11 +931,7 @@ face_t *neighbor_for_slot (face_t *p, char k)
     FREE(t);
     return NULL;
   }
-  if (debug >= 2)
-  {
-    LINE
-  }
-
+  
   vtx2d_t *pos = position_exists(tmp_pos, application.positions);
   if (pos != NULL)
   {
