@@ -115,12 +115,13 @@ void store_subsurface (SDL_Surface *surface, SDL_Rect *rect)
   memset(path, '\0', FILENAME_MAX + strlen(OUTPUT_DIR_PATH));
 
   char *buf = generate_name(surf);
+  if (buf != NULL)
+  {
+    strcat(path, OUTPUT_DIR_PATH);
+    strcat(path, buf);
 
-  strcat(path, OUTPUT_DIR_PATH);
-  strcat(path, buf);
-
-  SDL_SaveBMP(surf, path);
-
+    SDL_SaveBMP(surf, path);
+  }
   SDL_FreeSurface(surf);
   FREE(buf);
 }
