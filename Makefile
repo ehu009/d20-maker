@@ -21,9 +21,9 @@ default : clean $(PROG)
 
 clean :
 	rm -f *.o ./$(PROG).* *~
-	ifneq ($(OS), Windows_NT)
-		rm -f -r ./bat ./*.dll ./lib ./include
-	endif
+ifneq ($(OS), Windows_NT)
+	rm -f -r ./bat ./*.dll ./lib ./include
+endif
 
 all : default
 
