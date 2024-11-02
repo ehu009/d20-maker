@@ -10,10 +10,10 @@
   typedef struct button_switch button_t;
 
 
-  button_t *button_create (const char *txt, unsigned *value);
-  void button_free (button_t *button);
+  button_t *make_button (const char *txt, unsigned *value);
+  void free_button (button_t *button);
 
-  void button_setPosition (button_t *button, unsigned _x, unsigned _y);
+  void button_reposition (button_t *button, unsigned _x, unsigned _y);
 
   void button_update (button_t *button);
   void button_draw (button_t *button);

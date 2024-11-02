@@ -374,13 +374,13 @@ void app_free (void)
   application.positions = NULL;
 
   // free buttons
-  button_free(application.reset_btn);
+  free_button(application.reset_btn);
   application.reset_btn = NULL;
-  button_free(application.save_btn);
+  free_button(application.save_btn);
   application.save_btn = NULL;
 
   // free slidebar
-  fader_free(application.colour_select);
+  free_fader(application.colour_select);
   application.colour_select = NULL;
 }
 
@@ -1211,8 +1211,8 @@ void app_main (void)
         pin_root();
         if (application.reset_btn == NULL)
         {
-          application.reset_btn = button_create ("reset\0", &application.reset);
-          button_setPosition(application.reset_btn, canvas->w-(BORDER_SIZE+BUTTON_WIDTH), BORDER_SIZE);
+          application.reset_btn = make_button("reset\0", &application.reset);
+          button_reposition(application.reset_btn, canvas->w-(BORDER_SIZE+BUTTON_WIDTH), BORDER_SIZE);
         }
       }
     }
@@ -1233,14 +1233,14 @@ void app_main (void)
             application.status = APP_END;
             if (application.save_btn == NULL)
             {
-              application.save_btn = button_create ("save \0", &application.save);
-              button_setPosition(application.save_btn, canvas->w-(BORDER_SIZE+BUTTON_WIDTH), 2*BORDER_SIZE + BUTTON_HEIGHT);
+              application.save_btn = make_button("save \0", &application.save);
+              button_reposition(application.save_btn, canvas->w-(BORDER_SIZE+BUTTON_WIDTH), 2*BORDER_SIZE + BUTTON_HEIGHT);
             }
             if (application.colour_select == NULL)
             {
               unsigned fader_yPos = 3*BORDER_SIZE + 2*BUTTON_HEIGHT;
-              application.colour_select = fader_create(80.0, FADER_WIDTH, canvas->h - (BORDER_SIZE + fader_yPos), &application.negate_rate);
-              fader_setPos(application.colour_select, canvas->w - (BORDER_SIZE + BUTTON_WIDTH), fader_yPos);
+              application.colour_select = make_fader(80.0, FADER_WIDTH, canvas->h - (BORDER_SIZE + fader_yPos), &application.negate_rate);
+              fader_reposition(application.colour_select, canvas->w - (BORDER_SIZE + BUTTON_WIDTH), fader_yPos);
             }
             
             remove_unused_coordinates();

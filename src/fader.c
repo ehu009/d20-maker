@@ -26,7 +26,7 @@ struct fader_bar
 };
 
 
-fader_t *fader_create (double start, int width, int height, double *value)
+fader_t *make_fader (double start, int width, int height, double *value)
 {
   SDL_Surface *surf = SDL_CreateRGBSurface (0, width, height, 32, 0,0,0,0);
   if (surf == NULL)
@@ -49,7 +49,7 @@ fader_t *fader_create (double start, int width, int height, double *value)
   return slide;
 }
 
-void fader_setPos (fader_t *slide, int _x, int _y)
+void fader_reposition (fader_t *slide, int _x, int _y)
 {
   if (_x >= 0)
     slide->posx = _x;
@@ -238,7 +238,7 @@ void fader_update (fader_t *slide)
 }
 
 
-void  fader_free (fader_t *slide)
+void  free_fader (fader_t *slide)
 {
   if (slide != NULL)
   {

@@ -1,4 +1,3 @@
-#include  <stdlib.h>
 #include  <string.h>
 
 #include  "button.h"
@@ -27,7 +26,7 @@ struct button_switch
 
 
 
-button_t *button_create (const char *txt1, unsigned *value)
+button_t *make_button (const char *txt1, unsigned *value)
 {
 
   button_t *button = (button_t *) malloc (sizeof (button_t));
@@ -57,7 +56,7 @@ button_t *button_create (const char *txt1, unsigned *value)
   return button;
 }
 
-void button_free (button_t *button)
+void free_button (button_t *button)
 {
   if (button == NULL)
     return;
@@ -66,7 +65,7 @@ void button_free (button_t *button)
   free(button);
 }
 
-void button_setPosition (button_t *button, unsigned _x, unsigned _y)
+void button_reposition (button_t *button, unsigned _x, unsigned _y)
 {
   if (button == NULL)
     return;
