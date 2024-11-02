@@ -1,11 +1,5 @@
-#ifdef _WIN32
-  #include <malloc.h>
-#else
-  #include <stdlib.h>
-#endif
-
 #include "list.h"
-
+#include "memory.h"
 
 struct list_node;
 typedef struct list_node l_node;

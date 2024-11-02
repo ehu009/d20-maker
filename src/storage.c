@@ -2,12 +2,10 @@
 #include <stdio.h>
 #include <dirent.h>
 #include <string.h>
-#ifdef _WIN32
-  #include <malloc.h>
-#endif
 
-#include "colours.h"
 #include "storage.h"
+#include "colours.h"
+#include "memory.h"
 #include "sha256.h"
 
 #define OUTPUT_DIR_PATH "output/"
