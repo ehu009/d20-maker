@@ -29,7 +29,7 @@ struct button_switch
 button_t *make_button (const char *txt1, unsigned *value)
 {
 
-  button_t *button = (button_t *) malloc (sizeof (button_t));
+  button_t *button = (button_t *) MALLOC(sizeof (button_t));
   if (button == NULL)
     return button;
 
@@ -62,7 +62,7 @@ void free_button (button_t *button)
     return;
   TTF_CloseFont (button->font);
   SDL_FreeSurface (button->surf);
-  free(button);
+  FREE(button);
 }
 
 void button_reposition (button_t *button, unsigned _x, unsigned _y)

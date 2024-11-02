@@ -31,7 +31,7 @@ fader_t *make_fader (double start, int width, int height, double *value)
   SDL_Surface *surf = SDL_CreateRGBSurface (0, width, height, 32, 0,0,0,0);
   if (surf == NULL)
     return NULL;
-  fader_t *slide  = (fader_t *) malloc (sizeof(fader_t));
+  fader_t *slide  = (fader_t *) MALLOC(sizeof(fader_t));
   if (slide != NULL)
   {
     slide->posx = 0;
@@ -245,5 +245,5 @@ void  free_fader (fader_t *slide)
   SDL_FreeSurface (slide->surface);
   TTF_CloseFont (slide->font);
 }
-  free (slide);
+  FREE(slide);
 }
