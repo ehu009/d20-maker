@@ -1,12 +1,11 @@
 #include  <stdlib.h>
 #include  <string.h>
-#ifdef _WIN32
-  #include <malloc.h>
-#endif
 
 #include  "button.h"
+#include  "memory.h"
 #include  "font.h"
 #include  "colours.h"
+#include  "mouse_app.h"
 
 
 #define   TEXT_MARGIN 5

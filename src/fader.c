@@ -1,10 +1,9 @@
-#include  <stdlib.h>
-#include <stdio.h>
-#ifdef _WIN32
-  #include <malloc.h>
-#endif
-
 #include  "fader.h"
+
+#include  <stdlib.h>
+#include  <stdio.h>
+
+#include  "memory.h"
 #include  "colours.h"
 #include  "font.h"
 #include  "mouse_app.h"

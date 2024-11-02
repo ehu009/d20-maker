@@ -1,11 +1,7 @@
 #include    <string.h>
+
 #include    "screen-triangles.h"
-
-#ifdef _WIN32
-  #include    <malloc.h>
-#endif
-#include "memory.h"
-
+#include    "memory.h"
 
 
 triangle_t *copy_triangle(triangle_t *t)

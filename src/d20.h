@@ -2,9 +2,8 @@
 #ifndef   ICOSAHEDRON_H_
   #define   ICOSAHEDRON_H_
 
-
   #include "vertex.h"
-
+  #include "list.h"
 
   /*
    *  model of vertices in an icosahedron
@@ -48,8 +47,6 @@
   /*
    * Storage object
    */
-
-  #include "list.h"
 
   struct d20_object
   {

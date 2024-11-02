@@ -1,8 +1,6 @@
 #ifndef   LINES_H_
   #define LINES_H_
-
-  #include "SDL2/SDL.h"
-
+  
   #include "pixels.h"
 
   extern SDL_Surface *canvas;

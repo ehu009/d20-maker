@@ -1,7 +1,6 @@
-#include "d20.h"
-#include <stdlib.h>
 #include <string.h>
 
+#include "d20.h"
 #include "memory.h"
 
 vtx5i_t d20_model[NUM_D20_VTX] =

@@ -1,8 +1,6 @@
 #include <stdlib.h>
 #include <math.h>
-#ifdef _WIN32
-  #include <malloc.h>
-#endif
+
 #include "memory.h"
 #include "vertex.h"
 

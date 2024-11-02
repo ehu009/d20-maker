@@ -1,8 +1,6 @@
 #include <math.h>
 #include <string.h>
-#ifdef _WIN32
-  #include <malloc.h>
-#endif
+
 
 #include "debug.h"
 
