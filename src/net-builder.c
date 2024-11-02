@@ -331,31 +331,23 @@ void app_start (void)
 
 void app_free (void)
 {
-  
-  list_erase(d20.available, &free_face);
-  d20.available = NULL;
-
-  list_erase(d20.faces, &free_face);
-  d20.faces = NULL;
-  
-  void free_simple(void *ptr)
-  {
-    FREE(ptr);
-  }
-
-  list_erase(application.lines, &free_simple);
+  //  free lines and coordinates
+  list_erase(application.lines, NULL);
+  list_erase(application.positions, NULL);
   application.lines = NULL;
-
-  list_erase(application.positions, &free_simple);
   application.positions = NULL;
 
+  //  free faces
+  list_erase(d20.available, &free_face);
+  list_erase(d20.faces, &free_face);
+  d20.available = NULL;
+  d20.faces = NULL;
   if (d20.current_free != NULL)
   {
     FREE(d20.current_free->item);
     FREE(d20.current_free);
     d20.current_free = NULL;
   }
-
 
   // free buttons
   free_button(application.reset_btn);
