@@ -75,14 +75,13 @@ void _free (void *ptr, const char *file, int line)
 void memory_report (void)
 {
   int allocated = 0;
-
-  list_i *iter = make_list_iterator(allocations);
-  alloc_t *cur = list_iterator_next(iter);
-  while (cur != NULL)
+  
+  void free_alloc (void *ptr)
   {
-    allocated += cur->size;
-    cur = list_iterator_next(iter);
+    alloc_t *a = ptr;
+    allocated += a->size;
   }
+  list_erase(allocations, &free_alloc);
+
   printf("allocated bytes remaining: %i\r\n", allocated);
-  list_empty(allocations);
 }

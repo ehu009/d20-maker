@@ -46,24 +46,9 @@ void free_list (list_t *list)
   {
     return;
   }
-  list_empty(list);
   free(list);
 }
 
-void list_empty (list_t *list)
-{
-  if (list == NULL)
-  {
-    return;
-  }
-  while (list->head != NULL)
-  {
-    l_node *next = list->head->next;
-    free(list->head);
-    list->head = next;
-  }
-  list->size = 0;
-}
 
 
 int list_size (list_t *list)
@@ -134,6 +119,28 @@ void *list_pop (list_t *list)
   free(node);
   list->size --;
   return item;
+}
+ 
+void list_erase (list_t *list, list_erase_func f)
+{
+  if (list == NULL)
+  {
+    return;
+  }
+  void *item = list_pop(list);
+  while (item != NULL)
+  {
+    if (f != NULL)
+    {
+      f(item);
+    }
+    else
+    {
+      FREE(item);
+    }
+    item = list_pop(list);
+  }
+  free_list(list);
 }
 
 

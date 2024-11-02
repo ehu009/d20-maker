@@ -43,7 +43,8 @@
   face_t *copy_face (face_t *ptr);
   face_t *face_that_neighbors (face_t *f, char k);
 
-
+  void free_face (void*ptr);
+  
   /*
    * Storage object
    */

@@ -153,7 +153,6 @@ int main (int argc, char *argv[])
   
   DEBUG(2,"\t- deallocated d20 builder structures\0")
   unload ();
-  DEBUG(2,"\t- destroyed window\0")
   
   
   DEBUG(VERBOSE_DEFAULT, "Exiting icosahedron maker.\0")

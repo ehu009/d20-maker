@@ -13,8 +13,9 @@
   int list_insert(list_t *list, void *item);
   void list_remove(list_t *list, void *item);
   void *list_pop(list_t *list);
-  void list_empty(list_t *list);
-
+  
+  typedef void (*list_erase_func) (void *);
+  void list_erase (list_t *list, list_erase_func f);
 
   struct linked_list_iterator;
   typedef struct linked_list_iterator list_i;

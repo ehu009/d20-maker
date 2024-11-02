@@ -82,6 +82,13 @@ face_t *new_face (slot_t *a, slot_t *b, slot_t *c)
   return f;
 }
 
+void free_face (void*ptr)
+{
+  face_t *f = ptr;
+  FREE(f->item);
+  FREE(f);
+}
+
 int equal_faces (face_t *A, face_t *B)
 {
   int eq = 0;
@@ -107,8 +114,7 @@ face_t *copy_face (face_t *ptr)
   {
     return f;
   }
-  char l = sizeof(face_t);
-  memcpy(f, ptr, l);
+  memcpy(f, ptr, sizeof(face_t));
   return f;
 }
 

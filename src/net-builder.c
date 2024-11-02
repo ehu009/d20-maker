@@ -331,48 +331,31 @@ void app_start (void)
 
 void app_free (void)
 {
-  // free structures in the d20
-  void free_face_list(list_t * list)
-  {
-    if (list == NULL)
-    {
-      return;
-    }
-    face_t *f = list_pop(list);
-    while (f != NULL)
-    {
-      triangle_t *t = f->item;
-      FREE(t);
-      FREE(f);
-      f = list_pop(list);
-    }
-    FREE(list);
-  }
-
-  free_face_list(d20.available);
+  
+  list_erase(d20.available, &free_face);
   d20.available = NULL;
-  free_face_list(d20.faces);
+
+  list_erase(d20.faces, &free_face);
   d20.faces = NULL;
   
-  // free graphical elements
+  void free_simple(void *ptr)
+  {
+    FREE(ptr);
+  }
+
+  list_erase(application.lines, &free_simple);
+  application.lines = NULL;
+
+  list_erase(application.positions, &free_simple);
+  application.positions = NULL;
+
   if (d20.current_free != NULL)
   {
     FREE(d20.current_free->item);
     FREE(d20.current_free);
     d20.current_free = NULL;
   }
-  list_empty(application.lines);
-  FREE(application.lines);
-  application.lines = NULL;
 
-  vtx2d_t *coord = list_pop(application.positions);
-  while (coord != NULL)
-  {
-    FREE(coord);
-    coord = list_pop(application.positions);
-  }
-  FREE(application.positions);
-  application.positions = NULL;
 
   // free buttons
   free_button(application.reset_btn);
@@ -1058,53 +1041,48 @@ void pin (void)
 }
 
 
-void remove_unused_coordinates()
+void remove_unused_coordinates(void)
 {
+  
   list_t *unused = make_list();
-  list_i *s = make_list_iterator(application.positions);
-  vtx2d_t *coord = list_iterator_next (s);
+  list_i *pos_iter = make_list_iterator(application.positions);
+  
+  vtx2d_t *coord = list_iterator_next (pos_iter);
   while (coord != NULL)
   {
     int found = 0;
-    list_i *k = make_list_iterator(application.lines);
-    struct line *t = list_iterator_next(k);
-    while (t != NULL)
+    
+    list_i *line_iter = make_list_iterator(application.lines);
+    struct line *l = list_iterator_next(line_iter);
+    while (l != NULL)
     {
       
-      if (t->A == coord
-          || t->B == coord)
+      if (l->A == coord
+          || l->B == coord)
       {
         found = 1;
-        DEBUG(2, "found coordinate\r\n");
         break;
       }
       
-      t = list_iterator_next(k);
+      l = list_iterator_next(line_iter);
     }
-    free_list_iterator(k);
+    free_list_iterator(line_iter);
+    
     if (!found)
     {
       list_insert(unused, coord);
     }
-    
-    coord = list_iterator_next(s);
+    coord = list_iterator_next(pos_iter);
   }
+  free_list_iterator(pos_iter);
 
-  free_list_iterator(s);
-  s = make_list_iterator(unused);
-  coord = list_iterator_next (s);
-  
-  while (coord != NULL)
+  void remove_duplicate(void *ptr)
   {
-    list_remove(application.positions, coord);
-    coord = list_iterator_next (s);
+    list_remove(application.positions, ptr);
+    FREE(ptr);
   }
   
-  free_list_iterator(s);
-  list_empty(unused);
-  free_list(unused);
-
-  
+  list_erase(unused, remove_duplicate);
 }
 
 
