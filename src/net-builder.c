@@ -92,21 +92,10 @@ void draw_triangle_transparent (face_t *t)
   fill_triangle (t->item, invertPixel, 0);
 }
 
-void draw_triangle_outline (face_t *t)
-{
-  draw_triangle (t->item, invertPixel, 0);
-}
-
 void draw_triangle_coloured (face_t *t, COLOUR colour)
 {
   fill_triangle (t->item, colourPixel, colour);
 }
-
-void draw_triangle_on (face_t *t, SDL_Surface *dst, SDL_Rect *at)
-{
-  transfer_triangle(t->item, dst, at);
-}
-
 
 
 
@@ -468,7 +457,7 @@ void copy_triangles (list_t *triangles, SDL_Surface *dst)
   face_t *cur = list_iterator_next (s);
   while (cur != NULL)
   {
-    draw_triangle_on(cur, dst, &draw_area);
+    transfer_triangle(cur->item, dst, &draw_area);
 
     cur = list_iterator_next (s);
   }
