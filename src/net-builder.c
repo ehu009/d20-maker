@@ -87,17 +87,6 @@ int change_root_size (void)
 }
 
 
-void draw_triangle_transparent (face_t *t)
-{
-  fill_triangle (t->item, invertPixel, 0);
-}
-
-void draw_triangle_coloured (face_t *t, COLOUR colour)
-{
-  fill_triangle (t->item, colourPixel, colour);
-}
-
-
 
 
 d20_t d20;
@@ -403,11 +392,11 @@ void pinned_list_drawing (face_t *t)
 {
   if (t != d20.current_used)
   {
-    draw_triangle_coloured (t, TRIANGLE_COLOUR_PINNED);
+    draw_triangle_coloured (t->item, TRIANGLE_COLOUR_PINNED);
   }
   else
   {
-    draw_triangle_transparent (t);
+    draw_triangle_transparent (t->item);
   }
 }
 
@@ -415,11 +404,11 @@ void unpinned_list_drawing (face_t *t)
 {
   if (t != d20.current_free)
   {
-    draw_triangle_transparent (t);
+    draw_triangle_transparent (t->item);
   }
   else
   {
-    draw_triangle_coloured (t, TRIANGLE_COLOUR_UNPINNED);
+    draw_triangle_coloured (t->item, TRIANGLE_COLOUR_UNPINNED);
   }
 }
 
@@ -521,7 +510,7 @@ void _draw_main(void)
 {
   if (d20.faces == NULL)
   {
-    draw_triangle_transparent (d20.current_free);
+    draw_triangle_transparent (d20.current_free->item);
   }
   else
   {

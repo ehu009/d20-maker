@@ -15,10 +15,9 @@
 
   int triangle_contains (triangle_t *t, vtx2i_t point);
 
+  void draw_triangle_transparent (triangle_t *t);
 
-  void draw_triangle (triangle_t *t, plot_func plot, COLOUR color);
-
-  void fill_triangle (triangle_t *t, plot_func plot, COLOUR color);
+  void draw_triangle_coloured (triangle_t *t, COLOUR colour);
 
   void transfer_triangle (triangle_t *t, SDL_Surface *dst, SDL_Rect *dst_rect);
 

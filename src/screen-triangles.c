@@ -174,6 +174,16 @@ void fill_triangle (triangle_t *t, plot_func plot, COLOUR color)
   free ((void *) rect);
 }
 
+void draw_triangle_transparent (triangle_t *t)
+{
+  fill_triangle (t, invertPixel, 0);
+}
+
+void draw_triangle_coloured (triangle_t *t, COLOUR colour)
+{
+  fill_triangle (t, colourPixel, colour);
+}
+
 int triangle_contains (triangle_t *t, vtx2i_t point)
 {
   SDL_Rect *rect = get_bounds_of_triangle (t);
