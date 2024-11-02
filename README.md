@@ -3,11 +3,13 @@
 
 ### How-to
 #### Compiling on Linux
-You'll need to have `gcc`, `SDL2`, `SDL2_image`, `SDL2_ttf` installed on your system.
+You'll need to have `gcc`, `make`, `SDL2 dev`, `SDL2-image dev`, `SDL2-ttf dev` installed on your system.
 From that point onwards, just run `make` from the main directory.
 #### Compiling on Windows
 I uh...
-It depends, I guess.
+It depends on your toolchain, I guess.
+#### Compiling on Mac OSX
+No idea.
 #### Running
 First argument to the program specifies an input image:
 e.g. `d20-maker my-image.png`
@@ -41,6 +43,7 @@ All saved images will be stored in `.bmp` format, with a unique file name. They 
  - [x] Implement "Move" feature
  - [x] Implement folding line controls
  - [ ] Make it look prettier
+ - [x] Remove memory leaks
 
 ### Supported file extensions
  + `.bmp`, `.dib`
