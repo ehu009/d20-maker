@@ -1,8 +1,5 @@
-#include  "fader.h"
-
-#include  <stdlib.h>
 #include  <stdio.h>
-
+#include  "fader.h"
 #include  "memory.h"
 #include  "colours.h"
 #include  "font.h"
