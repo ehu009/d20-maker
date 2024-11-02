@@ -781,7 +781,7 @@ int triangle_exists (triangle_t *t, list_t *list, double acc)
     }
     cur = list_iterator_next(s);
   }
-  
+  free_list_iterator(s);
   return q;
 }
 
